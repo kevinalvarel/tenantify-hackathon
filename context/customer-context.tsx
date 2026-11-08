@@ -7,7 +7,6 @@ import {
   CustomerOrder,
   Tenant,
 } from "@/types/customer";
-import { defaultCustomerProducts, defaultTenants } from "@/data/customer-data";
 import { toast } from "sonner";
 
 type CustomerContextType = {
@@ -19,7 +18,8 @@ type CustomerContextType = {
   setIsCartOpen: (open: boolean) => void;
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
-
+  isNutritionModalOpen: boolean;
+  setIsNutritionModalOpen: (open: boolean) => void;
   addToCart: (product: CustomerProduct) => void;
   updateQuantity: (productId: string, delta: number) => void;
   removeFromCart: (productId: string) => void;
@@ -34,13 +34,13 @@ type CustomerContextType = {
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
 
 export function CustomerProvider({ children }: { children: React.ReactNode }) {
-  const [products] = useState<CustomerProduct[]>(defaultCustomerProducts);
-  const [tenants] = useState<Tenant[]>(defaultTenants);
+  const [products] = useState<CustomerProduct[]>([]);
+  const [tenants] = useState<Tenant[]>([]);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [cart, setCart] = useState<CustomerCartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
-
+  const [isNutritionModalOpen, setIsNutritionModalOpen] = useState(false);
 
   const cartItemCount = useMemo(
     () => cart.reduce((sum, item) => sum + item.quantity, 0),
@@ -146,7 +146,8 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
         setIsCartOpen,
         selectedCategory,
         setSelectedCategory,
-
+        isNutritionModalOpen,
+        setIsNutritionModalOpen,
         addToCart,
         updateQuantity,
         removeFromCart,
