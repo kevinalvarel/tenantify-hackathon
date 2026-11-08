@@ -1,168 +1,77 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
-import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "next-themes";
+import { FloatingNavbar } from "@/components/landing/layouts/floating-navbar";
+import AnimatedFooter from "@/components/landing/layouts/footer";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000",
-  ),
-  title: "Tenantify",
-  description: "UMKM Solution Platform",
-};
-
-const anthropicSans = localFont({
-  src: [
-    {
-      path: "../public/fonts/sans/AnthropicSans-Display-Light-Static.woff2",
-      weight: "300",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/sans/AnthropicSans-Display-Regular-Static.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/sans/AnthropicSans-Display-RegularItalic-Static.woff2",
-      weight: "400",
-      style: "italic",
-    },
-    {
-      path: "../public/fonts/sans/AnthropicSans-Display-Medium-Static.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/sans/AnthropicSans-Display-MediumItalic-Static.woff2",
-      weight: "500",
-      style: "italic",
-    },
-    {
-      path: "../public/fonts/sans/AnthropicSans-Display-Semibold-Static.woff2",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/sans/AnthropicSans-Display-Bold-Static.woff2",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/sans/AnthropicSans-Display-BoldItalic-Static.woff2",
-      weight: "700",
-      style: "italic",
-    },
-    {
-      path: "../public/fonts/sans/AnthropicSans-Display-Extrabold-Static.woff2",
-      weight: "800",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/sans/AnthropicSans-Display-ExtraboldItalic-Static.woff2",
-      weight: "800",
-      style: "italic",
-    },
-  ],
-  variable: "--font-anthropic-sans",
-  display: "swap",
-});
-
-const architechDaughterFont = localFont({
-  src: [
-    {
-      path: "../public/fonts/architects/ArchitectsDaughter-Regular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-  ],
-  variable: "--font-architects-daughter",
-  display: "swap",
-});
-
-const anthropicMono = localFont({
-  src: [
-    {
-      path: "../public/fonts/mono/Anthropic_Mono_Web.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/mono/Anthropic_Mono_RegularItalic.woff2",
-      weight: "400",
-      style: "italic",
-    },
-  ],
-  variable: "--font-anthropic-mono",
-  display: "swap",
-});
-
-const anthropicSerif = localFont({
-  src: [
-    {
-      path: "../public/fonts/serif/AnthropicSerif-Display-Regular-Static.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/serif/AnthropicSerif-Display-RegularItalic-Static.woff2",
-      weight: "400",
-      style: "italic",
-    },
-    {
-      path: "../public/fonts/serif/AnthropicSerif-Display-Medium-Static.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/serif/AnthropicSerif-Display-MediumItalic-Static.woff2",
-      weight: "500",
-      style: "italic",
-    },
-    {
-      path: "../public/fonts/serif/AnthropicSerif-Display-Semibold-Static.woff2",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/serif/AnthropicSerif-Display-Bold-Static.woff2",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/serif/AnthropicSerif-Display-BoldItalic-Static.woff2",
-      weight: "700",
-      style: "italic",
-    },
-  ],
-  variable: "--font-anthropic-serif",
-  display: "swap",
-});
-
-export default function RootLayout({
+export default function LandingLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html
-      style={{ colorScheme: "light" }}
-      data-theme="light"
-      lang="id"
-      className={`${anthropicSans.variable} ${anthropicMono.variable} ${anthropicSerif.variable}`}
-      suppressHydrationWarning={true}
-    >
-      <body
-        className={`${anthropicSans.variable} ${anthropicMono.variable} ${anthropicSerif.variable} ${architechDaughterFont.variable} antialiased font-sans`}
-        suppressHydrationWarning={true}
+    <>
+      <div className="site-frame site-frame--top" aria-hidden="true" />
+      <div className="site-frame site-frame--left" aria-hidden="true" />
+      <div className="site-frame site-frame--right" aria-hidden="true" />
+      <div className="site-frame site-frame--bottom" aria-hidden="true" />
+      <svg
+        className="site-corner site-corner--top-left"
+        width="50"
+        height="50"
+        viewBox="0 0 50 50"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
       >
-        <ThemeProvider defaultTheme="light">
-          <TooltipProvider>{children}</TooltipProvider>
-          <Toaster position="top-right" />
-        </ThemeProvider>
-      </body>
-    </html>
+        <path
+          d="M5.50871e-06 0C-0.00788227 37.3001 8.99616 50.0116 50 50H5.50871e-06V0Z"
+          fill="currentColor"
+        />
+      </svg>
+      <svg
+        className="site-corner site-corner--top-right"
+        width="50"
+        height="50"
+        viewBox="0 0 50 50"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M5.50871e-06 0C-0.00788227 37.3001 8.99616 50.0116 50 50H5.50871e-06V0Z"
+          fill="currentColor"
+        />
+      </svg>
+      <svg
+        className="site-corner site-corner--bottom-left"
+        width="50"
+        height="50"
+        viewBox="0 0 50 50"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M5.50871e-06 0C-0.00788227 37.3001 8.99616 50.0116 50 50H5.50871e-06V0Z"
+          fill="currentColor"
+        />
+      </svg>
+      <svg
+        className="site-corner site-corner--bottom-right"
+        width="50"
+        height="50"
+        viewBox="0 0 50 50"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M5.50871e-06 0C-0.00788227 37.3001 8.99616 50.0116 50 50H5.50871e-06V0Z"
+          fill="currentColor"
+        />
+      </svg>
+      <FloatingNavbar />
+
+      <div>{children}</div>
+      <AnimatedFooter />
+    </>
   );
 }
