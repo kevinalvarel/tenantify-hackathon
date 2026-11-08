@@ -1,10 +1,16 @@
 "use client";
 
-import { Building2, Store, ShoppingBag, Sparkles, ArrowRight } from "lucide-react";
+import {
+  Building2,
+  Store,
+  ShoppingBag,
+  Sparkles,
+  ArrowRight,
+} from "lucide-react";
 
 import { GridCross } from "@/components/landing/ui/grid-cross";
 import { StripedPattern } from "@/components/landing/ui/stripped-background";
-import { SERVICE_SYNERGY } from "@/lib/service-content";
+import { SERVICE_SYNERGY } from "@/lib/landing/service-content";
 
 export function ServiceSynergy() {
   const renderStepIcon = (iconName: string) => {
@@ -14,7 +20,9 @@ export function ServiceSynergy() {
       case "store":
         return <Store className="size-5 text-primary" aria-hidden="true" />;
       case "shopping-bag":
-        return <ShoppingBag className="size-5 text-primary" aria-hidden="true" />;
+        return (
+          <ShoppingBag className="size-5 text-primary" aria-hidden="true" />
+        );
       case "sparkles":
       default:
         return <Sparkles className="size-5 text-primary" aria-hidden="true" />;
@@ -22,7 +30,10 @@ export function ServiceSynergy() {
   };
 
   return (
-    <section id="sinergi" className="relative z-10 border-t border-foreground/15">
+    <section
+      id="sinergi"
+      className="relative z-10 border-t border-foreground/15"
+    >
       <StripedPattern className="pointer-events-none absolute inset-0 z-0 text-foreground/15" />
 
       <div className="relative z-10 mx-auto max-w-7xl overflow-hidden border-x border-foreground/15 bg-background px-4 py-16 md:px-16 md:py-24">
@@ -82,7 +93,10 @@ export function ServiceSynergy() {
 
               {index < SERVICE_SYNERGY.steps.length - 1 && (
                 <div className="mt-4 hidden items-center justify-end text-xs font-semibold text-primary lg:flex">
-                  <ArrowRight className="size-4 opacity-50 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+                  <ArrowRight
+                    className="size-4 opacity-50 transition-opacity group-hover:opacity-100"
+                    aria-hidden="true"
+                  />
                 </div>
               )}
             </div>

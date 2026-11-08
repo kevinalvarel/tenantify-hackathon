@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { logout } from "@/servers/auth-server";
-import { useSession } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth/auth-client";
 import { Badge } from "@/components/ui/badge";
 import {
   ChevronsUpDownIcon,

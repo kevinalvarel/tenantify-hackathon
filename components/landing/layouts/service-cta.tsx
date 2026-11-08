@@ -5,11 +5,14 @@ import Link from "next/link";
 import DotGrid from "@/components/landing/ui/dot-grid";
 import { StripedPattern } from "@/components/landing/ui/stripped-background";
 import { Button } from "@/components/ui/button";
-import { SERVICE_CTA } from "@/lib/service-content";
+import { SERVICE_CTA } from "@/lib/landing/service-content";
 
 export function ServiceCta() {
   return (
-    <section id="service-cta" className="relative z-10 border-t border-foreground/15">
+    <section
+      id="service-cta"
+      className="relative z-10 border-t border-foreground/15"
+    >
       <StripedPattern
         className="pointer-events-none absolute inset-0 z-0 text-foreground/20"
         direction="left"

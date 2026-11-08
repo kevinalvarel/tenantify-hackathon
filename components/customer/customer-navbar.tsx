@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { motion, useScroll, useMotionValueEvent } from "motion/react";
 import { useCustomer } from "@/context/customer-context";
-import { useSession } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth/auth-client";
 import { logout } from "@/servers/auth-server";
 import { formatRupiah } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -376,7 +376,9 @@ export function CustomerNavbar() {
                 </span>
               </>
             ) : (
-              <span className="text-[11px] sm:text-xs text-neutral-400 font-semibold">(0)</span>
+              <span className="text-[11px] sm:text-xs text-neutral-400 font-semibold">
+                (0)
+              </span>
             )}
 
             {cartItemCount > 0 && (

@@ -7,7 +7,7 @@ import { Check, ArrowRight, ImageOff } from "lucide-react";
 import { GridCross } from "@/components/landing/ui/grid-cross";
 import { StripedPattern } from "@/components/landing/ui/stripped-background";
 import { Button } from "@/components/ui/button";
-import { SERVICE_ROLES, type ServiceRole } from "@/lib/service-content";
+import { SERVICE_ROLES, type ServiceRole } from "@/lib/landing/service-content";
 import { cn } from "@/lib/utils";
 
 function ServicePreviewShot({ role }: { role: ServiceRole }) {
@@ -47,13 +47,16 @@ function ServicePreviewShot({ role }: { role: ServiceRole }) {
             <ImageOff className="size-6 text-primary" aria-hidden="true" />
           </span>
           <div>
-            <p className="font-sans text-sm font-bold text-foreground">{preview.alt}</p>
+            <p className="font-sans text-sm font-bold text-foreground">
+              {preview.alt}
+            </p>
             <p className="mt-1 font-mono text-xs text-muted-foreground">
               {preview.expectedPath}
             </p>
           </div>
           <p className="max-w-xs text-xs text-muted-foreground">
-            Pratinjau antarmuka riil akan tampil otomatis setelah tangkapan layar ditambahkan.
+            Pratinjau antarmuka riil akan tampil otomatis setelah tangkapan
+            layar ditambahkan.
           </p>
         </div>
       )}
@@ -87,13 +90,17 @@ export function ServiceRoleSection() {
               <div
                 className={cn(
                   "grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16",
-                  isEven && "lg:[&>*:first-child]:order-2 lg:[&>*:last-child]:order-1",
+                  isEven &&
+                    "lg:[&>*:first-child]:order-2 lg:[&>*:last-child]:order-1",
                 )}
               >
                 {/* Text Content Column */}
                 <div className="lg:col-span-7">
                   <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
-                    <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
+                    <span
+                      className="size-1.5 rounded-full bg-primary"
+                      aria-hidden="true"
+                    />
                     <span>{role.badge}</span>
                   </div>
 

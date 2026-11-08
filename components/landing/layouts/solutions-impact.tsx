@@ -3,7 +3,7 @@
 import { Zap, TrendingUp, ShieldCheck, Users } from "lucide-react";
 import { GridCross } from "@/components/landing/ui/grid-cross";
 import { StripedPattern } from "@/components/landing/ui/stripped-background";
-import { SOLUTIONS_IMPACT } from "@/lib/solutions-content";
+import { SOLUTIONS_IMPACT } from "@/lib/landing/solutions-content";
 
 export function SolutionsImpact() {
   const getImpactIcon = (iconName: string) => {
@@ -11,9 +11,13 @@ export function SolutionsImpact() {
       case "zap":
         return <Zap className="size-5 text-primary" aria-hidden="true" />;
       case "trending-up":
-        return <TrendingUp className="size-5 text-primary" aria-hidden="true" />;
+        return (
+          <TrendingUp className="size-5 text-primary" aria-hidden="true" />
+        );
       case "shield-check":
-        return <ShieldCheck className="size-5 text-primary" aria-hidden="true" />;
+        return (
+          <ShieldCheck className="size-5 text-primary" aria-hidden="true" />
+        );
       case "users":
         return <Users className="size-5 text-primary" aria-hidden="true" />;
       default:
@@ -22,7 +26,10 @@ export function SolutionsImpact() {
   };
 
   return (
-    <section id="solusi-impact" className="relative z-10 border-t border-foreground/15">
+    <section
+      id="solusi-impact"
+      className="relative z-10 border-t border-foreground/15"
+    >
       <StripedPattern className="pointer-events-none absolute inset-0 z-0 text-foreground/20" />
 
       <div className="relative z-10 mx-auto max-w-7xl overflow-hidden border-foreground/15 bg-background py-16 md:border-x md:py-24">
@@ -39,7 +46,9 @@ export function SolutionsImpact() {
           </h2>
 
           <p className="mx-auto mt-4 max-w-2xl font-serif text-base text-muted-foreground md:text-lg">
-            Teknologi Tenantify dirancang bukan sekadar untuk mendigitalkan proses, namun untuk melipatgandakan kepuasan belanja dan efisiensi kawasan secara terukur.
+            Teknologi Tenantify dirancang bukan sekadar untuk mendigitalkan
+            proses, namun untuk melipatgandakan kepuasan belanja dan efisiensi
+            kawasan secara terukur.
           </p>
 
           {/* 4 Pillars Grid */}

@@ -11,13 +11,15 @@ import {
 
 import { CloudShader } from "@/components/ui/cloud-shader";
 import { Button } from "@/components/ui/button";
-import { SOLUTIONS_HERO } from "@/lib/solutions-content";
+import { SOLUTIONS_HERO } from "@/lib/landing/solutions-content";
 
 export function SolutionsHero() {
   const getVenueIcon = (targetId: string) => {
     switch (targetId) {
       case "bazaar-festival":
-        return <UtensilsCrossed className="size-5 text-primary" aria-hidden="true" />;
+        return (
+          <UtensilsCrossed className="size-5 text-primary" aria-hidden="true" />
+        );
       case "food-court":
         return <Store className="size-5 text-primary" aria-hidden="true" />;
       case "pop-up-market":

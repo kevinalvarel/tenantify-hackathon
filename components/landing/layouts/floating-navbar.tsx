@@ -16,7 +16,7 @@ import {
   NavbarButton,
 } from "@/components/ui/resizable-navbar";
 import { cn } from "@/lib/utils";
-import { SITE_NAV, isNavItemActive } from "@/lib/site-nav";
+import { SITE_NAV, isNavItemActive } from "@/lib/routes/site-nav";
 
 export function FloatingNavbar() {
   const pathname = usePathname();

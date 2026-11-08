@@ -2,7 +2,7 @@ import Image from "next/image";
 import { ImageOff } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import type { ProductShot as ProductShotData } from "@/lib/product-content";
+import type { ProductShot as ProductShotData } from "@/lib/landing/product-content";
 
 /**
  * A product screenshot, or the frame that names the file it is still waiting
@@ -51,7 +51,8 @@ export function ProductShot({
         {shot.expectedPath}
       </p>
       <p className="font-sans text-xs text-muted-foreground">
-        Tangkapan layar ini belum tersedia. Letakkan berkasnya di lokasi di atas.
+        Tangkapan layar ini belum tersedia. Letakkan berkasnya di lokasi di
+        atas.
       </p>
     </div>
   );

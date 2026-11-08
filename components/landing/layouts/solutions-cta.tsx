@@ -4,11 +4,14 @@ import Link from "next/link";
 import DotGrid from "@/components/landing/ui/dot-grid";
 import { StripedPattern } from "@/components/landing/ui/stripped-background";
 import { Button } from "@/components/ui/button";
-import { SOLUTIONS_CTA } from "@/lib/solutions-content";
+import { SOLUTIONS_CTA } from "@/lib/landing/solutions-content";
 
 export function SolutionsCta() {
   return (
-    <section id="solusi-cta" className="relative z-10 border-t border-foreground/15">
+    <section
+      id="solusi-cta"
+      className="relative z-10 border-t border-foreground/15"
+    >
       <StripedPattern
         className="pointer-events-none absolute inset-0 z-0 text-foreground/20"
         direction="left"

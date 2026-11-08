@@ -12,7 +12,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { DASHBOARD_NAV_BY_ROLE } from "@/lib/dashboard-nav";
+import { DASHBOARD_NAV_BY_ROLE } from "@/lib/routes/dashboard-nav";
 
 export function AppSidebar({
   user,

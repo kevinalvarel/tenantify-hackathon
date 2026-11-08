@@ -1,6 +1,6 @@
 import { GridCross } from "@/components/landing/ui/grid-cross";
 import { StripedPattern } from "@/components/landing/ui/stripped-background";
-import { STEPS } from "@/lib/product-content";
+import { STEPS } from "@/lib/landing/product-content";
 
 export function ProductSteps() {
   return (

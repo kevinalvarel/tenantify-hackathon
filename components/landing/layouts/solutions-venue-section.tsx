@@ -17,7 +17,7 @@ import {
 import { GridCross } from "@/components/landing/ui/grid-cross";
 import { StripedPattern } from "@/components/landing/ui/stripped-background";
 import { Button } from "@/components/ui/button";
-import { VENUE_SOLUTIONS } from "@/lib/solutions-content";
+import { VENUE_SOLUTIONS } from "@/lib/landing/solutions-content";
 import { cn } from "@/lib/utils";
 
 /** Simulated Visual Preview Card for Bazaar & Festival */
@@ -54,7 +54,9 @@ function BazaarPreviewCard() {
         {/* Booth grid map */}
         <div className="mt-2.5 grid grid-cols-3 gap-2">
           <div className="flex flex-col items-center justify-center rounded-lg border border-primary/40 bg-primary/5 p-2 text-center transition-colors">
-            <span className="font-sans text-xs font-bold text-primary">A-01</span>
+            <span className="font-sans text-xs font-bold text-primary">
+              A-01
+            </span>
             <span className="text-[0.65rem] font-medium text-foreground truncate max-w-[80px]">
               Sate Maranggi
             </span>
@@ -64,7 +66,9 @@ function BazaarPreviewCard() {
           </div>
 
           <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-card/60 p-2 text-center">
-            <span className="font-sans text-xs font-bold text-muted-foreground">A-02</span>
+            <span className="font-sans text-xs font-bold text-muted-foreground">
+              A-02
+            </span>
             <span className="text-[0.65rem] font-medium text-foreground truncate max-w-[80px]">
               Nasi Liwet Solo
             </span>
@@ -74,7 +78,9 @@ function BazaarPreviewCard() {
           </div>
 
           <div className="flex flex-col items-center justify-center rounded-lg border border-primary/40 bg-primary/5 p-2 text-center">
-            <span className="font-sans text-xs font-bold text-primary">A-03</span>
+            <span className="font-sans text-xs font-bold text-primary">
+              A-03
+            </span>
             <span className="text-[0.65rem] font-medium text-foreground truncate max-w-[80px]">
               Es Cendol Durian
             </span>
@@ -92,7 +98,9 @@ function BazaarPreviewCard() {
               Smart Cross-Tenant Recommendation
             </p>
             <p className="font-serif text-muted-foreground">
-              Pengunjung memesan <strong>Sate Maranggi (Stan A-01)</strong>. Sistem otomatis merekomendasikan <strong>Es Cendol (Stan A-03)</strong> dengan diskon bundle!
+              Pengunjung memesan <strong>Sate Maranggi (Stan A-01)</strong>.
+              Sistem otomatis merekomendasikan{" "}
+              <strong>Es Cendol (Stan A-03)</strong> dengan diskon bundle!
             </p>
           </div>
         </div>
@@ -101,7 +109,9 @@ function BazaarPreviewCard() {
       {/* Metric snapshot */}
       <div className="grid grid-cols-3 gap-2 border-t border-border/70 pt-2 text-center">
         <div>
-          <span className="font-sans text-xs font-bold text-primary">3x Lebih Cepat</span>
+          <span className="font-sans text-xs font-bold text-primary">
+            3x Lebih Cepat
+          </span>
           <p className="text-[0.65rem] text-muted-foreground">Proses Pesanan</p>
         </div>
         <div>
@@ -150,26 +160,44 @@ function FoodCourtPreviewCard() {
         <div className="space-y-1.5 text-[0.72rem]">
           <div className="flex items-center justify-between rounded-md bg-card/80 px-2.5 py-1.5">
             <div>
-              <p className="font-sans font-semibold text-foreground">Bakmi Ayam Jamur</p>
-              <p className="text-[0.62rem] text-muted-foreground">Stan #02: Bakmi Master</p>
+              <p className="font-sans font-semibold text-foreground">
+                Bakmi Ayam Jamur
+              </p>
+              <p className="text-[0.62rem] text-muted-foreground">
+                Stan #02: Bakmi Master
+              </p>
             </div>
-            <span className="font-sans font-bold text-foreground">Rp 38.000</span>
+            <span className="font-sans font-bold text-foreground">
+              Rp 38.000
+            </span>
           </div>
 
           <div className="flex items-center justify-between rounded-md bg-card/80 px-2.5 py-1.5">
             <div>
-              <p className="font-sans font-semibold text-foreground">Kopi Susu Gula Aren</p>
-              <p className="text-[0.62rem] text-muted-foreground">Stan #08: Kopi Seduh</p>
+              <p className="font-sans font-semibold text-foreground">
+                Kopi Susu Gula Aren
+              </p>
+              <p className="text-[0.62rem] text-muted-foreground">
+                Stan #08: Kopi Seduh
+              </p>
             </div>
-            <span className="font-sans font-bold text-foreground">Rp 20.000</span>
+            <span className="font-sans font-bold text-foreground">
+              Rp 20.000
+            </span>
           </div>
 
           <div className="flex items-center justify-between rounded-md bg-card/80 px-2.5 py-1.5">
             <div>
-              <p className="font-sans font-semibold text-foreground">Pisang Goreng Madu</p>
-              <p className="text-[0.62rem] text-muted-foreground">Stan #11: Camilan Legit</p>
+              <p className="font-sans font-semibold text-foreground">
+                Pisang Goreng Madu
+              </p>
+              <p className="text-[0.62rem] text-muted-foreground">
+                Stan #11: Camilan Legit
+              </p>
             </div>
-            <span className="font-sans font-bold text-foreground">Rp 17.000</span>
+            <span className="font-sans font-bold text-foreground">
+              Rp 17.000
+            </span>
           </div>
         </div>
 
@@ -179,18 +207,23 @@ function FoodCourtPreviewCard() {
             <span className="text-primary">Rp 75.000</span>
           </div>
           <p className="mt-1 font-serif text-[0.65rem] text-muted-foreground">
-            Sistem otomatis mendistribusikan dana ke masing-masing saldo stan dan memotong komisi pengelola secara instan.
+            Sistem otomatis mendistribusikan dana ke masing-masing saldo stan
+            dan memotong komisi pengelola secara instan.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2 border-t border-border/70 pt-2 text-center">
         <div>
-          <span className="font-sans text-xs font-bold text-primary">1 Checkout</span>
+          <span className="font-sans text-xs font-bold text-primary">
+            1 Checkout
+          </span>
           <p className="text-[0.65rem] text-muted-foreground">Multi-Stan</p>
         </div>
         <div>
-          <span className="font-sans text-xs font-bold text-primary">0 Menit</span>
+          <span className="font-sans text-xs font-bold text-primary">
+            0 Menit
+          </span>
           <p className="text-[0.65rem] text-muted-foreground">Rekonsiliasi</p>
         </div>
         <div>
@@ -234,8 +267,12 @@ function PopUpPreviewCard() {
         <div className="space-y-1.5 text-[0.72rem]">
           <div className="flex items-center justify-between rounded-md bg-card/80 px-2.5 py-1.5">
             <div>
-              <p className="font-sans font-semibold text-foreground">Tote Bag Kanvas Lukis</p>
-              <p className="text-[0.62rem] text-muted-foreground">Sisa Stok: 4 buah</p>
+              <p className="font-sans font-semibold text-foreground">
+                Tote Bag Kanvas Lukis
+              </p>
+              <p className="text-[0.62rem] text-muted-foreground">
+                Sisa Stok: 4 buah
+              </p>
             </div>
             <span className="rounded bg-primary/15 px-2 py-0.5 font-sans text-[0.62rem] font-bold text-primary">
               Tersedia
@@ -244,8 +281,12 @@ function PopUpPreviewCard() {
 
           <div className="flex items-center justify-between rounded-md bg-card/80 px-2.5 py-1.5">
             <div>
-              <p className="font-sans font-semibold text-foreground">Lilin Aromaterapi Lavender</p>
-              <p className="text-[0.62rem] text-muted-foreground">Sisa Stok: 1 buah</p>
+              <p className="font-sans font-semibold text-foreground">
+                Lilin Aromaterapi Lavender
+              </p>
+              <p className="text-[0.62rem] text-muted-foreground">
+                Sisa Stok: 1 buah
+              </p>
             </div>
             <span className="rounded bg-amber-500/15 px-2 py-0.5 font-sans text-[0.62rem] font-bold text-amber-700 dark:text-amber-400">
               Hampir Habis
@@ -254,8 +295,12 @@ function PopUpPreviewCard() {
 
           <div className="flex items-center justify-between rounded-md bg-card/80 px-2.5 py-1.5">
             <div>
-              <p className="font-sans font-semibold text-foreground">Cangkir Keramik Handmade</p>
-              <p className="text-[0.62rem] text-muted-foreground">Sisa Stok: 0 buah</p>
+              <p className="font-sans font-semibold text-foreground">
+                Cangkir Keramik Handmade
+              </p>
+              <p className="text-[0.62rem] text-muted-foreground">
+                Sisa Stok: 0 buah
+              </p>
             </div>
             <span className="rounded bg-muted px-2 py-0.5 font-sans text-[0.62rem] font-bold text-muted-foreground">
               Habis Terjual
@@ -264,13 +309,16 @@ function PopUpPreviewCard() {
         </div>
 
         <p className="mt-2 font-serif text-[0.65rem] text-muted-foreground">
-          Kreator cukup memindai QR registrasi dari ponsel untuk mengaktifkan kasir, tanpa memerlukan perangkat keras tambahan.
+          Kreator cukup memindai QR registrasi dari ponsel untuk mengaktifkan
+          kasir, tanpa memerlukan perangkat keras tambahan.
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-2 border-t border-border/70 pt-2 text-center">
         <div>
-          <span className="font-sans text-xs font-bold text-primary">&lt; 5 Menit</span>
+          <span className="font-sans text-xs font-bold text-primary">
+            &lt; 5 Menit
+          </span>
           <p className="text-[0.65rem] text-muted-foreground">Setup Stan</p>
         </div>
         <div>
@@ -317,16 +365,24 @@ function SentraPreviewCard() {
 
         <div className="grid grid-cols-2 gap-2 text-[0.72rem]">
           <div className="rounded-lg bg-card/80 p-2.5">
-            <span className="text-[0.62rem] text-muted-foreground uppercase">Omzet Masuk</span>
-            <p className="font-sans text-sm font-bold text-foreground">Rp 14.850.000</p>
+            <span className="text-[0.62rem] text-muted-foreground uppercase">
+              Omzet Masuk
+            </span>
+            <p className="font-sans text-sm font-bold text-foreground">
+              Rp 14.850.000
+            </p>
             <span className="text-[0.6rem] font-semibold text-emerald-600 dark:text-emerald-400">
               &uarr; 18% dari bln lalu
             </span>
           </div>
 
           <div className="rounded-lg bg-card/80 p-2.5">
-            <span className="text-[0.62rem] text-muted-foreground uppercase">Sewa & Retribusi</span>
-            <p className="font-sans text-sm font-bold text-primary">Rp 1.500.000</p>
+            <span className="text-[0.62rem] text-muted-foreground uppercase">
+              Sewa & Retribusi
+            </span>
+            <p className="font-sans text-sm font-bold text-primary">
+              Rp 1.500.000
+            </p>
             <span className="text-[0.6rem] font-semibold text-muted-foreground">
               Jatuh Tempo: Tgl 01
             </span>
@@ -336,18 +392,25 @@ function SentraPreviewCard() {
         <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 p-2 text-[0.68rem]">
           <CalendarCheck className="size-3.5 text-primary shrink-0" />
           <span className="font-serif text-muted-foreground">
-            Invoice digital bulan depan telah dikirim otomatis kepada pengelola dan pedagang.
+            Invoice digital bulan depan telah dikirim otomatis kepada pengelola
+            dan pedagang.
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2 border-t border-border/70 pt-2 text-center">
         <div>
-          <span className="font-sans text-xs font-bold text-primary">99.2%</span>
-          <p className="text-[0.65rem] text-muted-foreground">Ketertiban Sewa</p>
+          <span className="font-sans text-xs font-bold text-primary">
+            99.2%
+          </span>
+          <p className="text-[0.65rem] text-muted-foreground">
+            Ketertiban Sewa
+          </p>
         </div>
         <div>
-          <span className="font-sans text-xs font-bold text-primary">Otomatis</span>
+          <span className="font-sans text-xs font-bold text-primary">
+            Otomatis
+          </span>
           <p className="text-[0.65rem] text-muted-foreground">Laporan Kas</p>
         </div>
         <div>
@@ -378,7 +441,10 @@ export function SolutionsVenueSection() {
   const [activeTab, setActiveTab] = useState<string>("bazaar-festival");
 
   return (
-    <section id="solusi-venue" className="relative z-10 border-t border-foreground/15">
+    <section
+      id="solusi-venue"
+      className="relative z-10 border-t border-foreground/15"
+    >
       {/* Background patterned stripes */}
       <StripedPattern className="pointer-events-none absolute inset-0 z-0 text-foreground/20" />
 
@@ -397,7 +463,9 @@ export function SolutionsVenueSection() {
           </h2>
 
           <p className="mx-auto mt-4 max-w-3xl font-serif text-base text-muted-foreground md:text-xl">
-            Setiap area komersial memiliki pola transaksi dan tantangan tersendiri. Telusuri bagaimana Tenantify memberikan solusi presisi untuk meningkatkan pengalaman pengunjung dan profitabilitas tenant.
+            Setiap area komersial memiliki pola transaksi dan tantangan
+            tersendiri. Telusuri bagaimana Tenantify memberikan solusi presisi
+            untuk meningkatkan pengalaman pengunjung dan profitabilitas tenant.
           </p>
 
           {/* Interactive quick filter tabs */}
@@ -459,7 +527,9 @@ export function SolutionsVenueSection() {
                     <div className="space-y-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 md:p-5">
                       <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-destructive uppercase">
                         <AlertCircle className="size-4 shrink-0" />
-                        <span>Tantangan Utama di Lapangan (Sebelum Tenantify)</span>
+                        <span>
+                          Tantangan Utama di Lapangan (Sebelum Tenantify)
+                        </span>
                       </div>
                       <ul className="space-y-2">
                         {venue.painPoints.map((pain, i) => (

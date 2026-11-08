@@ -18,7 +18,10 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { ChevronRightIcon } from "lucide-react";
-import type { DashboardNavGroup, DashboardNavItem } from "@/lib/dashboard-nav";
+import type {
+  DashboardNavGroup,
+  DashboardNavItem,
+} from "@/lib/routes/dashboard-nav";
 
 function isPathActive(pathname: string, url: string) {
   return pathname === url || pathname.startsWith(`${url}/`);
@@ -54,9 +57,7 @@ function NavItem({
       className="group/collapsible"
       render={<SidebarMenuItem />}
     >
-      <CollapsibleTrigger
-        render={<SidebarMenuButton tooltip={item.title} />}
-      >
+      <CollapsibleTrigger render={<SidebarMenuButton tooltip={item.title} />}>
         <Icon className="size-4" />
         <span>{item.title}</span>
         <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90" />

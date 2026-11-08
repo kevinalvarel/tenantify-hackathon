@@ -5,7 +5,7 @@ import Link from "next/link";
 import DotGrid from "@/components/landing/ui/dot-grid";
 import { StripedPattern } from "@/components/landing/ui/stripped-background";
 import { Button } from "@/components/ui/button";
-import { CTA } from "@/lib/product-content";
+import { CTA } from "@/lib/landing/product-content";
 
 export function ProductCta() {
   return (

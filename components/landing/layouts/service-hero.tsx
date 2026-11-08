@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowDown, Building2, Store, ShoppingBag } from "lucide-react";
 
 import { CloudShader } from "@/components/ui/cloud-shader";
-import { SERVICE_HERO } from "@/lib/service-content";
+import { SERVICE_HERO } from "@/lib/landing/service-content";
 
 export function ServiceHero() {
   const getRoleIcon = (role: string) => {

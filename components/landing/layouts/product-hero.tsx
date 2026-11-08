@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { CloudShader } from "@/components/ui/cloud-shader";
-import { HERO } from "@/lib/product-content";
+import { HERO } from "@/lib/landing/product-content";
 
 export function ProductHero() {
   return (

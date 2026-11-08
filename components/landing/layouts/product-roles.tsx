@@ -8,7 +8,7 @@ import { GridCross } from "@/components/landing/ui/grid-cross";
 import { ProductShot } from "@/components/landing/ui/product-shot";
 import { StripedPattern } from "@/components/landing/ui/stripped-background";
 import { Button } from "@/components/ui/button";
-import { ROLES } from "@/lib/product-content";
+import { ROLES } from "@/lib/landing/product-content";
 import RubberSegment from "@/components/RubberSegment";
 
 export function ProductRoles() {

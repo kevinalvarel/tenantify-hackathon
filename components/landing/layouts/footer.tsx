@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { SITE_NAV } from "@/lib/site-nav";
+import { SITE_NAV } from "@/lib/routes/site-nav";
 
 /**
  * Tenantify Interactive Kinetic Wordmark Footer — closing panel tailored for
