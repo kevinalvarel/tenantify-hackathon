@@ -5,7 +5,7 @@ import { ServiceHero } from "@/components/landing/layouts/service-hero";
 import { ServiceRoleSection } from "@/components/landing/layouts/service-role-section";
 import { ServiceSynergy } from "@/components/landing/layouts/service-synergy";
 import { SeparatorLanding } from "@/components/landing/ui/separator-landing";
-import { SERVICE_META } from "@/lib/service-content";
+import { SERVICE_META } from "@/lib/landing/service-content";
 
 export function generateMetadata(): Metadata {
   return {

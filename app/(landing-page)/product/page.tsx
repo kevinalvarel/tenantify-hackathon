@@ -5,7 +5,7 @@ import { ProductHero } from "@/components/landing/layouts/product-hero";
 import { ProductRoles } from "@/components/landing/layouts/product-roles";
 import { ProductSteps } from "@/components/landing/layouts/product-steps";
 import { SeparatorLanding } from "@/components/landing/ui/separator-landing";
-import { PRODUCT_META } from "@/lib/product-content";
+import { PRODUCT_META } from "@/lib/landing/product-content";
 
 export function generateMetadata(): Metadata {
   return {

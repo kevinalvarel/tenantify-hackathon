@@ -5,7 +5,7 @@ import { SolutionsHero } from "@/components/landing/layouts/solutions-hero";
 import { SolutionsImpact } from "@/components/landing/layouts/solutions-impact";
 import { SolutionsVenueSection } from "@/components/landing/layouts/solutions-venue-section";
 import { SeparatorLanding } from "@/components/landing/ui/separator-landing";
-import { SOLUTIONS_META } from "@/lib/solutions-content";
+import { SOLUTIONS_META } from "@/lib/landing/solutions-content";
 
 export function generateMetadata(): Metadata {
   return {
