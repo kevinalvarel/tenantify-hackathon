@@ -1,13 +1,11 @@
 import Link from "next/link";
 import { and, eq } from "drizzle-orm";
-import { Building2, CheckCircle2, Search } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { db } from "@/drizzle";
 import { user } from "@/db/schema";
 import { joinAssociationSchema } from "@/validations/auth-validation";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { JoinForm } from "./join-form";
 
 export const instant = false;
 
@@ -20,7 +18,7 @@ export default async function JoinPage({
   const rawCode = Array.isArray(params.code) ? params.code[0] : params.code;
   const submitted = rawCode !== undefined && rawCode.trim() !== "";
 
-  let association: { name: string } | null = null;
+  let association: { name: string; code: string } | null = null;
   let error: string | null = null;
 
   if (submitted) {
@@ -40,7 +38,7 @@ export default async function JoinPage({
         .limit(1);
 
       if (row) {
-        association = row;
+        association = { name: row.name, code: parsed.data.code };
       } else {
         error = "Kode pengelola tidak ditemukan.";
       }
@@ -55,11 +53,13 @@ export default async function JoinPage({
           className="flex items-center justify-center gap-2 font-semibold text-lg"
         >
           <Building2 className="size-6 text-primary" />
-          Tenant<span className="text-primary">ify</span>
+          <div>
+            Tenant<span className="text-primary">ify</span>
+          </div>
         </Link>
 
         <Card>
-          <CardContent className="flex flex-col gap-5 p-6">
+          <CardContent className="flex flex-col gap-5 p-4 sm:p-6">
             <div className="space-y-1 text-center">
               <h1 className="text-2xl font-bold">Temukan Pengelola</h1>
               <p className="text-sm text-balance text-muted-foreground">
@@ -68,42 +68,13 @@ export default async function JoinPage({
               </p>
             </div>
 
-            <form action="/join" method="get" className="flex flex-col gap-3">
-              <Label htmlFor="code">Kode Pengelola</Label>
-              <Input
-                id="code"
-                name="code"
-                defaultValue={rawCode ?? ""}
-                placeholder="Contoh: A3K7PQ"
-                maxLength={6}
-                autoComplete="off"
-                autoCapitalize="characters"
-                className="uppercase tracking-[0.3em]"
-                required
-              />
-              <Button type="submit" className="w-full gap-1.5">
-                <Search className="size-4" />
-                Cari Pengelola
-              </Button>
-            </form>
-
-            {association && (
-              <div className="flex items-start gap-3 rounded-lg border border-emerald-600/30 bg-emerald-600/10 p-3">
-                <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600" />
-                <div>
-                  <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                    Pengelola ditemukan
-                  </p>
-                  <p className="font-semibold">{association.name}</p>
-                </div>
-              </div>
-            )}
-
-            {error && (
-              <p role="alert" className="text-sm text-destructive">
-                {error}
-              </p>
-            )}
+            <JoinForm
+              key={rawCode ?? ""}
+              defaultValue={rawCode ?? ""}
+              initialStatus={error ? "error" : "idle"}
+              association={association}
+              error={error}
+            />
           </CardContent>
         </Card>
       </div>

@@ -10,7 +10,6 @@ export default function CustomerExplorePage() {
 
   return (
     <div className="flex flex-col gap-8 w-full max-w-full min-w-0">
-
       {/* TIX ID Style Automatic Recommendation Banner Slider */}
       <section aria-label="Slide Rekomendasi Menu">
         <RecommendationSlider />
