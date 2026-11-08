@@ -666,7 +666,8 @@ export function ProductExplorer({
               Menu tidak ditemukan
             </p>
             <p className="text-xs max-w-sm mt-1 leading-relaxed">
-              Tidak ada produk yang cocok dengan pencarian atau filter yang dipilih.
+              Tidak ada produk yang cocok dengan pencarian atau filter yang
+              dipilih.
             </p>
             <Button
               variant="outline"

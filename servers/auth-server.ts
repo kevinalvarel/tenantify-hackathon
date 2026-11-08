@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/drizzle";
 import { user } from "@/db/schema";
+import { assignAssociationCode } from "@/lib/association-code";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import {
@@ -83,9 +84,11 @@ export const signUp = async (data: TRegisterSchema): Promise<AuthResponse> => {
       .set({ role: "association" })
       .where(eq(user.id, createdUser.id));
 
+    const associationCode = await assignAssociationCode(createdUser.id);
+
     return {
       success: true,
-      message: "Pendaftaran akun Association berhasil",
+      message: `Pendaftaran akun Association berhasil. Kode pengelola Anda: ${associationCode}`,
     };
   } catch (error) {
     const err = error as { message?: string; body?: { message?: string } };

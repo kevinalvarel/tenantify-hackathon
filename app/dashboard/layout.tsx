@@ -2,9 +2,13 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { Suspense } from "react";
-import DashboardPage from "./page";
 
-export default async function DashboardLayout({
+// Opt out of instant navigation validation — this layout intentionally
+// reads the session (request-time data) and blocks until it resolves.
+// See: https://nextjs.org/docs/messages/blocking-prerender-dynamic
+export const instant = false;
+
+async function AuthenticatedShell({
   children,
 }: {
   children: React.ReactNode;
@@ -22,10 +26,18 @@ export default async function DashboardLayout({
       }
     : undefined;
 
+  return <DashboardShell user={user}>{children}</DashboardShell>;
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <main>
-      <Suspense fallback={<DashboardPage />}>
-        <DashboardShell user={user}>{children}</DashboardShell>;
+      <Suspense fallback={null}>
+        <AuthenticatedShell>{children}</AuthenticatedShell>
       </Suspense>
     </main>
   );

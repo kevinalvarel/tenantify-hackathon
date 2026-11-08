@@ -20,6 +20,19 @@ export const registerSchema = z
 export type TLoginSchema = z.infer<typeof loginSchema>;
 export type TRegisterSchema = z.infer<typeof registerSchema>;
 
+export const joinAssociationSchema = z.object({
+  code: z
+    .string()
+    .transform((value) => value.trim().toUpperCase())
+    .pipe(
+      z
+        .string()
+        .regex(/^[A-Z0-9]{6}$/, "Kode pengelola harus 6 karakter"),
+    ),
+});
+
+export type TJoinAssociationSchema = z.infer<typeof joinAssociationSchema>;
+
 export const createSellerSchema = z.object({
   name: z.string().min(3, "Nama lengkap pemilik minimal 3 karakter"),
   email: z.string().email("Format email tidak valid"),

@@ -2,7 +2,8 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/drizzle";
-import { tenants, boothSlots } from "@/db/schema";
+import { user, tenants, boothSlots } from "@/db/schema";
+import { assignAssociationCode } from "@/lib/association-code";
 import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import {
@@ -186,10 +187,11 @@ export async function createAssociationAccountAction(
     }
 
     const associationUser = response.user;
+    const associationCode = await assignAssociationCode(associationUser.id);
 
     return {
       success: true,
-      message: `Akun Association (${associationUser.email}) berhasil dibuat!`,
+      message: `Akun Association (${associationUser.email}) berhasil dibuat! Kode pengelola: ${associationCode}`,
       user: {
         id: associationUser.id,
         name: associationUser.name,
@@ -213,3 +215,47 @@ export async function createAssociationAccountAction(
 
 // Alias untuk kompatibilitas ke belakang
 export const createProviderAccountAction = createAssociationAccountAction;
+
+/**
+ * Membuat kode unik untuk Association yang belum memilikinya.
+ */
+export async function ensureAssociationCodeAction(): Promise<{
+  success: boolean;
+  message: string;
+  code?: string;
+}> {
+  try {
+    const headerList = await headers();
+    const session = await auth.api.getSession({
+      headers: headerList,
+    });
+
+    if (!session) {
+      return { success: false, message: "Sesi tidak valid. Silakan login kembali." };
+    }
+
+    const role = (session.user as { role?: string }).role;
+    if (role !== "association" && role !== "developer") {
+      return { success: false, message: "Hanya Association yang dapat membuat kode pengelola." };
+    }
+
+    const [row] = await db
+      .select({ code: user.associationCode })
+      .from(user)
+      .where(eq(user.id, session.user.id))
+      .limit(1);
+
+    if (row?.code) {
+      return { success: true, message: "Kode pengelola sudah tersedia", code: row.code };
+    }
+
+    const code = await assignAssociationCode(session.user.id);
+    return { success: true, message: "Kode pengelola berhasil dibuat", code };
+  } catch (error) {
+    const err = error as { message?: string; body?: { message?: string } };
+    return {
+      success: false,
+      message: err.body?.message || err.message || "Gagal membuat kode pengelola.",
+    };
+  }
+}
