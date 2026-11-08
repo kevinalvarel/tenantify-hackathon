@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="bgKulit" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF3C7"/>
+      <stop offset="50%" stop-color="#FDE68A"/>
+      <stop offset="100%" stop-color="#FCD34D"/>
+    </linearGradient>
+    <filter id="shadowKulit" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#92400E" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+
+  <rect width="400" height="300" fill="url(#bgKulit)"/>
+
+  <!-- Subtle background dots -->
+  <g opacity="0.08" fill="#B45309">
+    <circle cx="50" cy="50" r="4"/><circle cx="90" cy="80" r="3"/>
+    <circle cx="340" cy="60" r="4"/><circle cx="370" cy="110" r="3"/>
+    <circle cx="40" cy="220" r="3"/><circle cx="80" cy="260" r="4"/>
+    <circle cx="330" cy="240" r="4"/><circle cx="360" cy="210" r="3"/>
+  </g>
+
+  <!-- Snack Bowl / Basket -->
+  <g filter="url(#shadowKulit)">
+    <!-- Bowl exterior -->
+    <ellipse cx="200" cy="190" rx="110" ry="40" fill="#78350F" opacity="0.2"/>
+    <path d="M110,140 Q200,160 290,140 L270,195 Q200,215 130,195 Z" fill="#D97706"/>
+    <ellipse cx="200" cy="140" rx="90" ry="25" fill="#B45309"/>
+    <ellipse cx="200" cy="138" rx="86" ry="22" fill="#FEF3C7"/>
+
+    <!-- Piled Crispy Golden Chicken Skins -->
+    <g>
+      <!-- Piece 1 -->
+      <path d="M150,130 C135,115 155,100 175,105 C185,110 180,125 165,135 Z" fill="#D97706"/>
+      <path d="M154,126 C142,115 158,105 172,110 C180,114 176,124 164,130 Z" fill="#F59E0B"/>
+      <!-- Piece 2 -->
+      <path d="M220,130 C205,110 225,95 245,102 C260,110 250,128 235,135 Z" fill="#B45309"/>
+      <path d="M224,127 C212,112 228,100 242,106 C252,112 245,125 233,130 Z" fill="#D97706"/>
+      <!-- Center top piece -->
+      <path d="M175,110 C165,90 195,78 215,85 C230,92 225,115 205,120 C188,122 182,118 175,110 Z" fill="#D97706"/>
+      <path d="M180,106 C172,92 195,83 210,89 C222,95 218,112 202,115 C190,117 185,112 180,106 Z" fill="#FBBF24"/>
+      <!-- Golden crunchy ridges & folds -->
+      <path d="M185,96 Q195,102 205,94" stroke="#78350F" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M155,118 Q165,122 172,115" stroke="#78350F" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M225,115 Q235,120 242,112" stroke="#78350F" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+      <!-- Chili Flakes & Daun Jeruk (Lime leaf bits) -->
+      <!-- Red chili flakes -->
+      <g fill="#DC2626">
+        <circle cx="178" cy="102" r="2"/><circle cx="198" cy="92" r="1.5"/>
+        <circle cx="212" cy="104" r="2"/><circle cx="162" cy="122" r="1.5"/>
+        <circle cx="230" cy="120" r="2"/><circle cx="190" cy="112" r="2.5"/>
+      </g>
+      <!-- Green lime leaf bits -->
+      <g fill="#15803D">
+        <rect x="170" y="112" width="5" height="2" rx="1" transform="rotate(35 170 112)"/>
+        <rect x="204" y="98" width="6" height="2" rx="1" transform="rotate(-20 204 98)"/>
+        <rect x="218" y="112" width="5" height="2" rx="1" transform="rotate(45 218 112)"/>
+      </g>
+    </g>
+
+    <!-- Dipping Sauce small ramekin -->
+    <g transform="translate(60, 20)">
+      <ellipse cx="230" cy="165" rx="22" ry="12" fill="#FAFAFA" stroke="#E5E7EB" stroke-width="2"/>
+      <ellipse cx="230" cy="164" rx="18" ry="9" fill="#DC2626"/>
+      <ellipse cx="232" cy="162" rx="12" ry="5" fill="#EF4444"/>
+    </g>
+  </g>
+
+  <!-- Watermark / Placeholder Badge -->
+  <g transform="translate(16, 16)">
+    <rect width="118" height="24" rx="12" fill="#FFFFFF" fill-opacity="0.9" stroke="#D97706" stroke-width="1"/>
+    <path d="M12,15 A3,3 0 1,0 18,15 A3,3 0 1,0 12,15 M8,9 L10,7 L20,7 L22,9 L25,9 A2,2 0 0,1 27,11 L27,19 A2,2 0 0,1 25,21 L5,21 A2,2 0 0,1 3,19 L3,11 A2,2 0 0,1 5,9 Z" fill="none" stroke="#D97706" stroke-width="1.2" transform="scale(0.7) translate(3, 4)"/>
+    <text x="32" y="16" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#92400E">Camilan Gurih</text>
+  </g>
+</svg>
