@@ -110,17 +110,17 @@ export const DEVELOPER_NAV: DashboardNavGroup[] = [
     items: [
       {
         title: "Jelajah Menu",
-        url: "/dashboard/customer",
+        url: "/customer",
         icon: UtensilsCrossed,
       },
       {
         title: "Riwayat Pesanan",
-        url: "/dashboard/customer/orders",
+        url: "/customer/orders",
         icon: ReceiptText,
       },
       {
         title: "Denah Tenant",
-        url: "/dashboard/customer/map",
+        url: "/customer/map",
         icon: MapPin,
       },
     ],
