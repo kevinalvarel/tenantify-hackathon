@@ -7,6 +7,7 @@ import {
   CustomerOrder,
   Tenant,
 } from "@/types/customer";
+import { demoProducts, demoTenants } from "@/data/customer-demo";
 import { toast } from "sonner";
 
 type CustomerContextType = {
@@ -34,8 +35,8 @@ type CustomerContextType = {
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
 
 export function CustomerProvider({ children }: { children: React.ReactNode }) {
-  const [products] = useState<CustomerProduct[]>([]);
-  const [tenants] = useState<Tenant[]>([]);
+  const [products] = useState<CustomerProduct[]>(demoProducts);
+  const [tenants] = useState<Tenant[]>(demoTenants);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [cart, setCart] = useState<CustomerCartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);

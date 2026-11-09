@@ -18,8 +18,7 @@ import {
   useTransform,
   type MotionValue,
 } from "motion/react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Tick02Icon } from "@hugeicons/core-free-icons";
+import { Check } from "lucide-react";
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 const WASH_IN = 0.3;
@@ -546,10 +545,9 @@ const CodeSlots: React.FC<CodeSlotsProps> = ({
             className="grid place-items-center motion-reduce:transform-none! motion-reduce:[transition:opacity_150ms_ease]"
             style={{ transform: checkTransform, opacity: checkOpacity }}
           >
-            <HugeiconsIcon
-              icon={Tick02Icon}
+            <Check
               size={Math.round(slotSize * 0.6)}
-              strokeWidth={2.2}
+              strokeWidth={2.5}
             />
           </motion.span>
         </motion.span>

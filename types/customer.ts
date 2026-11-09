@@ -34,6 +34,7 @@ export type CustomerProduct = {
   category: "Makanan" | "Minuman" | "Camilan" | "Paket Hemat" | string;
   mcdCategory?: string;
   price: number;
+  originalPrice?: number;
   description: string;
   rating: number;
   image?: string;
