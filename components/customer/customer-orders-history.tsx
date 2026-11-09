@@ -36,8 +36,10 @@ export function CustomerOrdersHistory({
   orders,
   onReorder,
 }: CustomerOrdersHistoryProps) {
-  const [selectedFilter, setSelectedFilter] = useState<(typeof statusFilters)[number]>("Semua");
-  const [activeCodeDialogOrder, setActiveCodeDialogOrder] = useState<CustomerOrder | null>(null);
+  const [selectedFilter, setSelectedFilter] =
+    useState<(typeof statusFilters)[number]>("Semua");
+  const [activeCodeDialogOrder, setActiveCodeDialogOrder] =
+    useState<CustomerOrder | null>(null);
 
   const filteredOrders = orders.filter((order) => {
     if (selectedFilter === "Semua") return true;
@@ -55,28 +57,40 @@ export function CustomerOrdersHistory({
     switch (status) {
       case "Diterima":
         return (
-          <Badge variant="outline" className="border-amber-500/30 text-amber-600 gap-1">
+          <Badge
+            variant="outline"
+            className="border-amber-500/30 text-amber-600 gap-1"
+          >
             <Clock className="size-3" />
             Menunggu Konfirmasi
           </Badge>
         );
       case "Disiapkan":
         return (
-          <Badge variant="secondary" className="border-primary/30 text-primary gap-1">
+          <Badge
+            variant="secondary"
+            className="border-primary/30 text-primary gap-1"
+          >
             <ChefHat className="size-3" />
             Sedang Dimasak
           </Badge>
         );
       case "Siap Diambil":
         return (
-          <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-600 text-white gap-1 animate-pulse">
+          <Badge
+            variant="default"
+            className="bg-emerald-600 hover:bg-emerald-600 text-white gap-1 animate-pulse"
+          >
             <BellRing className="size-3" />
             Siap Diambil di Booth!
           </Badge>
         );
       case "Selesai":
         return (
-          <Badge variant="outline" className="text-emerald-700 dark:text-emerald-400 gap-1 border-emerald-500/30">
+          <Badge
+            variant="outline"
+            className="text-emerald-700 dark:text-emerald-400 gap-1 border-emerald-500/30"
+          >
             <CheckCircle2 className="size-3" />
             Selesai
           </Badge>
@@ -112,13 +126,13 @@ export function CustomerOrdersHistory({
               tab === "Semua"
                 ? orders.length
                 : tab === "Berjalan"
-                ? orders.filter(
-                    (o) =>
-                      o.status === "Diterima" ||
-                      o.status === "Disiapkan" ||
-                      o.status === "Siap Diambil"
-                  ).length
-                : orders.filter((o) => o.status === tab).length;
+                  ? orders.filter(
+                      (o) =>
+                        o.status === "Diterima" ||
+                        o.status === "Disiapkan" ||
+                        o.status === "Siap Diambil",
+                    ).length
+                  : orders.filter((o) => o.status === tab).length;
 
             return (
               <Button
@@ -160,8 +174,8 @@ export function CustomerOrdersHistory({
                 order.status === "Siap Diambil"
                   ? "border-emerald-500/50 bg-emerald-500/5 shadow-xs"
                   : isOngoing
-                  ? "border-primary/30 bg-card"
-                  : "bg-card"
+                    ? "border-primary/30 bg-card"
+                    : "bg-card"
               }`}
             >
               <CardHeader className="p-4 pb-3 border-b">
@@ -170,8 +184,13 @@ export function CustomerOrdersHistory({
                     <span className="font-mono font-bold text-sm text-foreground">
                       #{order.id}
                     </span>
-                    <span className="text-xs text-muted-foreground">• {order.createdAt}</span>
-                    <Badge variant="secondary" className="text-xs font-mono font-bold text-primary">
+                    <span className="text-xs text-muted-foreground">
+                      • {order.createdAt}
+                    </span>
+                    <Badge
+                      variant="secondary"
+                      className="text-xs font-mono font-bold text-primary"
+                    >
                       Kode: {order.pickupCode}
                     </Badge>
                   </div>
@@ -182,13 +201,25 @@ export function CustomerOrdersHistory({
                 {isOngoing && (
                   <div className="mt-3 pt-2 border-t">
                     <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground mb-1.5">
-                      <span className={currentStep >= 1 ? "text-primary font-bold" : ""}>
+                      <span
+                        className={
+                          currentStep >= 1 ? "text-primary font-bold" : ""
+                        }
+                      >
                         1. Diterima
                       </span>
-                      <span className={currentStep >= 2 ? "text-primary font-bold" : ""}>
+                      <span
+                        className={
+                          currentStep >= 2 ? "text-primary font-bold" : ""
+                        }
+                      >
                         2. Disiapkan
                       </span>
-                      <span className={currentStep >= 3 ? "text-emerald-600 font-bold" : ""}>
+                      <span
+                        className={
+                          currentStep >= 3 ? "text-emerald-600 font-bold" : ""
+                        }
+                      >
                         3. Siap Diambil
                       </span>
                     </div>
@@ -220,7 +251,10 @@ export function CustomerOrdersHistory({
 
                   <div className="divide-y border rounded-xl p-3 bg-muted/20 flex flex-col gap-1.5">
                     {order.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-start text-xs py-1">
+                      <div
+                        key={idx}
+                        className="flex justify-between items-start text-xs py-1"
+                      >
                         <div>
                           <p className="font-bold text-foreground">
                             {item.quantity}x {item.productName}
@@ -229,7 +263,9 @@ export function CustomerOrdersHistory({
                             Dari: {item.tenantName}
                           </p>
                           {item.notes && (
-                            <p className="text-[10px] text-primary italic">Note: {item.notes}</p>
+                            <p className="text-[10px] text-primary italic">
+                              Note: {item.notes}
+                            </p>
                           )}
                         </div>
                         <span className="font-mono text-muted-foreground">
@@ -246,7 +282,9 @@ export function CustomerOrdersHistory({
                     <span className="text-[11px] text-muted-foreground">
                       Total Pembayaran ({order.paymentMethod}):
                     </span>
-                    <p className="text-base font-bold text-primary">{formatRupiah(order.total)}</p>
+                    <p className="text-base font-bold text-primary">
+                      {formatRupiah(order.total)}
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -265,7 +303,9 @@ export function CustomerOrdersHistory({
                       size="sm"
                       onClick={() => {
                         onReorder(order);
-                        toast.success("Menu dari pesanan ini dimasukkan kembali ke keranjang!");
+                        toast.success(
+                          "Menu dari pesanan ini dimasukkan kembali ke keranjang!",
+                        );
                       }}
                       className="gap-1.5 text-xs font-semibold"
                     >
@@ -282,9 +322,12 @@ export function CustomerOrdersHistory({
         {filteredOrders.length === 0 && (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed p-12 text-center text-muted-foreground">
             <ShoppingBag className="size-10 mb-2 opacity-40" />
-            <p className="text-sm font-semibold text-foreground">Belum Ada Riwayat Pesanan</p>
+            <p className="text-sm font-semibold text-foreground">
+              Belum Ada Riwayat Pesanan
+            </p>
             <p className="text-xs max-w-sm mt-0.5">
-              Pesanan kuliner yang Anda buat di bazaar akan tercatat di sini lengkap dengan pemantauan status real-time.
+              Pesanan kuliner yang Anda buat di bazaar akan tercatat di sini
+              lengkap dengan pemantauan status real-time.
             </p>
           </div>
         )}
@@ -298,7 +341,9 @@ export function CustomerOrdersHistory({
         >
           <DialogContent className="sm:max-w-sm text-center">
             <DialogHeader>
-              <DialogTitle className="text-center font-bold">Kode Pengambilan Pesanan</DialogTitle>
+              <DialogTitle className="text-center font-bold">
+                Kode Pengambilan Pesanan
+              </DialogTitle>
             </DialogHeader>
 
             <div className="flex flex-col items-center gap-3 p-4 bg-muted/40 rounded-xl border">

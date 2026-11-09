@@ -156,13 +156,13 @@ export function CustomerNavbar() {
 
     toast.success(`Filter: Kategori "${categoryName}"`);
 
-    if (pathname === "/dashboard/customer") {
+    if (pathname === "/customer") {
       const catalogEl = document.getElementById("explore-catalog");
       if (catalogEl) {
         catalogEl.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     } else {
-      router.push("/dashboard/customer");
+      router.push("/customer");
     }
   };
 
@@ -202,7 +202,7 @@ export function CustomerNavbar() {
       >
         {/* Left: Brand Logo (Tanpa background hitam) */}
         <Link
-          href="/dashboard/customer"
+          href="/customer"
           onClick={() => setSelectedCategory("Semua")}
           className="flex items-center shrink-0 transition-transform active:scale-95 group px-1 sm:px-1.5"
           aria-label="Tenantify Home"
@@ -221,11 +221,11 @@ export function CustomerNavbar() {
         <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0">
           {/* 1. Home */}
           <Link
-            href="/dashboard/customer"
+            href="/customer"
             onClick={() => setSelectedCategory("Semua")}
             className={cn(
               "px-3.5 py-1.5 rounded-full text-xs sm:text-[13px] font-semibold transition-colors select-none",
-              pathname === "/dashboard/customer" && selectedCategory === "Semua"
+              pathname === "/customer" && selectedCategory === "Semua"
                 ? "text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-800"
                 : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
             )}
@@ -326,10 +326,10 @@ export function CustomerNavbar() {
 
           {/* 3. Pesanan */}
           <Link
-            href="/dashboard/customer/orders"
+            href="/customer/orders"
             className={cn(
               "px-3.5 py-1.5 rounded-full text-xs sm:text-[13px] font-semibold transition-colors select-none flex items-center gap-1.5",
-              pathname.startsWith("/dashboard/customer/orders")
+              pathname.startsWith("/customer/orders")
                 ? "text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-800"
                 : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
             )}
@@ -344,10 +344,10 @@ export function CustomerNavbar() {
 
           {/* 4. Denah Bazaar */}
           <Link
-            href="/dashboard/customer/map"
+            href="/customer/map"
             className={cn(
               "px-3.5 py-1.5 rounded-full text-xs sm:text-[13px] font-semibold transition-colors select-none",
-              pathname.startsWith("/dashboard/customer/map")
+              pathname.startsWith("/customer/map")
                 ? "text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-800"
                 : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
             )}
@@ -510,14 +510,14 @@ export function CustomerNavbar() {
           )}
         >
           <Link
-            href="/dashboard/customer"
+            href="/customer"
             onClick={() => {
               setSelectedCategory("Semua");
               setMobileMenuOpen(false);
             }}
             className={cn(
               "flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold transition-colors",
-              pathname === "/dashboard/customer" && selectedCategory === "Semua"
+              pathname === "/customer" && selectedCategory === "Semua"
                 ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950"
                 : "text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800",
             )}
@@ -555,11 +555,11 @@ export function CustomerNavbar() {
           <Separator className="my-1 bg-neutral-200 dark:bg-neutral-800" />
 
           <Link
-            href="/dashboard/customer/orders"
+            href="/customer/orders"
             onClick={() => setMobileMenuOpen(false)}
             className={cn(
               "flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold transition-colors",
-              pathname.startsWith("/dashboard/customer/orders")
+              pathname.startsWith("/customer/orders")
                 ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950"
                 : "text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800",
             )}
@@ -573,11 +573,11 @@ export function CustomerNavbar() {
           </Link>
 
           <Link
-            href="/dashboard/customer/map"
+            href="/customer/map"
             onClick={() => setMobileMenuOpen(false)}
             className={cn(
               "flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold transition-colors",
-              pathname.startsWith("/dashboard/customer/map")
+              pathname.startsWith("/customer/map")
                 ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950"
                 : "text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800",
             )}

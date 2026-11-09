@@ -20,13 +20,13 @@ export async function proxy(request: NextRequest) {
         return "/dashboard/seller";
       case "customer":
       default:
-        return "/dashboard/customer";
+        return "/customer";
     }
   };
 
-  // 1. Autentikasi Dashboard
+  // 1. Autentikasi Dashboard & Customer
   if (!session) {
-    if (pathname.startsWith("/dashboard")) {
+    if (pathname.startsWith("/dashboard") || pathname.startsWith("/customer")) {
       const signInUrl = new URL("/auth/sign-in", request.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(signInUrl);
@@ -69,9 +69,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Role 'customer' hanya boleh mengakses /dashboard/customer
-  if (pathname.startsWith("/dashboard/customer")) {
-    if (role !== "customer") {
+  // Role 'customer' hanya boleh mengakses /customer
+  if (pathname.startsWith("/customer")) {
+    if (role !== "customer" && role !== "developer") {
       return NextResponse.redirect(
         new URL(getRoleDashboard(role), request.url),
       );
@@ -86,6 +86,8 @@ export const config = {
   matcher: [
     "/dashboard",
     "/dashboard/:path*",
+    "/customer",
+    "/customer/:path*",
     "/auth/sign-in",
     "/auth/sign-up",
   ],
