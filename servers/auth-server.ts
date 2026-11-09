@@ -104,6 +104,48 @@ export const signUp = async (data: TRegisterSchema): Promise<AuthResponse> => {
   }
 };
 
+export const signUpCustomer = async (
+  data: TRegisterSchema,
+): Promise<AuthResponse> => {
+  try {
+    const validated = registerSchema.safeParse(data);
+    if (!validated.success) {
+      return {
+        success: false,
+        message:
+          validated.error.issues[0]?.message || "Format data tidak valid",
+      };
+    }
+
+    const headerList = await headers();
+
+    await auth.api.signUpEmail({
+      body: {
+        name: validated.data.name,
+        email: validated.data.email,
+        password: validated.data.password,
+      },
+      headers: headerList,
+    });
+
+    return {
+      success: true,
+      message: "Pendaftaran akun pembeli berhasil.",
+    };
+  } catch (error) {
+    const err = error as { message?: string; body?: { message?: string } };
+    const errorMessage =
+      err.body?.message ||
+      err.message ||
+      "Gagal membuat akun baru. Email mungkin sudah terdaftar.";
+
+    return {
+      success: false,
+      message: errorMessage,
+    };
+  }
+};
+
 export const logout = async (): Promise<AuthResponse> => {
   try {
     const headerList = await headers();

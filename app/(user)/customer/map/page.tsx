@@ -9,7 +9,7 @@ export default function CustomerMapPage() {
   const { tenants } = useCustomer();
 
   const handleSelectTenant = () => {
-    router.push("/dashboard/customer");
+    router.push("/customer");
   };
 
   return (
