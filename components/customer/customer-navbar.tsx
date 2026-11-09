@@ -90,27 +90,33 @@ export function CustomerNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const [foodDropdownOpen, setFoodDropdownOpen] = React.useState(false);
-  const [isScrolled, setIsScrolled] = React.useState(false);
+  const [isVisible, setIsVisible] = React.useState(true);
 
   const { scrollY } = useScroll();
+  const lastScrollY = React.useRef(0);
 
   useMotionValueEvent(scrollY, "change", (latest: number) => {
-    // Hysteresis prevents flicker near the boundary
-    if (latest > 25 && !isScrolled) {
-      setIsScrolled(true);
-    } else if (latest < 10 && isScrolled) {
-      setIsScrolled(false);
-    }
-  });
+    const previous = lastScrollY.current;
+    const diff = latest - previous;
 
-  React.useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      if (scrollY.get() > 25) {
-        setIsScrolled(true);
+    // Selalu tampilkan jika posisi di dekat bagian paling atas (<= 30px)
+    if (latest <= 30) {
+      setIsVisible(true);
+    } else if (Math.abs(diff) > 5) {
+      // Jika dropdown atau mobile menu sedang terbuka, tetap tampilkan
+      if (mobileMenuOpen || foodDropdownOpen) {
+        setIsVisible(true);
+      } else if (diff > 0) {
+        // Scroll ke bawah -> sembunyikan navbar
+        setIsVisible(false);
+      } else if (diff < 0) {
+        // Scroll ke atas -> munculkan kembali navbar
+        setIsVisible(true);
       }
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [scrollY]);
+    }
+
+    lastScrollY.current = latest;
+  });
 
   const user = session?.user;
   const userName = user?.name || "Pelanggan";
@@ -156,84 +162,88 @@ export function CustomerNavbar() {
 
     toast.success(`Filter: Kategori "${categoryName}"`);
 
-    if (pathname === "/customer") {
-      const catalogEl = document.getElementById("explore-catalog");
+    if (pathname === "/customer" || pathname === "/dashboard/customer") {
+      const catalogEl = document.getElementById("pilihan-menu") || document.getElementById("explore-catalog");
       if (catalogEl) {
         catalogEl.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     } else {
-      router.push("/customer");
+      router.push("/customer#pilihan-menu");
     }
   };
 
   const isFoodTypeActive = foodTypes.some((f) => f.name === selectedCategory);
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-40 w-full flex flex-col items-center transition-[background-color,border-color,box-shadow,padding] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-        isScrolled
-          ? "pointer-events-none bg-transparent border-b-transparent px-3 sm:px-6"
-          : "pointer-events-auto bg-white/95 dark:bg-[#0c0d12]/95 backdrop-blur-md border-b border-neutral-200/80 dark:border-neutral-800 px-0 shadow-xs",
-      )}
-    >
+    <header className="fixed top-3 inset-x-0 z-50 px-3 sm:px-6 pointer-events-none flex flex-col items-center">
       <motion.div
         initial={false}
         animate={{
-          y: isScrolled ? 10 : 0,
-          maxWidth: isScrolled ? "820px" : "1400px",
-          borderRadius: isScrolled ? 9999 : 0,
-          boxShadow: isScrolled
-            ? "0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08)"
-            : "0 0 0 0 rgba(0, 0, 0, 0)",
+          y: isVisible ? 0 : -90,
+          opacity: isVisible ? 1 : 0,
         }}
         transition={{
-          type: "spring",
-          stiffness: 260,
-          damping: 28,
-          mass: 0.8,
+          duration: 0.28,
+          ease: [0.16, 1, 0.3, 1],
         }}
         className={cn(
-          "pointer-events-auto w-full flex items-center justify-between transition-[padding,gap,border-color,background-color] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md",
-          isScrolled
-            ? "p-1.5 sm:p-2 gap-2 sm:gap-4 lg:gap-6 border border-neutral-200/90 dark:border-neutral-800/90"
-            : "px-4 sm:px-8 py-2.5 sm:py-3 gap-3 sm:gap-6 border-b border-neutral-200/80 dark:border-neutral-800 border-t-transparent border-x-transparent",
+          "pointer-events-auto w-full max-w-[1240px] flex items-center justify-between px-3 sm:px-5 lg:px-6 py-2 sm:py-2.5 rounded-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border border-neutral-200/90 dark:border-neutral-800/90 shadow-lg shadow-black/5 min-w-0 transition-shadow",
+          !isVisible && "pointer-events-none",
         )}
       >
-        {/* Left: Brand Logo (Tanpa background hitam) */}
+        {/* Left: Brand Logo */}
         <Link
           href="/customer"
           onClick={() => setSelectedCategory("Semua")}
-          className="flex items-center shrink-0 transition-transform active:scale-95 group px-1 sm:px-1.5"
+          className="flex items-center gap-2 shrink-0 transition-transform active:scale-95 group px-1 sm:px-1.5"
           aria-label="Tenantify Home"
         >
           <Image
-            src="/icons/tenantify-logo.png"
+            src="/icons/tenantify.png"
             alt="Tenantify Logo"
-            width={36}
-            height={36}
+            width={32}
+            height={32}
             priority
-            className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105"
+            className="h-7 sm:h-8 w-auto object-contain transition-transform group-hover:scale-105"
           />
+          <span className="font-extrabold text-base sm:text-lg tracking-tight text-neutral-900 dark:text-neutral-100 hidden sm:inline">
+            TENANT<span className="text-[#c85a32]">IFY</span>
+          </span>
         </Link>
 
         {/* Center: Clean Title-Case Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0">
-          {/* 1. Home */}
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink min-w-0">
+          {/* 1. Beranda */}
           <Link
             href="/customer"
             onClick={() => setSelectedCategory("Semua")}
             className={cn(
-              "px-3.5 py-1.5 rounded-full text-xs sm:text-[13px] font-semibold transition-colors select-none",
-              pathname === "/customer" && selectedCategory === "Semua"
-                ? "text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-800"
+              "px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-colors select-none whitespace-nowrap",
+              (pathname === "/customer" || pathname === "/dashboard/customer") && selectedCategory === "Semua"
+                ? "text-white bg-[#c85a32] shadow-sm"
                 : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
             )}
           >
-            Home
+            Beranda
           </Link>
 
-          {/* 2. Jenis Makanan Dropdown */}
+          {/* 2. Pilihan Makanan */}
+          <a
+            href="#pilihan-menu"
+            className="px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold text-neutral-600 dark:text-neutral-300 hover:text-[#c85a32] hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50 transition-colors select-none whitespace-nowrap"
+          >
+            Pilihan Makanan
+          </a>
+
+          {/* 3. Tenant Favorit */}
+          <a
+            href="#katering-section"
+            className="px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold text-neutral-600 dark:text-neutral-300 hover:text-[#c85a32] hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50 transition-colors select-none whitespace-nowrap"
+          >
+            Tenant Favorit
+          </a>
+
+          {/* 4. Jenis Makanan Dropdown */}
           <DropdownMenu
             open={foodDropdownOpen}
             onOpenChange={setFoodDropdownOpen}
@@ -243,13 +253,13 @@ export function CustomerNavbar() {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "flex items-center gap-1 px-3.5 py-1.5 h-auto rounded-full text-xs sm:text-[13px] font-semibold transition-colors cursor-pointer select-none outline-none",
+                    "flex items-center gap-1 px-2.5 xl:px-3.5 py-1.5 h-auto rounded-full text-xs xl:text-[13px] font-semibold transition-colors cursor-pointer select-none outline-none whitespace-nowrap",
                     isFoodTypeActive
                       ? "text-primary bg-primary/10 hover:bg-primary/15 hover:text-primary"
                       : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
                   )}
                 >
-                  <span className="max-w-[120px] xl:max-w-none truncate">
+                  <span className="max-w-[110px] xl:max-w-none truncate">
                     {isFoodTypeActive ? selectedCategory : "Jenis Makanan"}
                   </span>
                   <ChevronDown
@@ -328,15 +338,15 @@ export function CustomerNavbar() {
           <Link
             href="/customer/orders"
             className={cn(
-              "px-3.5 py-1.5 rounded-full text-xs sm:text-[13px] font-semibold transition-colors select-none flex items-center gap-1.5",
-              pathname.startsWith("/customer/orders")
-                ? "text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-800"
+              "px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-colors select-none flex items-center gap-1.5 whitespace-nowrap",
+              pathname.includes("/orders")
+                ? "text-white bg-[#c85a32] shadow-sm"
                 : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
             )}
           >
             <span>Pesanan</span>
             {activeOrdersCount > 0 && (
-              <Badge className="px-1.5 py-0 rounded-full text-[10px] font-bold bg-primary text-primary-foreground border-none">
+              <Badge className="px-1.5 py-0 rounded-full text-[10px] font-bold bg-[#c85a32] text-white border-none">
                 {activeOrdersCount}
               </Badge>
             )}
@@ -346,9 +356,9 @@ export function CustomerNavbar() {
           <Link
             href="/customer/map"
             className={cn(
-              "px-3.5 py-1.5 rounded-full text-xs sm:text-[13px] font-semibold transition-colors select-none",
-              pathname.startsWith("/customer/map")
-                ? "text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-800"
+              "px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-colors select-none whitespace-nowrap",
+              pathname.includes("/map")
+                ? "text-white bg-[#c85a32] shadow-sm"
                 : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
             )}
           >
@@ -356,27 +366,27 @@ export function CustomerNavbar() {
           </Link>
         </nav>
 
-        {/* Right Section: Black Pill Capsule (Cart CTA), User Menu & Mobile Trigger */}
+        {/* Right Section: Terracotta Pill Capsule (Cart CTA), User Menu & Mobile Trigger */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Black Pill Capsule: Cart CTA */}
+          {/* Cart CTA */}
           <Button
             onClick={() => setIsCartOpen(true)}
-            className="group relative flex items-center gap-2 h-9 sm:h-10 px-4 sm:px-5 rounded-full font-semibold text-xs sm:text-[13px] transition-all duration-200 cursor-pointer select-none active:scale-95 bg-neutral-950 hover:bg-neutral-800 text-white shadow-md shadow-black/15 border-none shrink-0"
+            className="group relative flex items-center gap-2 h-9 sm:h-10 px-4 sm:px-5 rounded-full font-semibold text-xs sm:text-[13px] transition-all duration-200 cursor-pointer select-none active:scale-95 bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-[0_4px_12px_rgba(200,90,50,0.25)] border-none shrink-0"
           >
-            <ShoppingBag className="size-4 shrink-0 transition-transform group-hover:scale-110 text-neutral-300" />
+            <ShoppingBag className="size-4 shrink-0 transition-transform group-hover:scale-110 text-white" />
             <span className="hidden sm:inline">Keranjang</span>
 
             {cartItemCount > 0 ? (
               <>
-                <Badge className="flex items-center justify-center size-5 p-0 rounded-full bg-primary text-primary-foreground text-[11px] font-bold border-none shrink-0">
+                <Badge className="flex items-center justify-center size-5 p-0 rounded-full bg-white text-[#c85a32] text-[11px] font-bold border-none shrink-0">
                   {cartItemCount}
                 </Badge>
-                <span className="hidden xl:inline text-xs font-semibold text-neutral-300">
+                <span className="hidden xl:inline text-xs font-semibold text-white/90">
                   • {formatRupiah(cartTotal)}
                 </span>
               </>
             ) : (
-              <span className="text-[11px] sm:text-xs text-neutral-400 font-semibold">
+              <span className="text-[11px] sm:text-xs text-white/80 font-semibold">
                 (0)
               </span>
             )}
@@ -501,14 +511,7 @@ export function CustomerNavbar() {
 
       {/* Mobile Drawer Navigation Card */}
       {mobileMenuOpen && (
-        <div
-          className={cn(
-            "pointer-events-auto animate-in slide-in-from-top-2 duration-200 shadow-2xl flex flex-col gap-2",
-            isScrolled
-              ? "max-w-md mx-auto w-full mt-2 rounded-3xl bg-white/98 dark:bg-neutral-900/98 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 p-3 sm:p-4"
-              : "w-full max-w-[1400px] mx-auto mt-2 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-4",
-          )}
-        >
+        <div className="pointer-events-auto animate-in slide-in-from-top-2 duration-200 shadow-2xl flex flex-col gap-2 max-w-md mx-auto w-full mt-2 rounded-3xl bg-white/98 dark:bg-neutral-900/98 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 p-3 sm:p-4">
           <Link
             href="/customer"
             onClick={() => {
@@ -517,13 +520,29 @@ export function CustomerNavbar() {
             }}
             className={cn(
               "flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold transition-colors",
-              pathname === "/customer" && selectedCategory === "Semua"
-                ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950"
+              (pathname === "/customer" || pathname === "/dashboard/customer") && selectedCategory === "Semua"
+                ? "bg-[#c85a32] text-white"
                 : "text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800",
             )}
           >
-            <span>Home</span>
+            <span>Beranda</span>
           </Link>
+
+          <a
+            href="#pilihan-menu"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          >
+            <span>Pilihan Makanan</span>
+          </a>
+
+          <a
+            href="#katering-section"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          >
+            <span>Tenant Favorit</span>
+          </a>
 
           {/* Jenis Makanan Category Accordion / List in Mobile */}
           <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 p-2.5 bg-neutral-50 dark:bg-neutral-900/50">
@@ -559,14 +578,14 @@ export function CustomerNavbar() {
             onClick={() => setMobileMenuOpen(false)}
             className={cn(
               "flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold transition-colors",
-              pathname.startsWith("/customer/orders")
-                ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950"
+              pathname.includes("/orders")
+                ? "bg-[#c85a32] text-white"
                 : "text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800",
             )}
           >
             <span>Pesanan Saya</span>
             {activeOrdersCount > 0 && (
-              <Badge className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary text-primary-foreground border-none">
+              <Badge className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#c85a32] text-white border-none">
                 {activeOrdersCount} Aktif
               </Badge>
             )}
@@ -577,8 +596,8 @@ export function CustomerNavbar() {
             onClick={() => setMobileMenuOpen(false)}
             className={cn(
               "flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold transition-colors",
-              pathname.startsWith("/customer/map")
-                ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950"
+              pathname.includes("/map")
+                ? "bg-[#c85a32] text-white"
                 : "text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800",
             )}
           >
