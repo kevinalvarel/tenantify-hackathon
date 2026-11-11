@@ -50,6 +50,28 @@ export type AnalyticsTotals = {
   transactionsChange: number | null;
 };
 
+export type ProductAnalyticsRank = {
+  id: string;
+  name: string;
+  category: string;
+  units: number;
+  revenue: number;
+  share: number;
+};
+
+export type SellerAnalytics = {
+  days: number;
+  daily: DailyAnalyticsPoint[];
+  hourly: HourlyAnalyticsPoint[];
+  payments: PaymentAnalyticsSlice[];
+  categories: CategoryAnalyticsSlice[];
+  topProducts: ProductAnalyticsRank[];
+  totals: AnalyticsTotals;
+  unitsSold: number;
+  peakDay: string | null;
+  peakHour: string | null;
+};
+
 export type AssociationAnalytics = {
   days: number;
   activeTenants: number;
