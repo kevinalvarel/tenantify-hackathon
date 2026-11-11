@@ -16,7 +16,6 @@ export const auth = betterAuth({
     enabled: true,
   },
   plugins: [
-    nextCookies(),
     admin({
       defaultRole: "customer",
       adminRoles: ["developer", "association"],
@@ -27,5 +26,6 @@ export const auth = betterAuth({
         customer: userAc,
       },
     }),
+    nextCookies(),
   ],
 });
