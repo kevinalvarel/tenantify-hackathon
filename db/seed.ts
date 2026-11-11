@@ -1,8 +1,10 @@
 import "dotenv/config";
-import { eq, or } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
+import { hashPassword } from "better-auth/crypto";
 import { db } from "@/drizzle";
 import {
   user,
+  account,
   zones,
   tenants,
   boothSlots,
@@ -24,6 +26,7 @@ import {
 
 const SEED_SELLER_ID = "seed-seller";
 const SEED_SELLER_EMAIL = "seed-seller@tenantify.id";
+const SEED_SELLER_PASSWORD = "cilegonjuare";
 const CUSTOMER_JOINED_AT = new Date(Date.UTC(2026, 0, 12));
 
 function parseJoinedAt(value: string): Date {
@@ -57,6 +60,19 @@ async function ensureSeedSeller(): Promise<string> {
     .limit(1);
 
   if (!row) throw new Error("Seed seller gagal dibuat.");
+
+  const password = await hashPassword(SEED_SELLER_PASSWORD);
+  await db
+    .delete(account)
+    .where(and(eq(account.userId, row.id), eq(account.providerId, "credential")));
+  await db.insert(account).values({
+    id: "seed-seller-credential",
+    accountId: row.id,
+    providerId: "credential",
+    userId: row.id,
+    password,
+  });
+
   return row.id;
 }
 
@@ -79,7 +95,10 @@ function checkSeedData(
   const tenantIds = new Set(tenantRows.map((tenant) => tenant.id));
   const zoneIds = new Set(demoZones.map((zone) => zone.id));
 
-  if (tenantRows.length !== associationTenants.length + customerTenants.length) {
+  if (
+    tenantRows.length !==
+    associationTenants.length + customerTenants.length
+  ) {
     throw new Error("Jumlah tenant tidak sesuai data demo.");
   }
   if (productRows.length !== demoProducts.length) {
@@ -246,8 +265,9 @@ async function main() {
       .update(zones)
       .set({
         totalBooths: zoneBooths.length,
-        occupiedBooths: zoneBooths.filter((booth) => booth.status === "occupied")
-          .length,
+        occupiedBooths: zoneBooths.filter(
+          (booth) => booth.status === "occupied",
+        ).length,
       })
       .where(eq(zones.id, zone.id));
   }
