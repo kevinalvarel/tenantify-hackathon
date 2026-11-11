@@ -180,7 +180,9 @@ function ProductCard({
           onClick={(e) => {
             e.stopPropagation();
             onAddToCart(product);
-            toast.success(`"${product.name}" berhasil ditambahkan ke keranjang!`);
+            toast.success(
+              `"${product.name}" berhasil ditambahkan ke keranjang!`,
+            );
           }}
           className="flex items-center gap-1.5 bg-[#c85a32] hover:bg-[#b34a24] text-white px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-[#c85a32]/20 hover:shadow-lg transition-all active:scale-95 cursor-pointer"
         >
@@ -407,7 +409,8 @@ export function ProductExplorer({
   const { selectedCategory, setSelectedCategory } = useCustomer();
   const [searchQuery, setSearchQuery] = useState("");
   const [internalTenantId, setInternalTenantId] = useState<string>("all");
-  const selectedTenantId = externalTenantId !== undefined ? externalTenantId : internalTenantId;
+  const selectedTenantId =
+    externalTenantId !== undefined ? externalTenantId : internalTenantId;
   const setSelectedTenantId = externalSetTenant || setInternalTenantId;
 
   const [sortBy, setSortBy] = useState<
@@ -426,7 +429,10 @@ export function ProductExplorer({
         selectedCategory === "Semua" || selectedCategory === "";
 
       if (!matchesCategory) {
-        if (selectedCategory === "Nasi & Lauk" || selectedCategory === "Makanan Berat") {
+        if (
+          selectedCategory === "Nasi & Lauk" ||
+          selectedCategory === "Makanan Berat"
+        ) {
           matchesCategory =
             p.category === "Makanan Berat" ||
             p.category === "Nusantara" ||
@@ -443,7 +449,10 @@ export function ProductExplorer({
             p.name.toLowerCase().includes("mie") ||
             p.name.toLowerCase().includes("seblak") ||
             p.name.toLowerCase().includes("kwetiau");
-        } else if (selectedCategory === "Minuman" || selectedCategory === "Kopi & Teh") {
+        } else if (
+          selectedCategory === "Minuman" ||
+          selectedCategory === "Kopi & Teh"
+        ) {
           matchesCategory =
             p.category === "Minuman" ||
             p.category === "Kopi & Teh" ||
@@ -487,9 +496,9 @@ export function ProductExplorer({
             p.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
             Boolean(
               p.mcdCategory &&
-                p.mcdCategory
-                  .toLowerCase()
-                  .includes(selectedCategory.toLowerCase()),
+              p.mcdCategory
+                .toLowerCase()
+                .includes(selectedCategory.toLowerCase()),
             );
         }
       }
@@ -624,19 +633,34 @@ export function ProductExplorer({
                   align="end"
                   className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-popover text-popover-foreground shadow-xl p-1 min-w-[170px]"
                 >
-                  <SelectItem value="default" className="text-xs font-medium cursor-pointer rounded-xl py-2">
+                  <SelectItem
+                    value="default"
+                    className="text-xs font-medium cursor-pointer rounded-xl py-2"
+                  >
                     Urutan Default
                   </SelectItem>
-                  <SelectItem value="popular" className="text-xs font-medium cursor-pointer rounded-xl py-2">
+                  <SelectItem
+                    value="popular"
+                    className="text-xs font-medium cursor-pointer rounded-xl py-2"
+                  >
                     Paling Laris
                   </SelectItem>
-                  <SelectItem value="rating" className="text-xs font-medium cursor-pointer rounded-xl py-2">
+                  <SelectItem
+                    value="rating"
+                    className="text-xs font-medium cursor-pointer rounded-xl py-2"
+                  >
                     Rating Tertinggi
                   </SelectItem>
-                  <SelectItem value="price-low" className="text-xs font-medium cursor-pointer rounded-xl py-2">
+                  <SelectItem
+                    value="price-low"
+                    className="text-xs font-medium cursor-pointer rounded-xl py-2"
+                  >
                     Harga Terendah
                   </SelectItem>
-                  <SelectItem value="price-high" className="text-xs font-medium cursor-pointer rounded-xl py-2">
+                  <SelectItem
+                    value="price-high"
+                    className="text-xs font-medium cursor-pointer rounded-xl py-2"
+                  >
                     Harga Tertinggi
                   </SelectItem>
                 </SelectContent>
@@ -696,8 +720,8 @@ export function ProductExplorer({
               Menu tidak ditemukan
             </p>
             <p className="text-xs sm:text-sm text-neutral-500 max-w-sm mt-1 leading-relaxed">
-              Tidak ada produk yang cocok dengan kata kunci atau filter tenant yang
-              Anda pilih.
+              Tidak ada produk yang cocok dengan kata kunci atau filter tenant
+              yang Anda pilih.
             </p>
             <Button
               variant="outline"

@@ -23,6 +23,7 @@ type SellerContextType = {
     itemsSold: { productId: string; qty: number }[]
   ) => void;
   handleUpdateStock: (productId: string, newStock: number) => void;
+  handleUpdatePrice: (productId: string, newPrice: number) => void;
   handleToggleActive: (productId: string) => void;
   handleAddProduct: (newProduct: Product) => void;
   handleUpdateOrderStatus: (orderId: string, nextStatus: OrderStatus) => void;
@@ -97,6 +98,12 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
   const handleUpdateStock = (productId: string, newStock: number) => {
     setProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, stock: newStock } : p))
+    );
+  };
+
+  const handleUpdatePrice = (productId: string, newPrice: number) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, price: newPrice } : p))
     );
   };
 
@@ -189,6 +196,7 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
         rentPaymentHistory,
         handleCompleteTransaction,
         handleUpdateStock,
+        handleUpdatePrice,
         handleToggleActive,
         handleAddProduct,
         handleUpdateOrderStatus,
