@@ -11,17 +11,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 export function StoreSettingsForm() {
-  const [storeName, setStoreName] = useState("Dapur Bu Rani");
-  const [category, setCategory] = useState("Makanan & Minuman");
-  const [description, setDescription] = useState(
-    "Masakan rumahan dengan bahan segar, dimasak sesuai pesanan."
-  );
-  const [booth, setBooth] = useState("Stall A-08, Zona A");
-  const [address, setAddress] = useState("Bazaar Kota, Lantai 1");
-  const [whatsapp, setWhatsapp] = useState("0812-3456-7890");
-  const [openTime, setOpenTime] = useState("09:00");
-  const [closeTime, setCloseTime] = useState("21:00");
-  const [isOpen, setIsOpen] = useState(true);
+  const [storeName, setStoreName] = useState("");
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [booth, setBooth] = useState("");
+  const [address, setAddress] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [openTime, setOpenTime] = useState("");
+  const [closeTime, setCloseTime] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -193,7 +191,7 @@ export function StoreSettingsForm() {
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[11px] text-muted-foreground">
-          Nilai awal adalah data demo. Perubahan hanya tersimpan selama sesi.
+          Pastikan informasi stan dan jam operasional toko Anda selalu diperbarui.
         </p>
         <Button type="submit" className="h-11 gap-1.5 sm:h-8">
           <Save className="size-4" />

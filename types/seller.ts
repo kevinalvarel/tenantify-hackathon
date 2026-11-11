@@ -80,7 +80,6 @@ export type Employee = {
   phone: string;
   isActive: boolean;
   joinedAt: string;
-  isDemo?: boolean;
 };
 
 export type PromotionType = "Info" | "Diskon" | "Pengumuman";
@@ -94,7 +93,6 @@ export type Promotion = {
   endDate: string;
   status: "Terkirim";
   sentAt: string;
-  isDemo?: boolean;
 };
 
 export type RentPaymentHistoryItem = {

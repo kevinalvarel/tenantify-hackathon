@@ -22,7 +22,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { buildSellerAnalytics } from "@/data/seller-analytics";
+import { buildSellerAnalytics } from "@/lib/analytics";
+import { useSeller } from "@/context/seller-context";
 import { cn, formatRupiah } from "@/lib/utils";
 import type {
   AnalyticsRange,
@@ -164,9 +165,6 @@ function StatisticsHeader({
           <h1 className="text-xl font-bold tracking-tight text-foreground">
             Statistik Toko
           </h1>
-          <Badge variant="outline" className="text-[11px]">
-            Data demo
-          </Badge>
         </div>
         <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
           Omzet, transaksi, dan produk terlaris toko Anda pada periode terpilih.
@@ -578,10 +576,11 @@ function StatisticsContent({ analytics }: { analytics: SellerAnalytics }) {
 }
 
 export function SellerStatisticsDashboard({ today }: { today: string }) {
+  const { products, orders } = useSeller();
   const [range, setRange] = useState<AnalyticsRange>(30);
   const analytics = useMemo(
-    () => buildSellerAnalytics(today, range),
-    [today, range],
+    () => buildSellerAnalytics(today, range, products, orders),
+    [today, range, products, orders],
   );
 
   return (
