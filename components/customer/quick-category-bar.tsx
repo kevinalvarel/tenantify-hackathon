@@ -8,7 +8,7 @@ import {
   Flame,
   Package,
   Boxes,
-  Percent,
+  Star,
 } from "lucide-react";
 import { useCustomer } from "@/context/customer-context";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,6 @@ type CategoryItem = {
   name: string;
   menuCount: string;
   icon: React.ComponentType<{ className?: string }>;
-  isSpecialPromo?: boolean;
 };
 
 const categories: CategoryItem[] = [
@@ -65,11 +64,10 @@ const categories: CategoryItem[] = [
     icon: Boxes,
   },
   {
-    id: "cat-promo-spesial",
-    name: "Promo Spesial",
-    menuCount: "Diskon 50%",
-    icon: Percent,
-    isSpecialPromo: true,
+    id: "cat-menu-favorit",
+    name: "Menu Favorit",
+    menuCount: "Paling Laris",
+    icon: Star,
   },
 ];
 
@@ -118,61 +116,6 @@ export function QuickCategoryBar({
         {categories.map((cat) => {
           const isSelected = current === cat.name;
           const Icon = cat.icon;
-
-          if (cat.isSpecialPromo) {
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => handleClick(cat.name)}
-                className={cn(
-                  "group relative flex flex-col items-center p-3.5 sm:p-4 rounded-2xl transition-all duration-200 text-center cursor-pointer select-none border",
-                  isSelected
-                    ? "bg-[#c85a32] text-white border-[#c85a32] shadow-lg -translate-y-1"
-                    : "bg-white dark:bg-neutral-900 border-[#c85a32]/60 hover:border-[#c85a32] hover:shadow-md hover:-translate-y-0.5 text-neutral-900 dark:text-neutral-100",
-                )}
-              >
-                {/* Floating Promo Tag */}
-                <span
-                  className={cn(
-                    "absolute -top-2.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-xs",
-                    isSelected
-                      ? "bg-white text-[#c85a32]"
-                      : "bg-[#c85a32] text-white",
-                  )}
-                >
-                  Promo
-                </span>
-
-                <div
-                  className={cn(
-                    "size-11 sm:size-12 rounded-full flex items-center justify-center transition-colors mb-2 mt-0.5",
-                    isSelected
-                      ? "bg-white/20 text-white"
-                      : "bg-[#ffdbcf] text-[#c85a32] group-hover:bg-[#c85a32] group-hover:text-white",
-                  )}
-                >
-                  <Icon className="size-5 sm:size-6" />
-                </div>
-                <span
-                  className={cn(
-                    "font-bold text-xs sm:text-[13px] line-clamp-1 transition-colors",
-                    isSelected ? "text-white" : "text-[#c85a32] group-hover:text-[#c85a32]",
-                  )}
-                >
-                  {cat.name}
-                </span>
-                <span
-                  className={cn(
-                    "text-[11px] font-extrabold transition-colors mt-0.5",
-                    isSelected ? "text-white/90" : "text-[#c85a32]",
-                  )}
-                >
-                  {cat.menuCount}
-                </span>
-              </button>
-            );
-          }
 
           return (
             <button

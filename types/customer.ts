@@ -27,6 +27,7 @@ export type CustomerCategoryType =
 
 export type CustomerProduct = {
   id: string;
+  slug?: string;
   tenantId: string;
   tenantName: string;
   boothNumber: string;

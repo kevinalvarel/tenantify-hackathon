@@ -33,11 +33,11 @@ type Slide = {
 const slides: Slide[] = [
   {
     id: "slide-1",
-    badge: "PROMO SPESIAL HARI INI",
+    badge: "KULINER SPESIAL HARI INI",
     title: "Pesta Kuliner Hemat Diskon s/d 50% + Cashback 40%!",
     description:
       "Gabungkan aneka menu dari Bebek Madura, Mie Aceh, hingga Kopi Susu dalam 1 pesanan kilat tanpa biaya antre meja.",
-    primaryCtaText: "Klaim Promo Sekarang",
+    primaryCtaText: "Jelajahi Menu Sekarang",
     primaryCtaHref: "#pilihan-menu",
     secondaryCtaText: "Jelajahi Tenant",
     secondaryCtaHref: "#katering-section",
@@ -100,7 +100,7 @@ export function CustomerHeroBanner() {
 
   return (
     <section
-      aria-label="Promo Utama Food Court"
+      aria-label="Banner Utama Food Court"
       className="pt-2 pb-2 px-2 sm:px-4 max-w-7xl mx-auto w-full"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}

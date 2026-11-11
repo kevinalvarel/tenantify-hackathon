@@ -2,37 +2,23 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Search,
   Plus,
-  Minus,
   Star,
   Store,
   UtensilsCrossed,
   SlidersHorizontal,
   X,
-  Flame,
-  Coffee,
-  Croissant,
-  Soup,
-  Package,
-  Percent,
   ChevronUp,
 } from "lucide-react";
 import { CustomerProduct, Tenant } from "@/types/customer";
 import { formatRupiah, cn } from "@/lib/utils";
+import { slugify } from "@/lib/slug";
 import { useCustomer } from "@/context/customer-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -58,7 +44,7 @@ const filterTabs = [
   "Minuman",
   "Camilan & Roti",
   "Paket Hemat",
-  "Promo Spesial",
+  "Menu Favorit",
 ] as const;
 
 function FloatingScrollToTop() {
@@ -127,23 +113,15 @@ function ProductCardImage({ product }: { product: CustomerProduct }) {
 function ProductCard({
   product,
   onAddToCart,
-  onOpenDetail,
 }: {
   product: CustomerProduct;
   onAddToCart: (product: CustomerProduct) => void;
-  onOpenDetail: (product: CustomerProduct) => void;
 }) {
+  const productSlug = product.slug || slugify(product.name);
+
   return (
-    <div
-      onClick={() => onOpenDetail(product)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onOpenDetail(product);
-        }
-      }}
+    <Link
+      href={`/customer/product/${productSlug}`}
       className="bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between border border-neutral-200/80 dark:border-neutral-800 hover:border-[#c85a32]/40 cursor-pointer select-none"
     >
       <div>
@@ -178,6 +156,7 @@ function ProductCard({
         <button
           type="button"
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onAddToCart(product);
             toast.success(`"${product.name}" berhasil ditambahkan ke keranjang!`);
@@ -188,212 +167,7 @@ function ProductCard({
           <span>Tambah</span>
         </button>
       </div>
-    </div>
-  );
-}
-
-function ProductDetailModal({
-  product,
-  isOpen,
-  onClose,
-  onAddToCart,
-}: {
-  product: CustomerProduct | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onAddToCart: (product: CustomerProduct, qty: number, notes?: string) => void;
-}) {
-  if (!product) return null;
-
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <ProductDetailModalContent
-        key={product.id}
-        product={product}
-        onClose={onClose}
-        onAddToCart={onAddToCart}
-      />
-    </Dialog>
-  );
-}
-
-function ProductDetailModalContent({
-  product,
-  onClose,
-  onAddToCart,
-}: {
-  product: CustomerProduct;
-  onClose: () => void;
-  onAddToCart: (product: CustomerProduct, qty: number, notes?: string) => void;
-}) {
-  const [qty, setQty] = useState(1);
-  const [notes, setNotes] = useState("");
-  const [imgError, setImgError] = useState(false);
-
-  const handleAdd = () => {
-    onAddToCart(product, qty, notes.trim() || undefined);
-    onClose();
-  };
-
-  return (
-    <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
-      {/* Modal Image Area */}
-      <div className="relative w-full h-52 sm:h-60 overflow-hidden bg-neutral-100 dark:bg-neutral-800">
-        {product.image && !imgError ? (
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <TenantifyPlaceholder size="lg" subtitle={product.category} />
-        )}
-
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
-          <Badge className="bg-black/75 backdrop-blur-md text-white text-[10px] font-semibold border-none px-2.5 py-1">
-            <Store className="size-3 mr-1 text-[#ffb59c]" />
-            {product.tenantName} • {product.boothNumber}
-          </Badge>
-        </div>
-
-        <div className="absolute top-3 right-3 flex items-center gap-1 z-10 bg-white/95 dark:bg-neutral-900/90 backdrop-blur-sm text-neutral-900 dark:text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md">
-          <Star className="size-3.5 fill-[#c85a32] text-[#c85a32]" />
-          <span>{product.rating}</span>
-        </div>
-      </div>
-
-      {/* Modal Body */}
-      <div className="p-5 sm:p-6 flex flex-col gap-4">
-        <DialogHeader className="text-left space-y-1">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg sm:text-xl font-extrabold text-neutral-900 dark:text-neutral-100">
-              {product.name}
-            </DialogTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            {product.originalPrice && product.originalPrice > product.price && (
-              <span className="text-xs text-neutral-400 line-through">
-                {formatRupiah(product.originalPrice)}
-              </span>
-            )}
-            <span className="text-base sm:text-lg font-bold text-[#c85a32]">
-              {formatRupiah(product.price)}
-            </span>
-          </div>
-        </DialogHeader>
-
-        {/* Description */}
-        <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed font-normal">
-          {product.description}
-        </p>
-
-        {/* Notes Input */}
-        <div className="space-y-1.5">
-          <label
-            htmlFor="special-notes"
-            className="text-xs font-bold text-neutral-800 dark:text-neutral-200"
-          >
-            Catatan Khusus (opsional)
-          </label>
-          <Textarea
-            id="special-notes"
-            placeholder="Contoh: Saus dipisah, tanpa sambal, es sedikit, dll."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="resize-none h-20 text-xs rounded-xl"
-          />
-        </div>
-
-        {/* Quantity and Add Button */}
-        <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-neutral-800">
-          <div className="flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 rounded-full px-2 py-1 bg-neutral-50 dark:bg-neutral-900">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              disabled={qty <= 1}
-              onClick={() => setQty((prev) => Math.max(1, prev - 1))}
-              className="size-7 rounded-full cursor-pointer"
-            >
-              <Minus className="size-3" />
-            </Button>
-            <span className="text-xs font-bold w-6 text-center">{qty}</span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => setQty((prev) => prev + 1)}
-              className="size-7 rounded-full cursor-pointer"
-            >
-              <Plus className="size-3" />
-            </Button>
-          </div>
-
-          <Button
-            onClick={handleAdd}
-            className="rounded-full px-5 h-10 text-xs sm:text-sm font-bold bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-md active:scale-95 cursor-pointer"
-          >
-            <span>Tambah • {formatRupiah(product.price * qty)}</span>
-          </Button>
-        </div>
-      </div>
-    </DialogContent>
-  );
-}
-
-function TenantFilterBar({
-  tenants,
-  selectedTenantId,
-  onSelect,
-}: {
-  tenants: Tenant[];
-  selectedTenantId: string;
-  onSelect: (id: string) => void;
-}) {
-  if (tenants.length === 0) return null;
-
-  return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none w-full max-w-full min-w-0">
-      <button
-        type="button"
-        onClick={() => onSelect("all")}
-        className={cn(
-          "rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer active:scale-95 shrink-0 flex items-center gap-1.5",
-          selectedTenantId === "all"
-            ? "bg-[#c85a32] text-white shadow-sm"
-            : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700",
-        )}
-      >
-        <Store className="size-3.5 shrink-0" />
-        <span>Semua Tenant</span>
-      </button>
-
-      {tenants.map((tenant) => {
-        const isSelected = selectedTenantId === tenant.id;
-        return (
-          <button
-            key={tenant.id}
-            type="button"
-            onClick={() => onSelect(tenant.id)}
-            className={cn(
-              "rounded-full px-3.5 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer active:scale-95 shrink-0 flex items-center gap-1.5",
-              isSelected
-                ? "bg-[#c85a32] text-white font-bold shadow-sm"
-                : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700",
-            )}
-          >
-            <Avatar className="size-4 shrink-0 border-none">
-              <AvatarFallback className="text-[8px] font-bold bg-[#ffdbcf] text-[#c85a32]">
-                {tenant.avatarText ? tenant.avatarText.charAt(0) : "T"}
-              </AvatarFallback>
-            </Avatar>
-            <span>{tenant.name}</span>
-          </button>
-        );
-      })}
-    </div>
+    </Link>
   );
 }
 
@@ -407,14 +181,13 @@ export function ProductExplorer({
   const { selectedCategory, setSelectedCategory } = useCustomer();
   const [searchQuery, setSearchQuery] = useState("");
   const [internalTenantId, setInternalTenantId] = useState<string>("all");
-  const selectedTenantId = externalTenantId !== undefined ? externalTenantId : internalTenantId;
+  const selectedTenantId =
+    externalTenantId !== undefined ? externalTenantId : internalTenantId;
   const setSelectedTenantId = externalSetTenant || setInternalTenantId;
 
   const [sortBy, setSortBy] = useState<
     "default" | "price-low" | "price-high" | "rating" | "popular"
   >("default");
-  const [selectedDetailProduct, setSelectedDetailProduct] =
-    useState<CustomerProduct | null>(null);
 
   // Filtering
   const filteredProducts = useMemo(() => {
@@ -469,7 +242,7 @@ export function ProductExplorer({
             p.mcdCategory === "Paket Hemat" ||
             p.name.toLowerCase().includes("paket") ||
             p.name.toLowerCase().includes("katering");
-        } else if (selectedCategory === "Promo Spesial") {
+        } else if (selectedCategory === "Menu Favorit") {
           matchesCategory =
             (p.originalPrice !== undefined && p.originalPrice > p.price) ||
             !!p.isPopular;
@@ -487,9 +260,9 @@ export function ProductExplorer({
             p.category.toLowerCase().includes(selectedCategory.toLowerCase()) ||
             Boolean(
               p.mcdCategory &&
-                p.mcdCategory
-                  .toLowerCase()
-                  .includes(selectedCategory.toLowerCase()),
+              p.mcdCategory
+                .toLowerCase()
+                .includes(selectedCategory.toLowerCase()),
             );
         }
       }
@@ -537,23 +310,14 @@ export function ProductExplorer({
       <FloatingScrollToTop />
 
       <div className="space-y-6 sm:space-y-8">
-        {/* Header Bar with Category Tabs from HTML */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div className="space-y-1 text-left">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#c85a32]">
-              PILIHAN MENU LENGKAP
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-neutral-100 tracking-tight">
-              Menu Paling Dicari Hari Ini
-            </h2>
-            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-              Rekomendasi terpopuler dari berbagai tenant dengan ulasan terbaik
-              pelanggan.
-            </p>
-          </div>
+        {/* Header Bar: Title on Top Left, Filtering Underneath */}
+        <div className="flex flex-col items-start gap-2.5 w-full">
+          <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#c85a32]">
+            PILIHAN MENU LENGKAP
+          </span>
 
-          {/* Category Filter Pills Matching User HTML */}
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {/* Category Filter Pills Underneath Title */}
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none w-full max-w-full justify-start">
             {filterTabs.map((tab) => {
               const isSelected =
                 (tab === "Semua" && selectedCategory === "Semua") ||
@@ -568,7 +332,7 @@ export function ProductExplorer({
                   type="button"
                   onClick={() => setSelectedCategory(tab)}
                   className={cn(
-                    "px-4 py-2 rounded-full font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer whitespace-nowrap active:scale-95",
+                    "px-4 py-2 rounded-full font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer whitespace-nowrap active:scale-95 shrink-0",
                     isSelected
                       ? "bg-[#c85a32] text-white shadow-sm"
                       : "bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:text-[#c85a32] border border-neutral-200 dark:border-neutral-800",
@@ -581,75 +345,66 @@ export function ProductExplorer({
           </div>
         </div>
 
-        {/* Search, Sort & Tenant Sub-filter Bar */}
-        <div className="flex flex-col gap-3.5 bg-white dark:bg-neutral-900/90 p-4 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
-          <div className="flex flex-col sm:flex-row gap-2.5 sm:items-center">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-neutral-400" />
-              <Input
-                type="text"
-                placeholder="Cari hidangan atau tenant favorit..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-10 h-10 text-xs sm:text-sm rounded-full bg-neutral-50 dark:bg-neutral-800/80 border-neutral-200 dark:border-neutral-800 focus-visible:ring-1 focus-visible:ring-[#c85a32]"
-              />
-              {searchQuery && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 size-6 text-neutral-400 hover:text-foreground rounded-full"
-                  aria-label="Hapus pencarian"
-                >
-                  <X className="size-3.5" />
-                </Button>
-              )}
-            </div>
-
-            {/* Sort Select */}
-            <div className="flex items-center gap-2">
-              <Select
-                value={sortBy}
-                onValueChange={(val) => {
-                  if (val) setSortBy(val as typeof sortBy);
-                }}
+        {/* Search & Sort Bar */}
+        <div className="flex flex-col sm:flex-row gap-2.5 sm:items-center bg-white dark:bg-neutral-900/90 p-3 sm:p-4 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 shadow-xs">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-neutral-400" />
+            <Input
+              type="text"
+              placeholder="Cari hidangan atau tenant favorit..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10 h-10 text-xs sm:text-sm rounded-full bg-neutral-50 dark:bg-neutral-800/80 border-neutral-200 dark:border-neutral-800 focus-visible:ring-1 focus-visible:ring-[#c85a32]"
+            />
+            {searchQuery && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 size-6 text-neutral-400 hover:text-foreground rounded-full"
+                aria-label="Hapus pencarian"
               >
-                <SelectTrigger className="h-10 rounded-full bg-neutral-50 dark:bg-neutral-800/80 border-neutral-200 dark:border-neutral-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 gap-2 pl-3.5 pr-3 min-w-[160px] cursor-pointer">
-                  <SlidersHorizontal className="size-3.5 text-[#c85a32] shrink-0" />
-                  <SelectValue placeholder="Urutan Default" />
-                </SelectTrigger>
-                <SelectContent
-                  align="end"
-                  className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-popover text-popover-foreground shadow-xl p-1 min-w-[170px]"
-                >
-                  <SelectItem value="default" className="text-xs font-medium cursor-pointer rounded-xl py-2">
-                    Urutan Default
-                  </SelectItem>
-                  <SelectItem value="popular" className="text-xs font-medium cursor-pointer rounded-xl py-2">
-                    Paling Laris
-                  </SelectItem>
-                  <SelectItem value="rating" className="text-xs font-medium cursor-pointer rounded-xl py-2">
-                    Rating Tertinggi
-                  </SelectItem>
-                  <SelectItem value="price-low" className="text-xs font-medium cursor-pointer rounded-xl py-2">
-                    Harga Terendah
-                  </SelectItem>
-                  <SelectItem value="price-high" className="text-xs font-medium cursor-pointer rounded-xl py-2">
-                    Harga Tertinggi
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <X className="size-3.5" />
+              </Button>
+            )}
           </div>
 
-          {/* Tenant Filter Row */}
-          <TenantFilterBar
-            tenants={tenants}
-            selectedTenantId={selectedTenantId}
-            onSelect={setSelectedTenantId}
-          />
+          {/* Sort Select */}
+          <div className="flex items-center gap-2">
+            <Select
+              value={sortBy}
+              onValueChange={(val) => {
+                if (val) setSortBy(val as typeof sortBy);
+              }}
+            >
+              <SelectTrigger className="h-10 rounded-full bg-neutral-50 dark:bg-neutral-800/80 border-neutral-200 dark:border-neutral-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 gap-2 pl-3.5 pr-3 min-w-[160px] cursor-pointer">
+                <SlidersHorizontal className="size-3.5 text-[#c85a32] shrink-0" />
+                <SelectValue placeholder="Urutan Default" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-popover text-popover-foreground shadow-xl p-1 min-w-[170px]"
+              >
+                <SelectItem value="default" className="text-xs font-medium cursor-pointer rounded-xl py-2">
+                  Urutan Default
+                </SelectItem>
+                <SelectItem value="popular" className="text-xs font-medium cursor-pointer rounded-xl py-2">
+                  Paling Laris
+                </SelectItem>
+                <SelectItem value="rating" className="text-xs font-medium cursor-pointer rounded-xl py-2">
+                  Rating Tertinggi
+                </SelectItem>
+                <SelectItem value="price-low" className="text-xs font-medium cursor-pointer rounded-xl py-2">
+                  Harga Terendah
+                </SelectItem>
+                <SelectItem value="price-high" className="text-xs font-medium cursor-pointer rounded-xl py-2">
+                  Harga Tertinggi
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Active Filter Summary */}
@@ -681,7 +436,6 @@ export function ProductExplorer({
               key={product.id}
               product={product}
               onAddToCart={onAddToCart}
-              onOpenDetail={(prod) => setSelectedDetailProduct(prod)}
             />
           ))}
         </div>
@@ -716,21 +470,6 @@ export function ProductExplorer({
           </div>
         )}
       </div>
-
-      {/* Item Detail & Customization Modal */}
-      <ProductDetailModal
-        product={selectedDetailProduct}
-        isOpen={!!selectedDetailProduct}
-        onClose={() => setSelectedDetailProduct(null)}
-        onAddToCart={(product, qty, notes) => {
-          for (let i = 0; i < qty; i++) {
-            onAddToCart(product);
-          }
-          toast.success(
-            `"${product.name}" (${qty}x) ditambahkan ke keranjang.${notes ? ` Catatan: ${notes}` : ""}`,
-          );
-        }}
-      />
     </section>
   );
 }

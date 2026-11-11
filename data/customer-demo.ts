@@ -1,5 +1,15 @@
 import { CustomerProduct, Tenant } from "@/types/customer";
 
+export function slugify(text: string): string {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export const demoTenants: Tenant[] = [
   {
     id: "tenant-kevin-kebab",
@@ -91,7 +101,7 @@ export const demoTenants: Tenant[] = [
   },
 ];
 
-export const demoProducts: CustomerProduct[] = [
+const rawDemoProducts: CustomerProduct[] = [
   // 1. Bebek Madura Cak Munir (Featured in Card 1 of HTML)
   {
     id: "prod-bm-1",
@@ -487,4 +497,26 @@ export const demoProducts: CustomerProduct[] = [
     image: "/images/products/paket-duet.svg",
   },
 ];
+
+export const demoProducts: CustomerProduct[] = rawDemoProducts.map((p) => ({
+  ...p,
+  slug: p.slug || slugify(p.name),
+}));
+
+export function getProductBySlug(slug: string): CustomerProduct | undefined {
+  if (!slug) return undefined;
+  let clean = slug.toLowerCase().trim();
+  try {
+    clean = decodeURIComponent(slug).toLowerCase().trim();
+  } catch {
+    // fallback to raw slug string
+  }
+  return demoProducts.find(
+    (p) =>
+      p.slug?.toLowerCase() === clean ||
+      slugify(p.name).toLowerCase() === clean ||
+      p.id.toLowerCase() === clean
+  );
+}
+
 
