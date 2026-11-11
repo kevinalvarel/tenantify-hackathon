@@ -8,6 +8,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import { tenants } from "./tenants";
+import { orderItems } from "./orders";
 
 export const products = pgTable(
   "products",
@@ -69,6 +70,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   recommendationsReceived: many(productRecommendations, {
     relationName: "targetProduct",
   }),
+  orderItems: many(orderItems),
 }));
 
 export const productRecommendationsRelations = relations(

@@ -1,6 +1,8 @@
 import { relations } from "drizzle-orm/_relations";
 import { pgTable, text, timestamp, boolean, integer, index } from "drizzle-orm/pg-core";
 import { user } from "./users";
+import { products } from "./products";
+import { tenantOrders } from "./orders";
 
 export const zones = pgTable("zones", {
   id: text("id").primaryKey(),
@@ -29,7 +31,7 @@ export const tenants = pgTable(
     description: text("description"),
     phone: text("phone"),
     zone: text("zone"),
-    status: text("status").notNull().default("active"), // active | inactive
+    status: text("status").notNull().default("pending"), // pending | active | inactive
     rating: text("rating").notNull().default("0.0"),
     totalReviews: integer("total_reviews").notNull().default(0),
     isOpen: boolean("is_open").notNull().default(false),
@@ -86,7 +88,7 @@ export const boothSlotsRelations = relations(boothSlots, ({ one }) => ({
   }),
 }));
 
-export const tenantsRelations = relations(tenants, ({ one }) => ({
+export const tenantsRelations = relations(tenants, ({ one, many }) => ({
   seller: one(user, {
     fields: [tenants.sellerId],
     references: [user.id],
@@ -95,4 +97,6 @@ export const tenantsRelations = relations(tenants, ({ one }) => ({
     fields: [tenants.id],
     references: [boothSlots.tenantId],
   }),
+  products: many(products),
+  tenantOrders: many(tenantOrders),
 }));
