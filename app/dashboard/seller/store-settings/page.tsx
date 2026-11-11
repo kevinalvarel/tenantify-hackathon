@@ -1,7 +1,5 @@
+import { StoreSettingsForm } from "@/components/seller/store-settings/store-settings-form";
+
 export default function SellerSettingsPage() {
-  return (
-    <div>
-      <span>Hallo</span>
-    </div>
-  );
+  return <StoreSettingsForm />;
 }
