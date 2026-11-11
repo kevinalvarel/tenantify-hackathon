@@ -11,8 +11,14 @@ import {
   UsersRound,
   UserRoundPlus,
   Settings,
+  Star,
+  DollarSign,
+  Speaker,
+  Megaphone,
+  User,
 } from "lucide-react";
 import { IconType } from "react-icons";
+import { FaMoneyBill } from "react-icons/fa";
 
 export type DashboardNavItem = {
   title: string;
@@ -84,19 +90,59 @@ export const SELLER_NAV: DashboardNavGroup[] = [
         icon: Store,
       },
       {
+        title: "Manajemen Orderan",
+        url: "/dashboard/seller/orders",
+        icon: ReceiptText,
+      },
+    ],
+  },
+  {
+    label: "Keuangan & Stock",
+    items: [
+      {
         title: "Pengaturan Stok",
         url: "/dashboard/seller/stock",
         icon: Package,
       },
       {
-        title: "Manajemen Orderan",
-        url: "/dashboard/seller/orders",
-        icon: ReceiptText,
-      },
-      {
         title: "Pembayaran Sewa",
         url: "/dashboard/seller/payments",
         icon: CreditCard,
+      },
+    ],
+  },
+  {
+    label: "Pelanggan",
+    items: [
+      {
+        title: "Statistik Pelanggan",
+        url: "/dashboard/seller/statistics",
+        icon: ChartNoAxesColumn,
+      },
+      {
+        title: "Review Pelanggan",
+        url: "/dashboard/seller/reviews",
+        icon: Star,
+      },
+      {
+        title: "Promosi",
+        url: "/dashboard/seller/promotions",
+        icon: Megaphone,
+      },
+    ],
+  },
+  {
+    label: "Pengaturan Toko",
+    items: [
+      {
+        title: "Pengaturan Toko",
+        url: "/dashboard/seller/store-settings",
+        icon: Settings,
+      },
+      {
+        title: "Management Karyawan",
+        url: "/dashboard/seller/employee-settings",
+        icon: User,
       },
     ],
   },

@@ -61,6 +61,42 @@ export type RentInvoice = {
   receiptNumber?: string;
 };
 
+export type SellerReview = {
+  id: string;
+  customerName: string;
+  avatarText: string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  comment: string;
+  createdAt: string;
+  reply?: {
+    message: string;
+    repliedAt: string;
+  };
+};
+
+export type Employee = {
+  id: string;
+  name: string;
+  phone: string;
+  isActive: boolean;
+  joinedAt: string;
+  isDemo?: boolean;
+};
+
+export type PromotionType = "Info" | "Diskon" | "Pengumuman";
+
+export type Promotion = {
+  id: string;
+  title: string;
+  message: string;
+  type: PromotionType;
+  startDate: string;
+  endDate: string;
+  status: "Terkirim";
+  sentAt: string;
+  isDemo?: boolean;
+};
+
 export type RentPaymentHistoryItem = {
   id: string;
   invoiceId: string;

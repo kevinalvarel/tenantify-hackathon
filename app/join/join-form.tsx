@@ -6,7 +6,6 @@ import {
   BookmarkPlus,
   Check,
   CheckCircle2,
-  LogIn,
   LogOut,
   Search,
   UserRound,
@@ -18,18 +17,9 @@ import { Label } from "@/components/ui/label";
 import CodeSlots, {
   type CodeSlotsStatus,
 } from "@/components/customer/ui/number-slots";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { useSession } from "@/lib/auth/auth-client";
 import { logout } from "@/servers/auth-server";
+import { CustomerAuthDialog } from "./customer-auth-dialog";
 
 type Association = { code: string; name: string };
 
@@ -168,39 +158,9 @@ export function JoinForm({
         ) : (
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs text-muted-foreground">
-              Masuk untuk menyimpan beberapa asosiasi.
+              Masuk atau daftar untuk menyimpan beberapa asosiasi.
             </p>
-            <Dialog>
-              <DialogTrigger
-                render={
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="shrink-0 gap-1 text-xs"
-                  />
-                }
-              >
-                <LogIn className="size-3.5" />
-                Masuk
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Masuk sebagai Pembeli</DialogTitle>
-                  <DialogDescription>
-                    Fitur masuk pembeli akan tersedia pada iterasi berikutnya.
-                    Sementara ini kamu tetap bisa mencari 1 kode pengelola
-                    tanpa akun.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <DialogClose
-                    render={<Button type="button" variant="secondary" />}
-                  >
-                    Mengerti
-                  </DialogClose>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <CustomerAuthDialog />
           </div>
         ))}
 
