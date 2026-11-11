@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm/_relations";
-import { pgTable, text, timestamp, boolean, integer, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  index,
+} from "drizzle-orm/pg-core";
 import { tenants } from "./tenants";
 
 export const products = pgTable(
@@ -28,7 +35,7 @@ export const products = pgTable(
     index("products_tenantId_idx").on(table.tenantId),
     index("products_category_idx").on(table.category),
     index("products_isActive_idx").on(table.isActive),
-  ]
+  ],
 );
 
 export const productRecommendations = pgTable(
@@ -48,7 +55,7 @@ export const productRecommendations = pgTable(
   (table) => [
     index("rec_sourceProductId_idx").on(table.sourceProductId),
     index("rec_targetProductId_idx").on(table.targetProductId),
-  ]
+  ],
 );
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -56,19 +63,26 @@ export const productsRelations = relations(products, ({ one, many }) => ({
     fields: [products.tenantId],
     references: [tenants.id],
   }),
-  recommendationsGiven: many(productRecommendations, { relationName: "sourceProduct" }),
-  recommendationsReceived: many(productRecommendations, { relationName: "targetProduct" }),
-}));
-
-export const productRecommendationsRelations = relations(productRecommendations, ({ one }) => ({
-  sourceProduct: one(products, {
-    fields: [productRecommendations.sourceProductId],
-    references: [products.id],
+  recommendationsGiven: many(productRecommendations, {
     relationName: "sourceProduct",
   }),
-  targetProduct: one(products, {
-    fields: [productRecommendations.targetProductId],
-    references: [products.id],
+  recommendationsReceived: many(productRecommendations, {
     relationName: "targetProduct",
   }),
 }));
+
+export const productRecommendationsRelations = relations(
+  productRecommendations,
+  ({ one }) => ({
+    sourceProduct: one(products, {
+      fields: [productRecommendations.sourceProductId],
+      references: [products.id],
+      relationName: "sourceProduct",
+    }),
+    targetProduct: one(products, {
+      fields: [productRecommendations.targetProductId],
+      references: [products.id],
+      relationName: "targetProduct",
+    }),
+  }),
+);
