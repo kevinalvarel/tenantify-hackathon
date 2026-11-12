@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { Suspense } from "react";
+import { TopLoadingBar } from "@/components/top-loading-bar";
 
 // Opt out of instant navigation validation — this layout intentionally
 // reads the session (request-time data) and blocks until it resolves.
@@ -36,6 +37,7 @@ export default function DashboardLayout({
 }) {
   return (
     <main>
+      <TopLoadingBar />
       <Suspense fallback={null}>
         <AuthenticatedShell>{children}</AuthenticatedShell>
       </Suspense>

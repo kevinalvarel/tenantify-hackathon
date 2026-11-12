@@ -16,6 +16,7 @@ import {
   Speaker,
   Megaphone,
   User,
+  Map,
 } from "lucide-react";
 import { IconType } from "react-icons";
 import { FaMoneyBill } from "react-icons/fa";
@@ -61,10 +62,20 @@ export const ASSOCIATION_NAV: DashboardNavGroup[] = [
         url: "/dashboard/association/register-seller",
         icon: UserRoundPlus,
       },
+    ],
+  },
+  {
+    label: "Manajemen Booth dan Floorplan",
+    items: [
       {
-        title: "Denah Bazaar / Layout",
-        url: "/dashboard/association/layout",
-        icon: MapPin,
+        title: "Kelola Floorplan",
+        url: "/dashboard/association/floorplan",
+        icon: Map,
+      },
+      {
+        title: "Kelola Zona Tenant",
+        url: "/dashboard/association/zone",
+        icon: Store,
       },
     ],
   },

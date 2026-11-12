@@ -57,6 +57,7 @@ export function LoginForm({
 
       if (!response.success) {
         toast.error(response.message);
+        setIsLoading(false);
         return;
       }
 
@@ -65,12 +66,14 @@ export function LoginForm({
       router.refresh();
     } catch {
       toast.error("Terjadi kendala jaringan saat mencoba masuk.");
-      setIsLoading(false)
+      setIsLoading(false);
     }
   };
 
   const handleGoogleClick = () => {
-    toast.info("Masuk dengan Google akan segera tersedia pada iterasi berikutnya.");
+    toast.info(
+      "Masuk dengan Google akan segera tersedia pada iterasi berikutnya.",
+    );
   };
 
   return (
@@ -116,8 +119,12 @@ export function LoginForm({
                 variant="ghost"
                 size="icon-xs"
                 onClick={() => setIsVisible((prev) => !prev)}
-                aria-label={isVisible ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
-                title={isVisible ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                aria-label={
+                  isVisible ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"
+                }
+                title={
+                  isVisible ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"
+                }
               >
                 {isVisible ? (
                   <EyeOffIcon className="size-3.5" />
@@ -127,7 +134,9 @@ export function LoginForm({
               </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>
-          {errors.password && <FieldError>{errors.password.message}</FieldError>}
+          {errors.password && (
+            <FieldError>{errors.password.message}</FieldError>
+          )}
         </Field>
 
         <Field>

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo } from "react";
+import React, { createContext, useContext, useState, useMemo, useEffect } from "react";
+import { getSellerDataAction } from "@/servers/seller-server";
 import {
   Product,
   Order,
@@ -42,6 +43,19 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
   const [rentPaymentHistory, setRentPaymentHistory] = useState<
     RentPaymentHistoryItem[]
   >([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    getSellerDataAction().then((data) => {
+      if (isMounted) {
+        if (data.products.length > 0) setProducts(data.products);
+        if (data.orders.length > 0) setOrders(data.orders);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Live metrics
   const totalRevenue = useMemo(

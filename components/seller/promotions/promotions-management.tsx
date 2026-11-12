@@ -340,9 +340,6 @@ export function PromotionsManagement({
                   <CheckCircle2 className="size-3" />
                   {promotion.status}
                 </Badge>
-                {promotion.isDemo && (
-                  <span className="text-[10px]">Data demo</span>
-                )}
               </div>
             </div>
           ))}

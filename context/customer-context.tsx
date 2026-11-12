@@ -1,13 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo } from "react";
+import React, { createContext, useContext, useState, useMemo, useEffect } from "react";
 import {
   CustomerProduct,
   CustomerCartItem,
   CustomerOrder,
   Tenant,
 } from "@/types/customer";
-import { demoProducts, demoTenants } from "@/data/customer-demo";
+import { getCustomerDataAction } from "@/servers/customer-server";
 import { toast } from "sonner";
 
 type CustomerContextType = {
@@ -35,13 +35,26 @@ type CustomerContextType = {
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
 
 export function CustomerProvider({ children }: { children: React.ReactNode }) {
-  const [products] = useState<CustomerProduct[]>(demoProducts);
-  const [tenants] = useState<Tenant[]>(demoTenants);
+  const [products, setProducts] = useState<CustomerProduct[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [cart, setCart] = useState<CustomerCartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
   const [isNutritionModalOpen, setIsNutritionModalOpen] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    getCustomerDataAction().then((data) => {
+      if (isMounted) {
+        if (data.products.length > 0) setProducts(data.products);
+        if (data.tenants.length > 0) setTenants(data.tenants);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const cartItemCount = useMemo(
     () => cart.reduce((sum, item) => sum + item.quantity, 0),

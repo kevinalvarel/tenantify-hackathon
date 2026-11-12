@@ -139,7 +139,6 @@ export function EmployeesManagement({ employees }: EmployeesManagementProps) {
                   <CalendarDays className="size-3" />
                   Bergabung {formatDate(employee.joinedAt)}
                 </span>
-                {employee.isDemo && <span className="text-[10px]">Data demo</span>}
               </div>
             </CardContent>
           </Card>
