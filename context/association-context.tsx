@@ -1,8 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo } from "react";
+import React, { createContext, useContext, useState, useMemo, useEffect } from "react";
 import { AreaZone, AssociationTenant, BoothSlot } from "@/types/association";
-import { demoBooths, demoTenants, demoZones } from "@/data/association-demo";
+import { getAssociationDataAction } from "@/servers/association-server";
 import { toast } from "sonner";
 
 type AssociationContextType = {
@@ -29,14 +29,34 @@ const AssociationContext = createContext<AssociationContextType | undefined>(
 
 export function AssociationProvider({
   children,
+  initialTenants = [],
+  initialBooths = [],
+  initialZones = [],
 }: {
   children: React.ReactNode;
+  initialTenants?: AssociationTenant[];
+  initialBooths?: BoothSlot[];
+  initialZones?: AreaZone[];
 }) {
-  const [tenants, setTenants] = useState<AssociationTenant[]>(demoTenants);
-  const [booths, setBooths] = useState<BoothSlot[]>(demoBooths);
-  const [zones] = useState<AreaZone[]>(demoZones);
+  const [tenants, setTenants] = useState<AssociationTenant[]>(initialTenants);
+  const [booths, setBooths] = useState<BoothSlot[]>(initialBooths);
+  const [zones, setZones] = useState<AreaZone[]>(initialZones);
   const [selectedTenant, setSelectedTenant] =
     useState<AssociationTenant | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    getAssociationDataAction().then((data) => {
+      if (isMounted) {
+        if (data.tenants.length > 0) setTenants(data.tenants);
+        if (data.booths.length > 0) setBooths(data.booths);
+        if (data.zones.length > 0) setZones(data.zones);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Live metrics calculations
   const totalTenants = tenants.length;

@@ -21,10 +21,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  loginSchema,
-  registerSchema,
-} from "@/validations/auth-validation";
+import { loginSchema, registerSchema } from "@/validations/auth-validation";
 import { signIn, signUpCustomer } from "@/servers/auth-server";
 
 type Mode = "sign-in" | "sign-up";
@@ -57,12 +54,11 @@ export function CustomerAuthDialog() {
 
   const isSignUp = mode === "sign-up";
 
-  const update = (key: FieldName) => (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    setValues((prev) => ({ ...prev, [key]: event.target.value }));
-    setErrors((prev) => ({ ...prev, [key]: undefined }));
-  };
+  const update =
+    (key: FieldName) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      setValues((prev) => ({ ...prev, [key]: event.target.value }));
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
+    };
 
   const switchMode = (next: Mode) => {
     setMode(next);

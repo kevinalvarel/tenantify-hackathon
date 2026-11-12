@@ -25,7 +25,7 @@ import {
   YAxis,
 } from "recharts";
 import { useAssociation } from "@/context/association-context";
-import { buildAssociationAnalytics } from "@/data/association-analytics";
+import { buildAssociationAnalytics } from "@/lib/analytics";
 import { cn, formatRupiah } from "@/lib/utils";
 import type {
   AnalyticsRange,
@@ -175,9 +175,6 @@ function AnalyticsHeader({
           <h1 className="text-xl font-bold tracking-tight text-foreground">
             Statistik Area
           </h1>
-          <Badge variant="outline" className="text-[11px]">
-            Data demo
-          </Badge>
         </div>
         <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
           Omzet dan kunjungan dari transaksi tenant aktif. Satu transaksi

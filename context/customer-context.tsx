@@ -1,13 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { createContext, useContext, useState, useMemo } from "react";
 import {
   CustomerProduct,
   CustomerCartItem,
@@ -15,7 +8,7 @@ import {
   CustomerOrderStatus,
   Tenant,
 } from "@/types/customer";
-import { demoProducts, demoTenants } from "@/data/customer-demo";
+import { getCustomerDataAction } from "@/servers/customer-server";
 import { toast } from "sonner";
 
 const ORDER_PROGRESS_STEPS: Array<{
@@ -23,22 +16,22 @@ const ORDER_PROGRESS_STEPS: Array<{
   status: CustomerOrderStatus;
   toastMessage: (orderId: string) => string;
 }> = [
-  {
-    delayMs: 4000,
-    status: "Disiapkan",
-    toastMessage: (id) => `Pesanan #${id} dikonfirmasi dan sedang disiapkan!`,
-  },
-  {
-    delayMs: 10000,
-    status: "Siap Diambil",
-    toastMessage: (id) => `Pesanan #${id} sudah siap diambil di booth!`,
-  },
-  {
-    delayMs: 18000,
-    status: "Selesai",
-    toastMessage: (id) => `Pesanan #${id} selesai. Selamat menikmati!`,
-  },
-];
+    {
+      delayMs: 4000,
+      status: "Disiapkan",
+      toastMessage: (id) => `Pesanan #${id} dikonfirmasi dan sedang disiapkan!`,
+    },
+    {
+      delayMs: 10000,
+      status: "Siap Diambil",
+      toastMessage: (id) => `Pesanan #${id} sudah siap diambil di booth!`,
+    },
+    {
+      delayMs: 18000,
+      status: "Selesai",
+      toastMessage: (id) => `Pesanan #${id} selesai. Selamat menikmati!`,
+    },
+  ];
 
 type CustomerContextType = {
   products: CustomerProduct[];
@@ -65,21 +58,13 @@ type CustomerContextType = {
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
 
 export function CustomerProvider({ children }: { children: React.ReactNode }) {
-  const [products] = useState<CustomerProduct[]>(demoProducts);
-  const [tenants] = useState<Tenant[]>(demoTenants);
+  const [products, setProducts] = useState<CustomerProduct[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [cart, setCart] = useState<CustomerCartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
   const [isNutritionModalOpen, setIsNutritionModalOpen] = useState(false);
-  const orderTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  useEffect(() => {
-    const timers = orderTimersRef.current;
-    return () => {
-      timers.forEach((timerId) => clearTimeout(timerId));
-    };
-  }, []);
 
   const cartItemCount = useMemo(
     () => cart.reduce((sum, item) => sum + item.quantity, 0),
