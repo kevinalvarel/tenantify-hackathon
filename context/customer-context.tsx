@@ -1,14 +1,44 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   CustomerProduct,
   CustomerCartItem,
   CustomerOrder,
+  CustomerOrderStatus,
   Tenant,
 } from "@/types/customer";
 import { demoProducts, demoTenants } from "@/data/customer-demo";
 import { toast } from "sonner";
+
+const ORDER_PROGRESS_STEPS: Array<{
+  delayMs: number;
+  status: CustomerOrderStatus;
+  toastMessage: (orderId: string) => string;
+}> = [
+  {
+    delayMs: 4000,
+    status: "Disiapkan",
+    toastMessage: (id) => `Pesanan #${id} dikonfirmasi dan sedang disiapkan!`,
+  },
+  {
+    delayMs: 10000,
+    status: "Siap Diambil",
+    toastMessage: (id) => `Pesanan #${id} sudah siap diambil di booth!`,
+  },
+  {
+    delayMs: 18000,
+    status: "Selesai",
+    toastMessage: (id) => `Pesanan #${id} selesai. Selamat menikmati!`,
+  },
+];
 
 type CustomerContextType = {
   products: CustomerProduct[];
@@ -42,6 +72,14 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
   const [isNutritionModalOpen, setIsNutritionModalOpen] = useState(false);
+  const orderTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    const timers = orderTimersRef.current;
+    return () => {
+      timers.forEach((timerId) => clearTimeout(timerId));
+    };
+  }, []);
 
   const cartItemCount = useMemo(
     () => cart.reduce((sum, item) => sum + item.quantity, 0),
@@ -109,6 +147,21 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
 
   const checkoutOrder = (newOrder: CustomerOrder) => {
     setOrders((prev) => [newOrder, ...prev]);
+
+    ORDER_PROGRESS_STEPS.forEach(({ delayMs, status, toastMessage }) => {
+      const timerId = setTimeout(() => {
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.id === newOrder.id && order.status !== "Dibatalkan"
+              ? { ...order, status }
+              : order
+          )
+        );
+        toast.info(toastMessage(newOrder.id));
+      }, delayMs);
+
+      orderTimersRef.current.push(timerId);
+    });
   };
 
   const reorder = (order: CustomerOrder) => {
