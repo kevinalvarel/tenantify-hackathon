@@ -14,9 +14,10 @@ import {
   CustomerOrder,
   CustomerOrderStatus,
   Tenant,
+  ActiveUmkm,
 } from "@/types/customer";
 import { demoProducts, demoTenants, slugify } from "@/data/customer-demo";
-import { getCustomerDataAction } from "@/servers/customer-server";
+import { getCustomerDataAction, resolveUmkmByCodeAction } from "@/servers/customer-server";
 import { toast } from "sonner";
 
 const ORDER_PROGRESS_STEPS: Array<{
@@ -43,7 +44,13 @@ const ORDER_PROGRESS_STEPS: Array<{
 
 type CustomerContextType = {
   products: CustomerProduct[];
+  allProducts: CustomerProduct[];
   tenants: Tenant[];
+  allTenants: Tenant[];
+  activeUmkm: ActiveUmkm | null;
+  setActiveUmkm: (umkm: ActiveUmkm | null) => void;
+  leaveUmkm: () => void;
+  joinUmkmByCode: (code: string) => Promise<{ success: boolean; message: string; umkm?: ActiveUmkm }>;
   orders: CustomerOrder[];
   cart: CustomerCartItem[];
   isCartOpen: boolean;
@@ -65,15 +72,63 @@ type CustomerContextType = {
 
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
 
+const ACTIVE_UMKM_STORAGE_KEY = "tenantify:active_umkm";
+
 export function CustomerProvider({ children }: { children: React.ReactNode }) {
-  const [products, setProducts] = useState<CustomerProduct[]>(demoProducts);
-  const [tenants, setTenants] = useState<Tenant[]>(demoTenants);
+  const [activeUmkm, setActiveUmkmState] = useState<ActiveUmkm | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const stored = window.localStorage.getItem(ACTIVE_UMKM_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as ActiveUmkm;
+        if (parsed && parsed.code) {
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore localStorage errors (e.g. private mode)
+    }
+    return null;
+  });
+  const [allProducts, setAllProducts] = useState<CustomerProduct[]>(demoProducts);
+  const [allTenants, setAllTenants] = useState<Tenant[]>(demoTenants);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [cart, setCart] = useState<CustomerCartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
   const [isNutritionModalOpen, setIsNutritionModalOpen] = useState(false);
   const orderTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const setActiveUmkm = (umkm: ActiveUmkm | null) => {
+    setActiveUmkmState(umkm);
+    try {
+      if (umkm) {
+        window.localStorage.setItem(ACTIVE_UMKM_STORAGE_KEY, JSON.stringify(umkm));
+      } else {
+        window.localStorage.removeItem(ACTIVE_UMKM_STORAGE_KEY);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const leaveUmkm = () => {
+    setActiveUmkm(null);
+    setSelectedCategory("Semua");
+    toast.info("Anda telah keluar dari UMKM. Masukkan kode baru untuk melihat menu.");
+  };
+
+  const joinUmkmByCode = async (code: string) => {
+    const res = await resolveUmkmByCodeAction(code);
+    if (res.success && res.umkm) {
+      setActiveUmkm(res.umkm);
+      setSelectedCategory("Semua");
+      toast.success(`Terhubung ke ${res.umkm.name}!`);
+      return res;
+    }
+    toast.error(res.message);
+    return res;
+  };
 
   useEffect(() => {
     const timers = orderTimersRef.current;
@@ -103,16 +158,44 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
             mcdCategory: dbProd.mcdCategory ?? demoMatch?.mcdCategory,
           };
         });
-        setProducts(enrichedProducts);
+        setAllProducts(enrichedProducts);
       }
       if (data.tenants.length > 0) {
-        setTenants(data.tenants);
+        setAllTenants(data.tenants);
       }
     });
     return () => {
       isMounted = false;
     };
   }, []);
+
+  // Filter products strictly based on active UMKM
+  const products = useMemo(() => {
+    // 1. Sembunyikan Menu Default: Jika belum join, hilangkan semua daftar menu!
+    if (!activeUmkm) return [];
+
+    // 2. Jika kode spesifik UMKM / paguyuban dengan daftar tenant tertentu:
+    if (activeUmkm.tenantIds && activeUmkm.tenantIds.length > 0) {
+      return allProducts.filter((p) =>
+        activeUmkm.tenantIds!.includes(p.tenantId),
+      );
+    }
+
+    return allProducts;
+  }, [activeUmkm, allProducts]);
+
+  // Filter tenants strictly based on active UMKM
+  const tenants = useMemo(() => {
+    if (!activeUmkm) return [];
+
+    if (activeUmkm.tenantIds && activeUmkm.tenantIds.length > 0) {
+      return allTenants.filter((t) =>
+        activeUmkm.tenantIds!.includes(t.id),
+      );
+    }
+
+    return allTenants;
+  }, [activeUmkm, allTenants]);
 
   const cartItemCount = useMemo(
     () => cart.reduce((sum, item) => sum + item.quantity, 0),
@@ -233,7 +316,13 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     <CustomerContext.Provider
       value={{
         products,
+        allProducts,
         tenants,
+        allTenants,
+        activeUmkm,
+        setActiveUmkm,
+        leaveUmkm,
+        joinUmkmByCode,
         orders,
         cart,
         isCartOpen,

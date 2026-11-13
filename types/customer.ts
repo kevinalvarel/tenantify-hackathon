@@ -1,3 +1,13 @@
+export type ActiveUmkm = {
+  code: string;
+  name: string;
+  type: "paguyuban" | "umkm";
+  description?: string;
+  location?: string;
+  category?: string;
+  tenantIds?: string[];
+};
+
 export type Tenant = {
   id: string;
   name: string;

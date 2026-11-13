@@ -15,6 +15,8 @@ import {
   ArrowRight,
   Check,
   User,
+  MapPin,
+  LogIn,
 } from "lucide-react";
 import { motion, useScroll, useMotionValueEvent } from "motion/react";
 import { useCustomer } from "@/context/customer-context";
@@ -89,6 +91,7 @@ export function CustomerNavbar() {
     activeOrdersCount,
     selectedCategory,
     setSelectedCategory,
+    activeUmkm,
   } = useCustomer();
 
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -189,7 +192,7 @@ export function CustomerNavbar() {
           ease: [0.16, 1, 0.3, 1],
         }}
         className={cn(
-          "pointer-events-auto w-full max-w-[1240px] flex items-center justify-between px-3 sm:px-5 lg:px-6 py-2 sm:py-2.5 rounded-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border border-neutral-200/90 dark:border-neutral-800/90 shadow-lg shadow-black/5 min-w-0 transition-shadow",
+          "pointer-events-auto w-full max-w-[1240px] flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-5 lg:px-6 py-2 sm:py-2.5 rounded-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border border-neutral-200/90 dark:border-neutral-800/90 shadow-lg shadow-black/5 min-w-0 transition-shadow",
           !isVisible && "pointer-events-none",
         )}
       >
@@ -213,12 +216,12 @@ export function CustomerNavbar() {
           </span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink min-w-0">
+        <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1.5 shrink min-w-0">
           <Link
             href="/customer"
             onClick={() => setSelectedCategory("Semua")}
             className={cn(
-              "px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-colors select-none whitespace-nowrap",
+              "px-2 xl:px-3 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-colors select-none whitespace-nowrap",
               (pathname === "/customer" ||
                 pathname === "/dashboard/customer") &&
                 selectedCategory === "Semua"
@@ -229,118 +232,148 @@ export function CustomerNavbar() {
             Beranda
           </Link>
 
-          {/* 2. Pilihan Makanan */}
-          <a
-            href="#pilihan-menu"
-            className="px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold text-neutral-600 dark:text-neutral-300 hover:text-[#c85a32] hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50 transition-colors select-none whitespace-nowrap"
-          >
-            Pilihan Makanan
-          </a>
-
-          {/* 3. Tenant Favorit */}
-          <a
-            href="#katering-section"
-            className="px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold text-neutral-600 dark:text-neutral-300 hover:text-[#c85a32] hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50 transition-colors select-none whitespace-nowrap"
-          >
-            Tenant Favorit
-          </a>
-
-          {/* 4. Jenis Makanan Dropdown */}
-          <DropdownMenu
-            open={foodDropdownOpen}
-            onOpenChange={setFoodDropdownOpen}
-          >
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "flex items-center gap-1 px-2.5 xl:px-3.5 py-1.5 h-auto rounded-full text-xs xl:text-[13px] font-semibold transition-colors cursor-pointer select-none outline-none whitespace-nowrap",
-                    isFoodTypeActive
-                      ? "text-primary bg-primary/10 hover:bg-primary/15 hover:text-primary"
-                      : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
-                  )}
-                >
-                  <span className="max-w-[110px] xl:max-w-none truncate">
-                    {isFoodTypeActive ? selectedCategory : "Jenis Makanan"}
-                  </span>
-                  <ChevronDown
-                    className={cn(
-                      "size-3.5 transition-transform duration-200 shrink-0 opacity-70",
-                      foodDropdownOpen && "rotate-180 opacity-100",
-                    )}
-                  />
-                </Button>
-              }
-            />
-
-            <DropdownMenuContent
-              align="start"
-              sideOffset={14}
-              className="w-72 p-2 rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-neutral-800 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150"
+          {/* Join UMKM (Jika belum connect) ATAU Pill Lokasi UMKM Aktif (Jika sudah connect) */}
+          {!activeUmkm ? (
+            <Link
+              href="/join"
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-all select-none whitespace-nowrap",
+                pathname.includes("/join")
+                  ? "text-white bg-[#c85a32] shadow-sm"
+                  : "text-[#c85a32] bg-[#c85a32]/10 hover:bg-[#c85a32]/20 border border-[#c85a32]/30",
+              )}
             >
-              <div className="px-3 pt-2 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
-                Pilih Jenis Makanan
-              </div>
+              <LogIn className="size-3.5" />
+              <span>Join UMKM</span>
+            </Link>
+          ) : (
+            <Link
+              href="/join"
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-all select-none whitespace-nowrap max-w-[130px] xl:max-w-[160px]",
+                pathname.includes("/join")
+                  ? "text-white bg-[#c85a32] shadow-sm"
+                  : "text-[#c85a32] bg-[#c85a32]/10 hover:bg-[#c85a32]/20 border border-[#c85a32]/30",
+              )}
+              title={`Terhubung ke ${activeUmkm.name} (${activeUmkm.code}). Klik untuk ganti.`}
+            >
+              <MapPin className="size-3.5 shrink-0 text-[#c85a32]" />
+              <span className="truncate">{activeUmkm.name}</span>
+              <Badge className="bg-[#c85a32] text-white text-[10px] font-mono px-1 py-0 border-none shrink-0">
+                {activeUmkm.code}
+              </Badge>
+            </Link>
+          )}
 
-              {foodTypes.map((item) => {
-                const isSelected = selectedCategory === item.name;
-                return (
-                  <DropdownMenuItem
-                    key={item.id}
-                    onClick={() => handleSelectFoodType(item.name)}
-                    className={cn(
-                      "flex flex-col items-start px-3 py-2.5 rounded-xl cursor-pointer transition-colors group",
-                      isSelected
-                        ? "bg-primary/15 text-neutral-900 dark:text-white"
-                        : "hover:bg-neutral-100 dark:hover:bg-neutral-800/60",
-                    )}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-neutral-900 dark:text-white group-hover:text-primary transition-colors">
-                          {item.label}
-                        </span>
-                        {item.badge && (
-                          <Badge
-                            className={cn(
-                              "text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase border-none",
-                              item.badgeColor || "bg-primary text-black",
-                            )}
-                          >
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </div>
-                      {isSelected && (
-                        <Check className="size-3.5 text-primary shrink-0 ml-auto" />
-                      )}
-                    </div>
-                    <span className="text-[10px] text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5 leading-normal">
-                      {item.description}
-                    </span>
-                  </DropdownMenuItem>
-                );
-              })}
-
-              <DropdownMenuSeparator className="my-1 bg-neutral-200 dark:bg-neutral-800" />
-
-              {/* Reset to All Menus */}
-              <DropdownMenuItem
-                onClick={() => handleSelectFoodType("Semua")}
-                className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800/60 text-xs font-semibold text-neutral-700 dark:text-neutral-300"
+          {/* Menu Khusus: Hanya jika sudah terhubung ke UMKM */}
+          {activeUmkm && (
+            <>
+              {/* Pilihan Makanan */}
+              <a
+                href="#pilihan-menu"
+                className="px-2 xl:px-3 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold text-neutral-600 dark:text-neutral-300 hover:text-[#c85a32] hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50 transition-colors select-none whitespace-nowrap"
               >
-                <span>Semua Menu Bazaar</span>
-                <ArrowRight className="size-3.5 text-neutral-400" />
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                Pilihan Makanan
+              </a>
 
-          {/* 3. Pesanan */}
+              {/* Jenis Makanan Dropdown */}
+              <DropdownMenu
+                open={foodDropdownOpen}
+                onOpenChange={setFoodDropdownOpen}
+              >
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "flex items-center gap-1 px-2 xl:px-3 py-1.5 h-auto rounded-full text-xs xl:text-[13px] font-semibold transition-colors cursor-pointer select-none outline-none whitespace-nowrap",
+                        isFoodTypeActive
+                          ? "text-primary bg-primary/10 hover:bg-primary/15 hover:text-primary"
+                          : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
+                      )}
+                    >
+                      <span className="max-w-[95px] xl:max-w-[120px] truncate">
+                        {isFoodTypeActive ? selectedCategory : "Jenis Makanan"}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "size-3.5 transition-transform duration-200 shrink-0 opacity-70",
+                          foodDropdownOpen && "rotate-180 opacity-100",
+                        )}
+                      />
+                    </Button>
+                  }
+                />
+
+                <DropdownMenuContent
+                  align="start"
+                  sideOffset={14}
+                  className="w-72 p-2 rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-neutral-800 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <div className="px-3 pt-2 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                    Pilih Jenis Makanan
+                  </div>
+
+                  {foodTypes.map((item) => {
+                    const isSelected = selectedCategory === item.name;
+                    return (
+                      <DropdownMenuItem
+                        key={item.id}
+                        onClick={() => handleSelectFoodType(item.name)}
+                        className={cn(
+                          "flex flex-col items-start px-3 py-2.5 rounded-xl cursor-pointer transition-colors group",
+                          isSelected
+                            ? "bg-primary/15 text-neutral-900 dark:text-white"
+                            : "hover:bg-neutral-100 dark:hover:bg-neutral-800/60",
+                        )}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-neutral-900 dark:text-white group-hover:text-primary transition-colors">
+                              {item.label}
+                            </span>
+                            {item.badge && (
+                              <Badge
+                                className={cn(
+                                  "text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase border-none",
+                                  item.badgeColor || "bg-primary text-black",
+                                )}
+                              >
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </div>
+                          {isSelected && (
+                            <Check className="size-3.5 text-primary shrink-0 ml-auto" />
+                          )}
+                        </div>
+                        <span className="text-[10px] text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5 leading-normal">
+                          {item.description}
+                        </span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+
+                  <DropdownMenuSeparator className="my-1 bg-neutral-200 dark:bg-neutral-800" />
+
+                  {/* Reset to All Menus */}
+                  <DropdownMenuItem
+                    onClick={() => handleSelectFoodType("Semua")}
+                    className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800/60 text-xs font-semibold text-neutral-700 dark:text-neutral-300"
+                  >
+                    <span>Semua Menu UMKM</span>
+                    <ArrowRight className="size-3.5 text-neutral-400" />
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
+
+          {/* Pesanan */}
           <Link
             href="/customer/orders"
             className={cn(
-              "px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-colors select-none flex items-center gap-1.5 whitespace-nowrap",
+              "px-2 xl:px-3 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-colors select-none flex items-center gap-1.5 whitespace-nowrap",
               pathname.includes("/orders")
                 ? "text-white bg-[#c85a32] shadow-sm"
                 : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
@@ -354,11 +387,11 @@ export function CustomerNavbar() {
             )}
           </Link>
 
-          {/* 4. Denah Bazaar */}
+          {/* Denah Bazaar */}
           <Link
             href="/customer/map"
             className={cn(
-              "px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-colors select-none whitespace-nowrap",
+              "px-2 xl:px-3 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-colors select-none whitespace-nowrap",
               pathname.includes("/map")
                 ? "text-white bg-[#c85a32] shadow-sm"
                 : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
@@ -369,7 +402,7 @@ export function CustomerNavbar() {
         </nav>
 
         {/* Right Section: Terracotta Pill Capsule (Cart CTA), User Menu & Mobile Trigger */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 relative z-10">
           {/* Cart CTA */}
           <Button
             onClick={() => setIsCartOpen(true)}
@@ -377,7 +410,7 @@ export function CustomerNavbar() {
               "group relative flex items-center justify-center font-semibold text-xs sm:text-[13px] transition-all duration-200 cursor-pointer select-none active:scale-95 bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-[0_4px_12px_rgba(200,90,50,0.25)] border-none shrink-0",
               isJoinPage
                 ? "size-9 sm:size-10 p-0 rounded-full"
-                : "h-9 sm:h-10 px-4 sm:px-5 rounded-full gap-2",
+                : "h-9 sm:h-10 px-2.5 sm:px-3 xl:px-3.5 rounded-full gap-1.5",
             )}
             aria-label="Keranjang Belanja"
           >
@@ -385,14 +418,14 @@ export function CustomerNavbar() {
 
             {!isJoinPage && (
               <>
-                <span className="hidden sm:inline">Keranjang</span>
+                <span className="hidden 2xl:inline">Keranjang</span>
 
                 {cartItemCount > 0 ? (
                   <>
                     <Badge className="flex items-center justify-center size-5 p-0 rounded-full bg-white text-[#c85a32] text-[11px] font-bold border-none shrink-0">
                       {cartItemCount}
                     </Badge>
-                    <span className="hidden xl:inline text-xs font-semibold text-white/90">
+                    <span className="hidden 2xl:inline text-xs font-semibold text-white/90">
                       • {formatRupiah(cartTotal)}
                     </span>
                   </>
@@ -558,50 +591,77 @@ export function CustomerNavbar() {
             <span>Beranda</span>
           </Link>
 
-          <a
-            href="#pilihan-menu"
+          {/* Menu Makanan: Hanya jika UMKM sudah aktif */}
+          {activeUmkm && (
+            <>
+              <a
+                href="#pilihan-menu"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              >
+                <span>Pilihan Makanan</span>
+              </a>
+
+              <a
+                href="#katering-section"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              >
+                <span>Tenant Favorit</span>
+              </a>
+
+              {/* Jenis Makanan Category Accordion / List in Mobile */}
+              <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 p-2.5 bg-neutral-50 dark:bg-neutral-900/50">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 px-2 py-1 mb-1">
+                  Jenis Makanan:
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {foodTypes.map((item) => {
+                    const isSelected = selectedCategory === item.name;
+                    return (
+                      <Button
+                        key={item.id}
+                        variant={isSelected ? "default" : "outline"}
+                        onClick={() => handleSelectFoodType(item.name)}
+                        className={cn(
+                          "flex items-center justify-center p-2.5 h-auto rounded-xl text-center text-xs font-semibold transition-all cursor-pointer",
+                          isSelected
+                            ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs border-transparent"
+                            : "bg-white dark:bg-neutral-800/80 text-neutral-800 dark:text-neutral-200 hover:border-primary",
+                        )}
+                      >
+                        <span className="truncate">{item.label}</span>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <Separator className="my-1 bg-neutral-200 dark:bg-neutral-800" />
+            </>
+          )}
+
+          {/* Join UMKM Link on Mobile */}
+          <Link
+            href="/join"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            className={cn(
+              "flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold transition-colors",
+              pathname.includes("/join")
+                ? "bg-[#c85a32] text-white"
+                : "text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800",
+            )}
           >
-            <span>Pilihan Makanan</span>
-          </a>
-
-          <a
-            href="#katering-section"
-            onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-          >
-            <span>Tenant Favorit</span>
-          </a>
-
-          {/* Jenis Makanan Category Accordion / List in Mobile */}
-          <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 p-2.5 bg-neutral-50 dark:bg-neutral-900/50">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 px-2 py-1 mb-1">
-              Jenis Makanan:
+            <div className="flex items-center gap-2">
+              <LogIn className="size-4 text-[#c85a32]" />
+              <span>{activeUmkm ? "Ganti UMKM / Lokasi" : "Join UMKM / Paguyuban"}</span>
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              {foodTypes.map((item) => {
-                const isSelected = selectedCategory === item.name;
-                return (
-                  <Button
-                    key={item.id}
-                    variant={isSelected ? "default" : "outline"}
-                    onClick={() => handleSelectFoodType(item.name)}
-                    className={cn(
-                      "flex items-center justify-center p-2.5 h-auto rounded-xl text-center text-xs font-semibold transition-all cursor-pointer",
-                      isSelected
-                        ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs border-transparent"
-                        : "bg-white dark:bg-neutral-800/80 text-neutral-800 dark:text-neutral-200 hover:border-primary",
-                    )}
-                  >
-                    <span className="truncate">{item.label}</span>
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-
-          <Separator className="my-1 bg-neutral-200 dark:bg-neutral-800" />
+            {activeUmkm && (
+              <Badge className="bg-[#c85a32] text-white text-[10px] py-0 border-none">
+                {activeUmkm.code}
+              </Badge>
+            )}
+          </Link>
 
           <Link
             href="/customer/orders"
