@@ -134,7 +134,7 @@ export function CustomerAuthDialog({
               variant={variant || "default"}
               size="sm"
               className={cn(
-                "h-9 sm:h-10 px-3.5 sm:px-4 rounded-full font-semibold text-xs sm:text-[13px] gap-1.5 shrink-0 bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-sm transition-all duration-200 cursor-pointer active:scale-95",
+                "h-9 sm:h-10 px-3 sm:px-3.5 2xl:px-4 rounded-full font-semibold text-xs sm:text-[13px] gap-1.5 shrink-0 bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-sm transition-all duration-200 cursor-pointer active:scale-95",
                 className,
               )}
             />
@@ -142,7 +142,9 @@ export function CustomerAuthDialog({
         }
       >
         <LogIn className="size-3.5 sm:size-4 shrink-0" />
-        <span>Masuk / Daftar</span>
+        <span>
+          Masuk<span className="hidden 2xl:inline"> / Daftar</span>
+        </span>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

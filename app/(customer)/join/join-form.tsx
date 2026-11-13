@@ -10,19 +10,32 @@ import {
   Search,
   UserRound,
   X,
+  Store,
+  ArrowRight,
+  UtensilsCrossed,
+  MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import CodeSlots, {
   type CodeSlotsStatus,
 } from "@/components/customer/ui/number-slots";
 import { useSession } from "@/lib/auth/auth-client";
 import { logout } from "@/servers/auth-server";
+import { useCustomer } from "@/context/customer-context";
+import type { ActiveUmkm } from "@/types/customer";
 
-type Association = { code: string; name: string };
+const SAMPLE_CHIPS = [
+  { code: "5S5CTP", label: "Cilegon Juare", type: "Paguyuban" },
+  { code: "KEB001", label: "Kevin Kebab", type: "UMKM" },
+  { code: "BBK001", label: "Bebek Madura", type: "UMKM" },
+  { code: "KOP001", label: "Janji Manis", type: "UMKM" },
+  { code: "AYM001", label: "Ayam Juara", type: "UMKM" },
+  { code: "PGY001", label: "Nusantara", type: "Paguyuban" },
+];
 
-const GUEST_KEY = "tenantify:join:guest";
 const SAVED_KEY = "tenantify:join:saved";
 const STORAGE_EVENT = "tenantify:join:storage";
 
@@ -69,48 +82,45 @@ function writeStorage(key: string, value: unknown) {
 export function JoinForm({
   defaultValue = "",
   initialStatus = "idle",
-  association = null,
+  detectedUmkm = null,
   error = null,
 }: {
   defaultValue?: string;
   initialStatus?: CodeSlotsStatus;
-  association?: Association | null;
+  detectedUmkm?: ActiveUmkm | null;
   error?: string | null;
 }) {
   const router = useRouter();
   const { data: session, isPending } = useSession();
+  const { activeUmkm, setActiveUmkm } = useCustomer();
   const [code, setCode] = useState(defaultValue);
   const [status, setStatus] = useState<CodeSlotsStatus>(initialStatus);
   const [loggingOut, setLoggingOut] = useState(false);
-  const guestRaw = useStored(GUEST_KEY);
+
   const savedRaw = useStored(SAVED_KEY);
-  const guest = useMemo(() => parse<Association>(guestRaw), [guestRaw]);
   const saved = useMemo(
-    () => parse<Association[]>(savedRaw) ?? [],
+    () => parse<ActiveUmkm[]>(savedRaw) ?? [],
     [savedRaw],
   );
 
   const isLoggedIn = !!session?.user;
 
+  // Auto-connect when a valid UMKM is detected from search params
   useEffect(() => {
-    if (isPending || isLoggedIn || !association) return;
-    if (guest?.code === association.code) return;
-    writeStorage(GUEST_KEY, association);
-  }, [isPending, isLoggedIn, association, guest]);
+    if (detectedUmkm) {
+      setActiveUmkm(detectedUmkm);
+    }
+  }, [detectedUmkm, setActiveUmkm]);
 
-  // shortcut: batas 1 kode tamu hanya di klien, ?code= manual masih bisa lookup — pindahkan ke server saat sesi sudah ada
-  const locked = !isPending && !isLoggedIn && guest !== null;
-  const shown = association ?? (locked ? guest : null);
-  const activeCode = locked && guest ? guest.code : code;
   const isSaved =
-    !!association && saved.some((item) => item.code === association.code);
+    !!detectedUmkm && saved.some((item) => item.code === detectedUmkm.code);
 
-  const updateSaved = (next: Association[]) => writeStorage(SAVED_KEY, next);
+  const updateSaved = (next: ActiveUmkm[]) => writeStorage(SAVED_KEY, next);
 
   const save = () => {
-    if (!association || isSaved) return;
-    updateSaved([...saved, association]);
-    toast.success("Asosiasi disimpan.");
+    if (!detectedUmkm || isSaved) return;
+    updateSaved([...saved, detectedUmkm]);
+    toast.success("UMKM / Paguyuban tersimpan di akun.");
   };
 
   const handleLogout = async () => {
@@ -126,154 +136,260 @@ export function JoinForm({
     router.refresh();
   };
 
-  return (
-    <div className="flex flex-col gap-3">
-      {!isPending &&
-        (isLoggedIn ? (
-          <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <UserRound className="size-4 shrink-0 text-primary" />
-              <div className="min-w-0">
-                <p className="truncate text-xs font-medium">
-                  {session.user.name}
-                </p>
-                <p className="truncate text-[11px] text-muted-foreground">
-                  {session.user.email}
-                </p>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="shrink-0 gap-1 text-xs"
-              onClick={handleLogout}
-              disabled={loggingOut}
-            >
-              <LogOut className="size-3.5" />
-              {loggingOut ? "Keluar..." : "Keluar"}
-            </Button>
-          </div>
-        ) : null)}
+  const handleGoToMenu = () => {
+    if (detectedUmkm) {
+      setActiveUmkm(detectedUmkm);
+      toast.success(`Menampilkan menu ${detectedUmkm.name}`);
+    }
+    router.push("/customer");
+  };
 
+  const handleSelectSample = (sampleCode: string) => {
+    setCode(sampleCode);
+    router.push(`/join?code=${sampleCode}`);
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* User Info Bar if Logged In */}
+      {!isPending && isLoggedIn && (
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/60 px-3 py-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <UserRound className="size-4 shrink-0 text-[#c85a32]" />
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-neutral-900 dark:text-neutral-100">
+                {session.user.name}
+              </p>
+              <p className="truncate text-[11px] text-neutral-500">
+                {session.user.email}
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="shrink-0 gap-1 text-xs h-7"
+            onClick={handleLogout}
+            disabled={loggingOut}
+          >
+            <LogOut className="size-3.5" />
+            {loggingOut ? "Keluar..." : "Keluar"}
+          </Button>
+        </div>
+      )}
+
+      {/* Info UMKM Aktif Saat Ini (jika sudah ada sebelumnya) */}
+      {activeUmkm && !detectedUmkm && (
+        <div className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-[#c85a32]/30 bg-[#c85a32]/5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Store className="size-4 text-[#c85a32] shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#c85a32]">
+                Saat Ini Terhubung
+              </p>
+              <p className="text-xs font-extrabold text-neutral-900 dark:text-white truncate">
+                {activeUmkm.name} ({activeUmkm.code})
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => router.push("/customer")}
+            className="rounded-full text-xs font-semibold h-7 px-3 bg-[#c85a32] hover:bg-[#b34a24] text-white shrink-0"
+          >
+            Buka Menu
+          </Button>
+        </div>
+      )}
+
+      {/* Input Form Kode Unik */}
       <form action="/join" method="get" className="flex flex-col gap-3">
-        <Label htmlFor="code">Kode Pengelola</Label>
-        <div className="flex justify-center">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="code" className="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-300">
+            Masukkan 6 Digit Kode Unik
+          </Label>
+          <span className="text-[11px] text-neutral-400">Contoh: 5S5CTP, KEB001</span>
+        </div>
+
+        <div className="flex justify-center py-2">
           <CodeSlots
             id="code"
             length={6}
-            value={activeCode}
+            value={code}
             onChange={(next) => {
-              setCode(next);
+              setCode(next.toUpperCase());
               setStatus("idle");
             }}
-            readOnly={locked}
             status={status}
             alphanumeric
-            ariaLabel="Kode pengelola"
-            accentColor="var(--primary)"
-            inkColor="var(--primary)"
+            ariaLabel="Kode unik UMKM"
+            accentColor="#c85a32"
+            inkColor="#c85a32"
             slotColor="var(--muted)"
-            digitColor="var(--primary-foreground)"
+            digitColor="var(--foreground)"
             dangerColor="var(--destructive)"
-            slotSize={36}
-            gap={6}
-            radius={10}
+            slotSize={42}
+            gap={8}
+            radius={12}
             mask={false}
             caret
-            autoFocus={!locked}
+            autoFocus
           />
         </div>
-        <input type="hidden" name="code" value={activeCode} />
+        <input type="hidden" name="code" value={code} />
+
         <Button
           type="submit"
-          className="w-full gap-1.5"
-          disabled={locked || code.length !== 6}
+          className="w-full gap-2 h-11 rounded-2xl font-bold bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-md shadow-[#c85a32]/20 text-sm cursor-pointer active:scale-[0.99] transition-all"
+          disabled={code.length !== 6}
         >
           <Search className="size-4" />
-          Cari Pengelola
+          <span>Deteksi & Buka Menu UMKM</span>
         </Button>
       </form>
 
-      {shown && (
-        <div className="flex items-start gap-3 rounded-lg border border-emerald-600/30 bg-emerald-600/10 p-3">
-          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600" />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
-              {association ? "Pengelola ditemukan" : "Kode tersimpan"}
-            </p>
-            <p className="font-semibold">{shown.name}</p>
-            <p className="font-mono text-xs text-muted-foreground">
-              {shown.code}
-            </p>
-          </div>
-          {isLoggedIn && association && (
-            <Button
+      {/* Shortcut Sample Chips */}
+      <div className="space-y-1.5 pt-1">
+        <p className="text-[11px] font-semibold text-neutral-500 text-center">
+          Atau klik kode sample untuk menguji cepat:
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          {SAMPLE_CHIPS.map((chip) => (
+            <button
+              key={chip.code}
               type="button"
-              size="sm"
-              variant={isSaved ? "secondary" : "default"}
-              className="shrink-0 gap-1 text-xs"
-              onClick={save}
-              disabled={isSaved}
+              onClick={() => handleSelectSample(chip.code)}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-800 hover:border-[#c85a32] hover:text-[#c85a32] transition-colors cursor-pointer"
             >
-              {isSaved ? (
-                <Check className="size-3.5" />
-              ) : (
-                <BookmarkPlus className="size-3.5" />
-              )}
-              {isSaved ? "Tersimpan" : "Simpan"}
-            </Button>
-          )}
+              <span className="font-mono font-bold text-[#c85a32]">{chip.code}</span>
+              <span className="text-neutral-500 dark:text-neutral-400">({chip.label})</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* HASIL DETEKSI UMKM */}
+      {detectedUmkm && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col gap-3 rounded-2xl border border-emerald-600/30 bg-emerald-500/10 dark:bg-emerald-950/20 p-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                  UMKM / Paguyuban Terdeteksi
+                </p>
+                <h2 className="text-base font-extrabold text-neutral-900 dark:text-neutral-100">
+                  {detectedUmkm.name}
+                </h2>
+                <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-neutral-600 dark:text-neutral-300">
+                  <Badge className="bg-emerald-600 text-white text-[10px] font-bold py-0 border-none">
+                    {detectedUmkm.type === "paguyuban" ? "Paguyuban" : "Stan UMKM"}
+                  </Badge>
+                  <span className="font-mono font-bold text-[#c85a32]">
+                    Kode: {detectedUmkm.code}
+                  </span>
+                  {detectedUmkm.location && (
+                    <span className="flex items-center gap-1 text-neutral-500">
+                      <MapPin className="size-3" />
+                      {detectedUmkm.location}
+                    </span>
+                  )}
+                </div>
+                {detectedUmkm.description && (
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1.5 leading-relaxed">
+                    {detectedUmkm.description}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {isLoggedIn && (
+              <Button
+                type="button"
+                size="sm"
+                variant={isSaved ? "secondary" : "default"}
+                className="shrink-0 gap-1 text-xs h-7 rounded-full"
+                onClick={save}
+                disabled={isSaved}
+              >
+                {isSaved ? (
+                  <Check className="size-3" />
+                ) : (
+                  <BookmarkPlus className="size-3" />
+                )}
+                <span>{isSaved ? "Tersimpan" : "Simpan"}</span>
+              </Button>
+            )}
+          </div>
+
+          {/* Tombol Utama: Buka Menu */}
+          <Button
+            type="button"
+            onClick={handleGoToMenu}
+            className="w-full h-11 rounded-xl bg-[#c85a32] hover:bg-[#b34a24] text-white font-bold text-sm gap-2 shadow-lg shadow-[#c85a32]/25 cursor-pointer mt-1"
+          >
+            <UtensilsCrossed className="size-4" />
+            <span>Buka Menu & Mulai Pesan</span>
+            <ArrowRight className="size-4" />
+          </Button>
         </div>
       )}
 
-      {locked && (
-        <p className="text-xs text-muted-foreground">
-          Kamu sudah memakai 1 kode gratis di browser ini. Masuk untuk
-          menyimpan dan mencari kode pengelola lain.
-        </p>
+      {/* Pesan Error jika tidak ditemukan */}
+      {error && (
+        <div
+          role="alert"
+          className="p-3 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 text-xs text-red-600 dark:text-red-400 font-medium leading-relaxed"
+        >
+          {error}
+        </div>
       )}
 
+      {/* Daftar Tersimpan jika login */}
       {isLoggedIn && saved.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <p className="text-xs font-medium text-muted-foreground">
-            Asosiasi tersimpan
+        <div className="flex flex-col gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+          <p className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+            UMKM / Paguyuban Tersimpan:
           </p>
-          <ul className="flex flex-col gap-1.5">
+          <div className="grid grid-cols-1 gap-1.5">
             {saved.map((item) => (
-              <li
+              <div
                 key={item.code}
-                className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2"
+                className="flex items-center justify-between gap-2 rounded-xl border border-neutral-200 dark:border-neutral-800 p-2.5 bg-neutral-50/50 dark:bg-neutral-900/50"
               >
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-medium">{item.name}</p>
-                  <p className="font-mono text-[11px] text-muted-foreground">
-                    {item.code}
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSelectSample(item.code)}
+                  className="flex items-center gap-2 min-w-0 text-left hover:text-[#c85a32] transition-colors cursor-pointer"
+                >
+                  <Store className="size-4 text-[#c85a32] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-bold text-neutral-900 dark:text-white">
+                      {item.name}
+                    </p>
+                    <p className="font-mono text-[10px] text-neutral-500">
+                      {item.code} • {item.location || "Lokasi Bazaar"}
+                    </p>
+                  </div>
+                </button>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-xs"
                   aria-label={`Hapus ${item.name}`}
                   onClick={() =>
-                    updateSaved(
-                      saved.filter((entry) => entry.code !== item.code),
-                    )
+                    updateSaved(saved.filter((entry) => entry.code !== item.code))
                   }
+                  className="shrink-0 text-neutral-400 hover:text-red-500"
                 >
                   <X className="size-3.5" />
                 </Button>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
-      )}
-
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
       )}
     </div>
   );

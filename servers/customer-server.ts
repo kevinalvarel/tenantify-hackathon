@@ -1,9 +1,99 @@
 "use server";
 
 import { db } from "@/drizzle";
-import { tenants, boothSlots, products } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import type { CustomerProduct, Tenant } from "@/types/customer";
+import { tenants, boothSlots, products, user, associationProfiles } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
+import type { CustomerProduct, Tenant, ActiveUmkm } from "@/types/customer";
+import { findPresetUmkmByCode } from "@/data/umkm-registry";
+
+export async function resolveUmkmByCodeAction(rawCode: string): Promise<{
+  success: boolean;
+  message: string;
+  umkm?: ActiveUmkm;
+}> {
+  try {
+    if (!rawCode || typeof rawCode !== "string") {
+      return { success: false, message: "Kode unik wajib diisi." };
+    }
+
+    const normalizedCode = rawCode.trim().toUpperCase();
+
+    // 1. First check in Preset / Configured Registry (fastest & robust)
+    const preset = findPresetUmkmByCode(normalizedCode);
+    if (preset) {
+      return {
+        success: true,
+        message: `Berhasil mendeteksi ${preset.name}`,
+        umkm: {
+          code: preset.code,
+          name: preset.name,
+          type: preset.type,
+          description: preset.description,
+          location: preset.location,
+          category: preset.category,
+          tenantIds: preset.tenantIds,
+        },
+      };
+    }
+
+    // 2. Check Database for association user
+    try {
+      const [assocUser] = await db
+        .select({
+          id: user.id,
+          name: user.name,
+          role: user.role,
+          associationCode: user.associationCode,
+        })
+        .from(user)
+        .where(
+          and(
+            eq(user.associationCode, normalizedCode),
+            eq(user.role, "association"),
+          ),
+        )
+        .limit(1);
+
+      if (assocUser) {
+        // Fetch association profile if available
+        const [profile] = await db
+          .select()
+          .from(associationProfiles)
+          .where(eq(associationProfiles.id, assocUser.id))
+          .limit(1);
+
+        return {
+          success: true,
+          message: `Berhasil mendeteksi Paguyuban ${assocUser.name}`,
+          umkm: {
+            code: normalizedCode,
+            name: profile?.name || assocUser.name,
+            type: "paguyuban",
+            description:
+              profile?.description ||
+              "Paguyuban Multi-UMKM & Pusat Kuliner Terpadu",
+            location: profile?.address || "Area Bazaar & Sentra UMKM",
+            tenantIds: [], // All tenants
+          },
+        };
+      }
+    } catch (dbErr) {
+      console.warn("Database lookup warning for association code:", dbErr);
+    }
+
+    return {
+      success: false,
+      message:
+        "Kode unik UMKM tidak ditemukan. Coba kode sample seperti 5S5CTP (Paguyuban Cilegon Juare), KEB001, atau BBK001.",
+    };
+  } catch (error) {
+    console.error("Error resolving UMKM by code:", error);
+    return {
+      success: false,
+      message: "Terjadi kesalahan saat memeriksa kode. Silakan coba lagi.",
+    };
+  }
+}
 
 export async function getCustomerDataAction(): Promise<{
   products: CustomerProduct[];
