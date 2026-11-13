@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, Building2, ImagePlus, Save } from "lucide-react";
+import { Bell, Building2, CreditCard, ImagePlus, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +27,9 @@ type SettingsValues = {
   notifyNewTenant: boolean;
   notifyNewReview: boolean;
   notifyPaymentDue: boolean;
+  bankName: string;
+  bankAccountNumber: string;
+  bankAccountHolder: string;
 };
 
 const NOTIFICATIONS: {
@@ -191,6 +194,60 @@ export function AssociationSettingsForm({
                 className="min-h-20 text-base sm:text-sm"
               />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="size-4 text-primary" />
+            Rekening Pembayaran
+          </CardTitle>
+          <CardDescription>
+            Rekening ini tampil ke pedagang saat membayar tagihan sewa.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="settings-bank-name">Nama bank</Label>
+            <Input
+              id="settings-bank-name"
+              value={values.bankName}
+              onChange={(event) =>
+                setValues({ ...values, bankName: event.target.value })
+              }
+              maxLength={60}
+              placeholder="Contoh: Bank BCA"
+              className="h-11 sm:h-8"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="settings-bank-account">Nomor rekening</Label>
+            <Input
+              id="settings-bank-account"
+              value={values.bankAccountNumber}
+              onChange={(event) =>
+                setValues({ ...values, bankAccountNumber: event.target.value })
+              }
+              maxLength={40}
+              className="h-11 sm:h-8"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <Label htmlFor="settings-bank-holder">Atas nama</Label>
+            <Input
+              id="settings-bank-holder"
+              value={values.bankAccountHolder}
+              onChange={(event) =>
+                setValues({ ...values, bankAccountHolder: event.target.value })
+              }
+              maxLength={80}
+              placeholder="Nama pemilik rekening"
+              className="h-11 sm:h-8"
+            />
           </div>
         </CardContent>
       </Card>

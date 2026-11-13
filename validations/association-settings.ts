@@ -31,6 +31,24 @@ export const associationSettingsSchema = z.object({
   notifyNewTenant: z.boolean(),
   notifyNewReview: z.boolean(),
   notifyPaymentDue: z.boolean(),
+  bankName: z
+    .string()
+    .trim()
+    .max(60, "Nama bank maksimal 60 karakter")
+    .optional()
+    .default(""),
+  bankAccountNumber: z
+    .string()
+    .trim()
+    .max(40, "Nomor rekening maksimal 40 karakter")
+    .optional()
+    .default(""),
+  bankAccountHolder: z
+    .string()
+    .trim()
+    .max(80, "Nama pemilik rekening maksimal 80 karakter")
+    .optional()
+    .default(""),
 });
 
 export type TAssociationSettings = z.input<typeof associationSettingsSchema>;

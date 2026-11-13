@@ -6,11 +6,9 @@ import {
   CreditCard,
   CheckCircle2,
   Clock,
-  QrCode,
   Receipt,
   Copy,
   Store,
-  Sparkles,
   Printer,
   Check,
 } from "lucide-react";
@@ -42,29 +40,24 @@ type RentPaymentSystemProps = {
   onPayInvoice: (
     invoiceId: string,
     method: string
-  ) => { success: boolean; receiptNumber: string };
+  ) => Promise<{ success: boolean; receiptNumber: string; message: string }>;
 };
 
+// shortcut: payment settles without a gateway, wire a real payment provider before production.
 const PAYMENT_METHODS = [
   {
-    id: "QRIS",
-    name: "QRIS Instan",
-    description: "Scan otomatis via GoPay, OVO, Dana, BCA, atau Livin",
-    icon: <QrCode className="size-4" />,
-  },
-  {
-    id: "Transfer Bank BCA",
-    name: "BCA Virtual Account",
-    description: "Nomor VA: 8801 9238 1234 (Verifikasi Otomatis)",
+    id: "Transfer Bank",
+    name: "Transfer Bank",
+    description:
+      "Transfer ke rekening resmi pengelola area, lalu catat pembayaran di sini.",
     icon: <CreditCard className="size-4" />,
-    accountNumber: "880192381234",
   },
   {
-    id: "Transfer Bank Mandiri",
-    name: "Mandiri Bill Payment",
-    description: "Kode Perusahaan: 70012, No. Pelanggan: 0813567812",
+    id: "Tunai",
+    name: "Tunai di Pengelola",
+    description:
+      "Bayar langsung ke pengelola area. Pengelola memverifikasi dari sisinya.",
     icon: <Building2 className="size-4" />,
-    accountNumber: "700120813567812",
   },
 ];
 
@@ -76,7 +69,7 @@ export function RentPaymentSystem({
   // Modal states
   const [selectedInvoiceToPay, setSelectedInvoiceToPay] =
     useState<RentInvoice | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<string>("QRIS");
+  const [selectedMethod, setSelectedMethod] = useState<string>("Transfer Bank");
   const [isProcessing, setIsProcessing] = useState(false);
   const [copiedAccount, setCopiedAccount] = useState(false);
 
@@ -112,52 +105,50 @@ export function RentPaymentSystem({
     setTimeout(() => setCopiedAccount(false), 2000);
   };
 
-  const handleConfirmPayment = () => {
-    if (!selectedInvoiceToPay) return;
+  const handleConfirmPayment = async () => {
+    const invoice = selectedInvoiceToPay;
+    if (!invoice) return;
 
     setIsProcessing(true);
+    const result = await onPayInvoice(invoice.id, selectedMethod);
+    setIsProcessing(false);
 
-    setTimeout(() => {
-      const result = onPayInvoice(selectedInvoiceToPay.id, selectedMethod);
-      setIsProcessing(false);
+    if (!result.success) {
+      toast.error(
+        result.message || "Gagal memproses pembayaran. Silakan coba kembali."
+      );
+      return;
+    }
 
-      if (result.success) {
-        toast.success(
-          `Pembayaran sewa ${selectedInvoiceToPay.period} berhasil diverifikasi!`
-        );
+    toast.success(`Pembayaran sewa ${invoice.period} berhasil dicatat!`);
 
-        // Open digital receipt
-        const now = new Date();
-        const dateFormatted = now.toLocaleDateString("id-ID", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
-        const timeFormatted = now.toLocaleTimeString("id-ID", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+    const now = new Date();
+    const dateFormatted = now.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    const timeFormatted = now.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-        setReceiptData({
-          invoiceNumber: selectedInvoiceToPay.invoiceNumber,
-          receiptNumber: result.receiptNumber,
-          period: selectedInvoiceToPay.period,
-          associationName: selectedInvoiceToPay.associationName,
-          boothNumber: selectedInvoiceToPay.boothNumber,
-          boothSize: selectedInvoiceToPay.boothSize,
-          amount: selectedInvoiceToPay.totalAmount,
-          baseRent: selectedInvoiceToPay.baseRent,
-          maintenanceFee: selectedInvoiceToPay.maintenanceFee,
-          electricityFee: selectedInvoiceToPay.electricityFee,
-          paidAt: `${dateFormatted}, ${timeFormatted} WIB`,
-          paymentMethod: selectedMethod,
-        });
+    setReceiptData({
+      invoiceNumber: invoice.invoiceNumber,
+      receiptNumber: result.receiptNumber,
+      period: invoice.period,
+      associationName: invoice.associationName,
+      boothNumber: invoice.boothNumber,
+      boothSize: invoice.boothSize,
+      amount: invoice.totalAmount,
+      baseRent: invoice.baseRent,
+      maintenanceFee: invoice.maintenanceFee,
+      electricityFee: invoice.electricityFee,
+      paidAt: `${dateFormatted}, ${timeFormatted} WIB`,
+      paymentMethod: selectedMethod,
+    });
 
-        setSelectedInvoiceToPay(null);
-      } else {
-        toast.error("Gagal memproses pembayaran. Silakan coba kembali.");
-      }
-    }, 1200);
+    setSelectedInvoiceToPay(null);
   };
 
   const handleInspectHistoricalReceipt = (item: RentPaymentHistoryItem) => {
@@ -331,7 +322,7 @@ export function RentPaymentSystem({
                   onClick={() => setSelectedInvoiceToPay(currentUnpaidInvoice)}
                   className="gap-2 mt-1 w-full md:w-auto"
                 >
-                  <Sparkles className="size-4" />
+                  <CreditCard className="size-4" />
                   Bayar Sewa Sekarang
                 </Button>
               </div>
@@ -557,60 +548,64 @@ export function RentPaymentSystem({
               </div>
 
               {/* Payment Channel Detail Panel */}
-              {selectedMethod === "QRIS" && (
-                <div className="flex flex-col items-center justify-center p-4 rounded-xl border bg-card text-center gap-2">
-                  <div className="flex size-36 items-center justify-center rounded-lg border-2 border-dashed border-primary/40 bg-white p-2">
-                    <QrCode className="size-32 text-slate-900" />
-                  </div>
-                  <p className="text-xs font-medium text-foreground">
-                    Scan Kode QRIS Nasional di atas
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Mendukung semua aplikasi e-wallet dan mobile banking berlisensi
-                    Bank Indonesia.
-                  </p>
+              {selectedMethod === "Transfer Bank" && (
+                <div className="p-3 rounded-xl border bg-muted/40 flex flex-col gap-2">
+                  {selectedInvoiceToPay.bankAccountNumber ? (
+                    <>
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-[11px] text-muted-foreground">
+                            Rekening Tujuan (
+                            {selectedInvoiceToPay.bankName || "Bank"})
+                          </p>
+                          <p className="text-sm font-mono font-bold text-foreground">
+                            {selectedInvoiceToPay.bankAccountNumber}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleCopyText(
+                              selectedInvoiceToPay.bankAccountNumber || ""
+                            )
+                          }
+                          className="text-xs h-7 gap-1"
+                        >
+                          {copiedAccount ? (
+                            <>
+                              <Check className="size-3 text-emerald-600" />
+                              Tersalin
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="size-3" />
+                              Salin
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Atas Nama:{" "}
+                        {selectedInvoiceToPay.bankAccountHolder ||
+                          selectedInvoiceToPay.associationName}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground">
+                      Pengelola area belum mengatur nomor rekening. Hubungi{" "}
+                      {selectedInvoiceToPay.associationName} untuk instruksi
+                      transfer.
+                    </p>
+                  )}
                 </div>
               )}
 
-              {selectedMethod.startsWith("Transfer") && (
-                <div className="p-3 rounded-xl border bg-muted/40 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[11px] text-muted-foreground">
-                        Nomor Rekening Tujuan Escrow
-                      </p>
-                      <p className="text-sm font-mono font-bold text-foreground">
-                        {PAYMENT_METHODS.find((m) => m.id === selectedMethod)
-                          ?.accountNumber || "880192381234"}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleCopyText(
-                          PAYMENT_METHODS.find((m) => m.id === selectedMethod)
-                            ?.accountNumber || "880192381234"
-                        )
-                      }
-                      className="text-xs h-7 gap-1"
-                    >
-                      {copiedAccount ? (
-                        <>
-                          <Check className="size-3 text-emerald-600" />
-                          Tersalin
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="size-3" />
-                          Salin
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">
-                    Atas Nama: PT Tenantify Komersial (Escrow Pengelola Grand
-                    Bazaar)
+              {selectedMethod === "Tunai" && (
+                <div className="p-3 rounded-xl border bg-muted/40">
+                  <p className="text-[11px] text-muted-foreground">
+                    Bayar langsung ke {selectedInvoiceToPay.associationName}.
+                    Catat pembayaran di sini setelah uang diterima.
                   </p>
                 </div>
               )}

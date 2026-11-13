@@ -46,6 +46,9 @@ export default async function AssociationSettingsPage() {
           notifyNewTenant: profile?.notifyNewTenant ?? true,
           notifyNewReview: profile?.notifyNewReview ?? true,
           notifyPaymentDue: profile?.notifyPaymentDue ?? true,
+          bankName: profile?.bankName ?? "",
+          bankAccountNumber: profile?.bankAccountNumber ?? "",
+          bankAccountHolder: profile?.bankAccountHolder ?? "",
         }}
       />
 

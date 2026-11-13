@@ -8,6 +8,7 @@ export type Product = {
   price: number;
   stock: number;
   description?: string;
+  image?: string;
   isActive: boolean;
 };
 
@@ -45,6 +46,8 @@ export type RentInvoiceStatus = "unpaid" | "paid" | "overdue";
 
 export type RentInvoice = {
   id: string;
+  tenantId: string;
+  tenantName: string;
   invoiceNumber: string;
   period: string;
   associationName: string;
@@ -59,6 +62,9 @@ export type RentInvoice = {
   paidAt?: string;
   paymentMethod?: string;
   receiptNumber?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountHolder?: string;
 };
 
 export type SellerReview = {

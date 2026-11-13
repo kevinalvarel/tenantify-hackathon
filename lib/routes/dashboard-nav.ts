@@ -63,6 +63,11 @@ export const ASSOCIATION_NAV: DashboardNavGroup[] = [
         url: "/dashboard/association/register-seller",
         icon: UserRoundPlus,
       },
+      {
+        title: "Pembayaran Pedagang",
+        url: "/dashboard/association/payments",
+        icon: CreditCard,
+      },
     ],
   },
   {

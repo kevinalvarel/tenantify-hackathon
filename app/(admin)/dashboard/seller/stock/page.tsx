@@ -4,8 +4,13 @@ import { useSeller } from "@/context/seller-context";
 import { StockManagement } from "@/components/seller/stock-management";
 
 export default function SellerStockPage() {
-  const { products, handleUpdateStock, handleToggleActive, handleAddProduct } =
-    useSeller();
+  const {
+    products,
+    handleUpdateStock,
+    handleToggleActive,
+    handleAddProduct,
+    handleDeleteProduct,
+  } = useSeller();
 
   return (
     <StockManagement
@@ -13,6 +18,7 @@ export default function SellerStockPage() {
       onUpdateStock={handleUpdateStock}
       onToggleActive={handleToggleActive}
       onAddProduct={handleAddProduct}
+      onDeleteProduct={handleDeleteProduct}
     />
   );
 }

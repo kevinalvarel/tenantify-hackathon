@@ -62,6 +62,7 @@ export async function getCustomerDataAction(): Promise<{
         category: p.category,
         price: p.price,
         description: p.description || "",
+        image: p.image || undefined,
         rating: Number(p.rating) || 0,
         isPopular: p.isPopular,
       };

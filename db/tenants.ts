@@ -118,6 +118,9 @@ export const associationProfiles = pgTable("association_profiles", {
   notifyNewTenant: boolean("notify_new_tenant").notNull().default(true),
   notifyNewReview: boolean("notify_new_review").notNull().default(true),
   notifyPaymentDue: boolean("notify_payment_due").notNull().default(true),
+  bankName: text("bank_name"),
+  bankAccountNumber: text("bank_account_number"),
+  bankAccountHolder: text("bank_account_holder"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

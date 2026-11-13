@@ -1,7 +1,13 @@
 "use client";
 
 import React, { createContext, useContext, useState, useMemo, useEffect } from "react";
-import { getSellerDataAction } from "@/servers/seller-server";
+import {
+  getSellerDataAction,
+  updateProductStockAction,
+  toggleProductActiveAction,
+  deleteProductAction,
+} from "@/servers/seller-server";
+import { settleRentInvoiceAction } from "@/servers/rent-server";
 import {
   Product,
   Order,
@@ -19,6 +25,7 @@ type SellerContextType = {
   activeOrdersCount: number;
   rentInvoices: RentInvoice[];
   rentPaymentHistory: RentPaymentHistoryItem[];
+  isRentLoading: boolean;
   handleCompleteTransaction: (
     newOrder: Order,
     itemsSold: { productId: string; qty: number }[]
@@ -27,11 +34,14 @@ type SellerContextType = {
   handleUpdatePrice: (productId: string, newPrice: number) => void;
   handleToggleActive: (productId: string) => void;
   handleAddProduct: (newProduct: Product) => void;
+  handleDeleteProduct: (
+    productId: string
+  ) => Promise<{ success: boolean; message: string }>;
   handleUpdateOrderStatus: (orderId: string, nextStatus: OrderStatus) => void;
   handlePayRentInvoice: (
     invoiceId: string,
     paymentMethod: string
-  ) => { success: boolean; receiptNumber: string };
+  ) => Promise<{ success: boolean; receiptNumber: string; message: string }>;
 };
 
 const SellerContext = createContext<SellerContextType | undefined>(undefined);
@@ -40,9 +50,7 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [rentInvoices, setRentInvoices] = useState<RentInvoice[]>([]);
-  const [rentPaymentHistory, setRentPaymentHistory] = useState<
-    RentPaymentHistoryItem[]
-  >([]);
+  const [isRentLoading, setIsRentLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -50,6 +58,8 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
       if (isMounted) {
         if (data.products.length > 0) setProducts(data.products);
         if (data.orders.length > 0) setOrders(data.orders);
+        setRentInvoices(data.rentInvoices);
+        setIsRentLoading(false);
       }
     });
     return () => {
@@ -113,6 +123,7 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
     setProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, stock: newStock } : p))
     );
+    updateProductStockAction(productId, newStock).catch(console.error);
   };
 
   const handleUpdatePrice = (productId: string, newPrice: number) => {
@@ -125,10 +136,32 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
     setProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, isActive: !p.isActive } : p))
     );
+    toggleProductActiveAction(productId).catch(console.error);
   };
 
   const handleAddProduct = (newProduct: Product) => {
     setProducts((prev) => [newProduct, ...prev]);
+  };
+
+  const handleDeleteProduct = async (
+    productId: string
+  ): Promise<{ success: boolean; message: string }> => {
+    const previousProducts = products;
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
+
+    try {
+      const res = await deleteProductAction(productId);
+      if (!res.success) {
+        setProducts(previousProducts);
+      }
+      return res;
+    } catch (err) {
+      setProducts(previousProducts);
+      return {
+        success: false,
+        message: "Terjadi kesalahan saat menghapus produk dari database.",
+      };
+    }
   };
 
   const handleUpdateOrderStatus = (orderId: string, nextStatus: OrderStatus) => {
@@ -137,65 +170,44 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const handlePayRentInvoice = (
+  const handlePayRentInvoice = async (
     invoiceId: string,
     paymentMethod: string
-  ): { success: boolean; receiptNumber: string } => {
-    const targetInvoice = rentInvoices.find((inv) => inv.id === invoiceId);
-    if (!targetInvoice) {
-      return { success: false, receiptNumber: "" };
+  ): Promise<{ success: boolean; receiptNumber: string; message: string }> => {
+    const result = await settleRentInvoiceAction(invoiceId, paymentMethod);
+
+    if (result.success && result.invoice) {
+      const updated = result.invoice;
+      setRentInvoices((prev) =>
+        prev.map((invoice) => (invoice.id === updated.id ? updated : invoice))
+      );
     }
 
-    const now = new Date();
-    const dateFormatted = now.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-    const timeFormatted = now.toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const paidAt = `${dateFormatted}, ${timeFormatted} WIB`;
-
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const receiptNumber = `RCP-${now.getFullYear()}${String(
-      now.getMonth() + 1
-    ).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${randomSuffix}`;
-
-    // Update invoice state
-    setRentInvoices((prev) =>
-      prev.map((inv) =>
-        inv.id === invoiceId
-          ? {
-              ...inv,
-              status: "paid",
-              paidAt,
-              paymentMethod,
-              receiptNumber,
-            }
-          : inv
-      )
-    );
-
-    // Add to history
-    const historyItem: RentPaymentHistoryItem = {
-      id: `pay-${Date.now()}`,
-      invoiceId: targetInvoice.id,
-      period: targetInvoice.period,
-      amount: targetInvoice.totalAmount,
-      paymentMethod,
-      paidAt,
-      status: "Berhasil",
-      receiptNumber,
-      associationName: targetInvoice.associationName,
-      boothNumber: targetInvoice.boothNumber,
+    return {
+      success: result.success,
+      receiptNumber: result.invoice?.receiptNumber || "",
+      message: result.message,
     };
-
-    setRentPaymentHistory((prev) => [historyItem, ...prev]);
-
-    return { success: true, receiptNumber };
   };
+
+  const rentPaymentHistory = useMemo<RentPaymentHistoryItem[]>(
+    () =>
+      rentInvoices
+        .filter((invoice) => invoice.status === "paid")
+        .map((invoice) => ({
+          id: invoice.id,
+          invoiceId: invoice.id,
+          period: invoice.period,
+          amount: invoice.totalAmount,
+          paymentMethod: invoice.paymentMethod || "-",
+          paidAt: invoice.paidAt || "-",
+          status: "Berhasil",
+          receiptNumber: invoice.receiptNumber || "-",
+          associationName: invoice.associationName,
+          boothNumber: invoice.boothNumber,
+        })),
+    [rentInvoices]
+  );
 
   return (
     <SellerContext.Provider
@@ -208,11 +220,13 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
         activeOrdersCount,
         rentInvoices,
         rentPaymentHistory,
+        isRentLoading,
         handleCompleteTransaction,
         handleUpdateStock,
         handleUpdatePrice,
         handleToggleActive,
         handleAddProduct,
+        handleDeleteProduct,
         handleUpdateOrderStatus,
         handlePayRentInvoice,
       }}
