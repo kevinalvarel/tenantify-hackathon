@@ -1,14 +1,45 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   CustomerProduct,
   CustomerCartItem,
   CustomerOrder,
+  CustomerOrderStatus,
   Tenant,
 } from "@/types/customer";
+import { demoProducts, demoTenants, slugify } from "@/data/customer-demo";
 import { getCustomerDataAction } from "@/servers/customer-server";
 import { toast } from "sonner";
+
+const ORDER_PROGRESS_STEPS: Array<{
+  delayMs: number;
+  status: CustomerOrderStatus;
+  toastMessage: (orderId: string) => string;
+}> = [
+    {
+      delayMs: 4000,
+      status: "Disiapkan",
+      toastMessage: (id) => `Pesanan #${id} dikonfirmasi dan sedang disiapkan!`,
+    },
+    {
+      delayMs: 10000,
+      status: "Siap Diambil",
+      toastMessage: (id) => `Pesanan #${id} sudah siap diambil di booth!`,
+    },
+    {
+      delayMs: 18000,
+      status: "Selesai",
+      toastMessage: (id) => `Pesanan #${id} selesai. Selamat menikmati!`,
+    },
+  ];
 
 type CustomerContextType = {
   products: CustomerProduct[];
@@ -21,7 +52,7 @@ type CustomerContextType = {
   setSelectedCategory: (category: string) => void;
   isNutritionModalOpen: boolean;
   setIsNutritionModalOpen: (open: boolean) => void;
-  addToCart: (product: CustomerProduct) => void;
+  addToCart: (product: CustomerProduct, quantity?: number, notes?: string) => void;
   updateQuantity: (productId: string, delta: number) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
@@ -35,20 +66,47 @@ type CustomerContextType = {
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
 
 export function CustomerProvider({ children }: { children: React.ReactNode }) {
-  const [products, setProducts] = useState<CustomerProduct[]>([]);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [products, setProducts] = useState<CustomerProduct[]>(demoProducts);
+  const [tenants, setTenants] = useState<Tenant[]>(demoTenants);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const [cart, setCart] = useState<CustomerCartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
   const [isNutritionModalOpen, setIsNutritionModalOpen] = useState(false);
+  const orderTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    const timers = orderTimersRef.current;
+    return () => {
+      timers.forEach((timerId) => clearTimeout(timerId));
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
     getCustomerDataAction().then((data) => {
-      if (isMounted) {
-        if (data.products.length > 0) setProducts(data.products);
-        if (data.tenants.length > 0) setTenants(data.tenants);
+      if (!isMounted) return;
+      if (data.products.length > 0) {
+        const enrichedProducts = data.products.map((dbProd) => {
+          const demoMatch = demoProducts.find(
+            (d) =>
+              d.id === dbProd.id ||
+              d.name.toLowerCase() === dbProd.name.toLowerCase(),
+          );
+          return {
+            ...demoMatch,
+            ...dbProd,
+            slug: dbProd.slug || demoMatch?.slug || slugify(dbProd.name),
+            image: dbProd.image || demoMatch?.image,
+            originalPrice: dbProd.originalPrice ?? demoMatch?.originalPrice,
+            soldCount: dbProd.soldCount ?? demoMatch?.soldCount,
+            mcdCategory: dbProd.mcdCategory ?? demoMatch?.mcdCategory,
+          };
+        });
+        setProducts(enrichedProducts);
+      }
+      if (data.tenants.length > 0) {
+        setTenants(data.tenants);
       }
     });
     return () => {
@@ -77,17 +135,24 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     [orders]
   );
 
-  const addToCart = (product: CustomerProduct) => {
+  const addToCart = (
+    product: CustomerProduct,
+    quantity: number = 1,
+    notes?: string
+  ) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+      const existingIndex = prev.findIndex(
+        (item) =>
+          item.product.id === product.id && (item.notes || "") === (notes || "")
+      );
+      if (existingIndex > -1) {
+        return prev.map((item, idx) =>
+          idx === existingIndex
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { product, quantity, notes }];
     });
   };
 
@@ -115,6 +180,21 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
 
   const checkoutOrder = (newOrder: CustomerOrder) => {
     setOrders((prev) => [newOrder, ...prev]);
+
+    ORDER_PROGRESS_STEPS.forEach(({ delayMs, status, toastMessage }) => {
+      const timerId = setTimeout(() => {
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.id === newOrder.id && order.status !== "Dibatalkan"
+              ? { ...order, status }
+              : order
+          )
+        );
+        toast.info(toastMessage(newOrder.id));
+      }, delayMs);
+
+      orderTimersRef.current.push(timerId);
+    });
   };
 
   const reorder = (order: CustomerOrder) => {

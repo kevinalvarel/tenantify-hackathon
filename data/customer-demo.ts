@@ -1,0 +1,522 @@
+import { CustomerProduct, Tenant } from "@/types/customer";
+
+export function slugify(text: string): string {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export const demoTenants: Tenant[] = [
+  {
+    id: "tenant-kevin-kebab",
+    name: "Kevin Kebab",
+    category: "Kebab, Burger & Middle Eastern",
+    zone: "Zona A",
+    boothNumber: "Stall A-04",
+    rating: 4.9,
+    totalReviews: 420,
+    isOpen: true,
+    avatarText: "KK",
+  },
+  {
+    id: "tenant-seblak-safik",
+    name: "Seblak Safik",
+    category: "Seblak Prasmanan & Jajanan Pedas Bandung",
+    zone: "Zona B",
+    boothNumber: "Stall B-12",
+    rating: 4.9,
+    totalReviews: 850,
+    isOpen: true,
+    avatarText: "SS",
+  },
+  {
+    id: "tenant-bebek-madura",
+    name: "Bebek Madura Cak Munir",
+    category: "Bebek & Ayam Bumbu Hitam Madura",
+    zone: "Zona C",
+    boothNumber: "Stall C-01",
+    rating: 4.8,
+    totalReviews: 530,
+    isOpen: true,
+    avatarText: "BM",
+  },
+  {
+    id: "tenant-janji-manis",
+    name: "Kopi & Toast Janji Manis",
+    category: "Artisan Coffee, Toast & Minuman",
+    zone: "Zona A",
+    boothNumber: "Stall A-01",
+    rating: 4.8,
+    totalReviews: 390,
+    isOpen: true,
+    avatarText: "JM",
+  },
+  {
+    id: "tenant-ayam-juara",
+    name: "Ayam Juara Geprek",
+    category: "Ayam Geprek Sambal Korek & Kremes",
+    zone: "Zona A",
+    boothNumber: "Stall A-08",
+    rating: 4.8,
+    totalReviews: 610,
+    isOpen: true,
+    avatarText: "AJ",
+  },
+  {
+    id: "tenant-serambi-aceh",
+    name: "Warung Serambi Aceh",
+    category: "Mie Aceh, Kopi Gayo & Canai",
+    zone: "Zona B",
+    boothNumber: "Stall B-03",
+    rating: 4.9,
+    totalReviews: 470,
+    isOpen: true,
+    avatarText: "SA",
+  },
+  {
+    id: "tenant-dimsum-imperial",
+    name: "Dimsum Imperial",
+    category: "Dimsum Kukus, Mentai & Goreng",
+    zone: "Zona C",
+    boothNumber: "Stall C-05",
+    rating: 4.7,
+    totalReviews: 380,
+    isOpen: true,
+    avatarText: "DI",
+  },
+  {
+    id: "tenant-sate-mas-joko",
+    name: "Sate Purwakarta Mas Joko",
+    category: "Sate Maranggi Sapi & Kambing",
+    zone: "Zona A",
+    boothNumber: "Stall A-02",
+    rating: 4.9,
+    totalReviews: 510,
+    isOpen: true,
+    avatarText: "SJ",
+  },
+];
+
+const rawDemoProducts: CustomerProduct[] = [
+  // 1. Bebek Madura Cak Munir (Featured in Card 1 of HTML)
+  {
+    id: "prod-bm-1",
+    tenantId: "tenant-bebek-madura",
+    tenantName: "Tenant Bebek Madura Asli",
+    boothNumber: "Stall C-01",
+    name: "Nasi Bebek Goreng Bumbu Hitam",
+    category: "Makanan Berat",
+    mcdCategory: "Nusantara",
+    price: 30500,
+    originalPrice: 38000,
+    rating: 4.9,
+    soldCount: 1420,
+    isPopular: true,
+    description:
+      "Bebek empuk berbumbu rempah gurih khas Madura disajikan lengkap sambal mangga dan lalapan segar.",
+    image: "/images/favorites/nasi-goreng-spesial.jpg",
+  },
+  // 2. Ayam Juara Geprek (Featured in Card 2 of HTML)
+  {
+    id: "prod-aj-1",
+    tenantId: "tenant-ayam-juara",
+    tenantName: "Tenant Ayam Juara Geprek",
+    boothNumber: "Stall A-08",
+    name: "Ayam Geprek Sambal Korek Mozzarella",
+    category: "Makanan Berat",
+    mcdCategory: "Nusantara",
+    price: 24000,
+    originalPrice: 32000,
+    rating: 4.8,
+    soldCount: 1650,
+    isPopular: true,
+    description:
+      "Ayam goreng tepung renyah dihancurkan bersama sambal korek bawang segar dan lumuran lelehan keju mozzarella.",
+    image: "/images/products/ayam-geprek.svg",
+  },
+  // 3. Warung Serambi Aceh (Featured in Card 3 of HTML)
+  {
+    id: "prod-sa-1",
+    tenantId: "tenant-serambi-aceh",
+    tenantName: "Tenant Warung Serambi Aceh",
+    boothNumber: "Stall B-03",
+    name: "Mie Aceh Kuah Kepiting Spesial",
+    category: "Mie & Pasta",
+    mcdCategory: "Makanan Berat",
+    price: 37000,
+    originalPrice: 45000,
+    rating: 4.9,
+    soldCount: 920,
+    isPopular: true,
+    description:
+      "Mie kuning kenyal khas Aceh dengan kuah kari rempah kental gurih, irisan kepiting utuh dan emping renyah.",
+    image: "/images/favorites/mie-goreng-seafood.jpg",
+  },
+  // 4. Dimsum Imperial (Featured in Card 4 of HTML)
+  {
+    id: "prod-di-1",
+    tenantId: "tenant-dimsum-imperial",
+    tenantName: "Tenant Dimsum Imperial",
+    boothNumber: "Stall C-05",
+    name: "Dimsum Mentai Box (Isi 10)",
+    category: "Camilan & Roti",
+    mcdCategory: "Camilan",
+    price: 39900,
+    originalPrice: 50000,
+    rating: 4.7,
+    soldCount: 1100,
+    isPopular: true,
+    description:
+      "Kombinasi siomay udang ayam lembut dibakar saus mentai gurih berlimpah dan taburan nori.",
+    image: "/images/products/dimsum-siomay.svg",
+  },
+  // 5. Sate Purwakarta Mas Joko (Featured in Card 5 of HTML)
+  {
+    id: "prod-sj-1",
+    tenantId: "tenant-sate-mas-joko",
+    tenantName: "Tenant Sate Purwakarta Mas Joko",
+    boothNumber: "Stall A-02",
+    name: "Sate Maranggi Sapi Pilihan",
+    category: "Makanan Berat",
+    mcdCategory: "Nusantara",
+    price: 42000,
+    originalPrice: 48000,
+    rating: 4.9,
+    soldCount: 890,
+    isPopular: true,
+    description:
+      "10 tusuk daging sapi lembut termarinasi ketumbar manis, disajikan bersama sambal tomat segar asam pedas.",
+    image: "/images/favorites/chicken-cordon-bleu.jpg",
+  },
+  // 6. Titik Temu / Kopi & Toast Janji Manis (Featured in Card 6 of HTML)
+  {
+    id: "prod-jm-1",
+    tenantId: "tenant-janji-manis",
+    tenantName: "Tenant Titik Temu Kopi",
+    boothNumber: "Stall A-01",
+    name: "Es Kopi Susu Gula Aren Asli",
+    category: "Kopi & Teh",
+    mcdCategory: "Minuman",
+    price: 16000,
+    originalPrice: 22000,
+    rating: 4.8,
+    soldCount: 2400,
+    isPopular: true,
+    description:
+      "Espresso robusta aromatik dipadu susu murni gurih dan sirup gula aren murni berkualitas tinggi.",
+    image: "/images/products/kopi-susu-aren.jpg",
+  },
+
+  // --- Kevin Kebab items ---
+  {
+    id: "prod-kk-1",
+    tenantId: "tenant-kevin-kebab",
+    tenantName: "Kevin Kebab",
+    boothNumber: "Stall A-04",
+    name: "Kebab Daging Sapi Super Jumbo",
+    category: "Makanan Berat",
+    mcdCategory: "Paket Hemat",
+    price: 25000,
+    originalPrice: 30000,
+    rating: 4.9,
+    soldCount: 1530,
+    isPopular: true,
+    description:
+      "Tortilla panggang renyah berpadu irisan daging sapi melimpah dengan saus lada hitam pedas manis dan mayones gurih.",
+    image: "/images/products/beef-burger.jpg",
+  },
+  {
+    id: "prod-kk-2",
+    tenantId: "tenant-kevin-kebab",
+    tenantName: "Kevin Kebab",
+    boothNumber: "Stall A-04",
+    name: "Kebab Mozzarella Cheese Melt",
+    category: "Camilan & Roti",
+    mcdCategory: "Makanan Berat",
+    price: 28000,
+    originalPrice: 33000,
+    rating: 4.9,
+    soldCount: 940,
+    description:
+      "Kebab sapi spesial dengan keju mozzarella leleh melar berlimpah di setiap gigitan.",
+    image: "/images/products/beef-burger.jpg",
+  },
+  {
+    id: "prod-kk-3",
+    tenantId: "tenant-kevin-kebab",
+    tenantName: "Kevin Kebab",
+    boothNumber: "Stall A-04",
+    name: "Beef Burger Crispy Onion Ring",
+    category: "Makanan Berat",
+    mcdCategory: "Paket Hemat",
+    price: 26000,
+    originalPrice: 32000,
+    rating: 4.8,
+    soldCount: 780,
+    description:
+      "Roti brioche lembut dengan beef patty tebal juicy, onion ring garing keemasan, dan saus smoky burger spesial.",
+    image: "/images/products/beef-burger.jpg",
+  },
+  {
+    id: "prod-kk-4",
+    tenantId: "tenant-kevin-kebab",
+    tenantName: "Kevin Kebab",
+    boothNumber: "Stall A-04",
+    name: "Shawarma Roll Daging Kambing",
+    category: "Makanan Berat",
+    mcdCategory: "Nusantara",
+    price: 28000,
+    originalPrice: 34000,
+    rating: 4.8,
+    soldCount: 650,
+    description:
+      "Roti pita khas Timur Tengah gulung dengan suwiran daging kambing rempah kapulaga, selada, dan saus garlic tahini.",
+  },
+
+  // --- Seblak Safik items ---
+  {
+    id: "prod-ss-1",
+    tenantId: "tenant-seblak-safik",
+    tenantName: "Seblak Safik",
+    boothNumber: "Stall B-12",
+    name: "Seblak Komplit Ceker & Tulang Rangu",
+    category: "Nusantara",
+    mcdCategory: "Mie & Pasta",
+    price: 22000,
+    originalPrice: 26000,
+    rating: 4.9,
+    soldCount: 2800,
+    isPopular: true,
+    description:
+      "Seblak kuah kencur pedas berlevel dengan topping ceker empuk, tulang rangu renyah gurih, batagor, dan kerupuk basah kenyal.",
+    image: "/images/favorites/kwetiau-goreng-sapi.jpg",
+  },
+  {
+    id: "prod-ss-2",
+    tenantId: "tenant-seblak-safik",
+    tenantName: "Seblak Safik",
+    boothNumber: "Stall B-12",
+    name: "Seblak Seafood Dumpling Keju",
+    category: "Nusantara",
+    mcdCategory: "Mie & Pasta",
+    price: 24000,
+    originalPrice: 28000,
+    rating: 4.9,
+    soldCount: 1450,
+    isPopular: true,
+    description:
+      "Seblak kuah merah asam pedas gurih dengan dumpling keju, fishcake, chikuwa, dan sosis sapi.",
+    image: "/images/products/hakau-udang.svg",
+  },
+  {
+    id: "prod-ss-3",
+    tenantId: "tenant-seblak-safik",
+    tenantName: "Seblak Safik",
+    boothNumber: "Stall B-12",
+    name: "Seblak Cilok Goang Level Pedas 1-5",
+    category: "Camilan & Roti",
+    mcdCategory: "Nusantara",
+    price: 18000,
+    originalPrice: 22000,
+    rating: 4.8,
+    soldCount: 1120,
+    description:
+      "Cilok kenyal isi daging disiram sambal goang cabe rawit hijau pedas nampol dengan perasan jeruk limau segar.",
+    image: "/images/products/kulit-ayam.svg",
+  },
+  {
+    id: "prod-ss-4",
+    tenantId: "tenant-seblak-safik",
+    tenantName: "Seblak Safik",
+    boothNumber: "Stall B-12",
+    name: "Cuanki Lidah & Batagor Kuah Kencur",
+    category: "Camilan & Roti",
+    mcdCategory: "Nusantara",
+    price: 15000,
+    originalPrice: 19000,
+    rating: 4.8,
+    soldCount: 970,
+    description:
+      "Cuanki lidah garing, siomay kering, dan batagor dalam guyuran kaldu rempah kencur khas Sunda yang gurih segar.",
+    image: "/images/products/dimsum-siomay.svg",
+  },
+
+  // --- Bebek Madura Cak Munir items ---
+  {
+    id: "prod-bm-2",
+    tenantId: "tenant-bebek-madura",
+    tenantName: "Bebek Madura Cak Munir",
+    boothNumber: "Stall C-01",
+    name: "Bebek Peking Cabe Ijo Gurih",
+    category: "Makanan Berat",
+    mcdCategory: "Nusantara",
+    price: 32000,
+    originalPrice: 40000,
+    rating: 4.8,
+    soldCount: 790,
+    description:
+      "Potongan bebek gurih goreng diselimuti ulekan cabe ijo segar minyak kelapa dan lalapan timun kemangi.",
+    image: "/images/favorites/express-bowl-teriyaki.jpg",
+  },
+  {
+    id: "prod-bm-3",
+    tenantId: "tenant-bebek-madura",
+    tenantName: "Bebek Madura Cak Munir",
+    boothNumber: "Stall C-01",
+    name: "Nasi Bebek Suwir Sambal Korek",
+    category: "Makanan Berat",
+    mcdCategory: "Nusantara",
+    price: 28000,
+    originalPrice: 35000,
+    rating: 4.8,
+    soldCount: 880,
+    description:
+      "Nasi hangat pulen dengan suwiran daging bebek bumbu rempah hitam dan siraman sambal korek bawang pedas.",
+    image: "/images/favorites/nasi-cap-cay-seafood.jpg",
+  },
+  {
+    id: "prod-bm-4",
+    tenantId: "tenant-bebek-madura",
+    tenantName: "Bebek Madura Cak Munir",
+    boothNumber: "Stall C-01",
+    name: "Ayam Bakar Madu Madura",
+    category: "Makanan Berat",
+    mcdCategory: "Nusantara",
+    price: 26000,
+    originalPrice: 32000,
+    rating: 4.7,
+    soldCount: 650,
+    description:
+      "Ayam ungkep panggang dengan olesan madu murni dan rempah manis gurih khas Madura.",
+    image: "/images/favorites/chicken-cordon-bleu.jpg",
+  },
+
+  // --- Kopi & Toast Janji Manis items ---
+  {
+    id: "prod-jm-2",
+    tenantId: "tenant-janji-manis",
+    tenantName: "Kopi & Toast Janji Manis",
+    boothNumber: "Stall A-01",
+    name: "Toast Roti Bakar Cokelat Keju Melt",
+    category: "Camilan & Roti",
+    mcdCategory: "Camilan",
+    price: 20000,
+    originalPrice: 24000,
+    rating: 4.8,
+    soldCount: 1340,
+    description:
+      "Roti brioche panggang garing mentega bertabur parutan keju cheddar melimpah dan lelehan cokelat premium.",
+    image: "/images/products/roti-bakar.jpg",
+  },
+  {
+    id: "prod-jm-3",
+    tenantId: "tenant-janji-manis",
+    tenantName: "Kopi & Toast Janji Manis",
+    boothNumber: "Stall A-01",
+    name: "Matcha Cream Cheese Macchiato",
+    category: "Kopi & Teh",
+    mcdCategory: "Minuman",
+    price: 22000,
+    originalPrice: 26000,
+    rating: 4.8,
+    soldCount: 910,
+    description:
+      "Matcha Uji Jepang berpadu susu segar dan lapisan foam cream cheese gurih manis di atasnya.",
+    image: "/images/products/es-cendol.svg",
+  },
+  {
+    id: "prod-jm-4",
+    tenantId: "tenant-janji-manis",
+    tenantName: "Kopi & Toast Janji Manis",
+    boothNumber: "Stall A-01",
+    name: "Earl Grey Milk Tea Boba Brown Sugar",
+    category: "Kopi & Teh",
+    mcdCategory: "Minuman",
+    price: 20000,
+    originalPrice: 25000,
+    rating: 4.7,
+    soldCount: 1190,
+    description:
+      "Teh earl grey beraroma harum dengan susu segar dan topping boba kenyal berbalut sirup gula aren.",
+    image: "/images/products/es-cendol-nangka.svg",
+  },
+  {
+    id: "prod-jm-5",
+    tenantId: "tenant-janji-manis",
+    tenantName: "Kopi & Toast Janji Manis",
+    boothNumber: "Stall A-01",
+    name: "Croffle Butter Cinnamon Sugar",
+    category: "Camilan & Roti",
+    mcdCategory: "Camilan",
+    price: 18000,
+    originalPrice: 22000,
+    rating: 4.8,
+    soldCount: 820,
+    description:
+      "Croissant waffle mentega Prancis renyah karamel dengan taburan gula kayu manis harum aromatik.",
+    image: "/images/products/croissant.jpg",
+  },
+
+  // --- Katering Box & Paket Hemat ---
+  {
+    id: "prod-kb-1",
+    tenantId: "tenant-bebek-madura",
+    tenantName: "Katering Box Bebek Madura",
+    boothNumber: "Stall C-01",
+    name: "Paket Katering Bento Box Komplit",
+    category: "Katering Box",
+    mcdCategory: "Paket Hemat",
+    price: 35000,
+    originalPrice: 45000,
+    rating: 4.8,
+    soldCount: 420,
+    isPopular: true,
+    description:
+      "Paket nasi box bento eksklusif isi nasi pulen, bebek suwir bumbu hitam, telur balado, capcay sayur, sambal & kerupuk.",
+    image: "/images/favorites/nasi-cap-cay-seafood.jpg",
+  },
+  {
+    id: "prod-ph-1",
+    tenantId: "tenant-ayam-juara",
+    tenantName: "Tenant Ayam Juara Geprek",
+    boothNumber: "Stall A-08",
+    name: "Paket Hemat Duet Kenyang Berdua",
+    category: "Paket Hemat",
+    mcdCategory: "Paket Hemat",
+    price: 48000,
+    originalPrice: 65000,
+    rating: 4.9,
+    soldCount: 880,
+    isPopular: true,
+    description:
+      "Paket hemat berdua: 2 Nasi Ayam Geprek Sambal Korek + 2 Es Teh Manis Segar.",
+    image: "/images/products/paket-duet.svg",
+  },
+];
+
+export const demoProducts: CustomerProduct[] = rawDemoProducts.map((p) => ({
+  ...p,
+  slug: p.slug || slugify(p.name),
+}));
+
+export function getProductBySlug(slug: string): CustomerProduct | undefined {
+  if (!slug) return undefined;
+  let clean = slug.toLowerCase().trim();
+  try {
+    clean = decodeURIComponent(slug).toLowerCase().trim();
+  } catch {
+    // fallback to raw slug string
+  }
+  return demoProducts.find(
+    (p) =>
+      p.slug?.toLowerCase() === clean ||
+      slugify(p.name).toLowerCase() === clean ||
+      p.id.toLowerCase() === clean
+  );
+}
+
+

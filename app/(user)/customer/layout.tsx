@@ -17,7 +17,10 @@ function CustomerLayoutContent({ children }: { children: React.ReactNode }) {
   } = useCustomer();
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col w-full overflow-x-clip relative">
+    <div
+      className="min-h-screen bg-background text-foreground flex flex-col w-full overflow-x-clip relative font-poppins"
+      style={{ fontFamily: '"Poppins", sans-serif' }}
+    >
       {/* Pattern Background Layer */}
       <div
         className="fixed inset-0 pointer-events-none z-0 bg-repeat opacity-35 dark:opacity-10 dark:invert"

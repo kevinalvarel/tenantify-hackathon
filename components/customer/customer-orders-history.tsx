@@ -10,12 +10,17 @@ import {
   Store,
   QrCode,
   ShoppingBag,
+  MessageSquarePlus,
+  Star,
+  ShieldAlert,
 } from "lucide-react";
 import { CustomerOrder, CustomerOrderStatus } from "@/types/customer";
+import type { CommentClassificationResult } from "@/lib/ai-client";
 import { formatRupiah } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +45,83 @@ export function CustomerOrdersHistory({
     useState<(typeof statusFilters)[number]>("Semua");
   const [activeCodeDialogOrder, setActiveCodeDialogOrder] =
     useState<CustomerOrder | null>(null);
+  const [reviewOrder, setReviewOrder] = useState<CustomerOrder | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [moderationOutcome, setModerationOutcome] = useState<{
+    accepted: boolean;
+    moderation: CommentClassificationResult;
+  } | null>(null);
+  const [submittedReviews, setSubmittedReviews] = useState<
+    Record<
+      string,
+      {
+        rating: number;
+        comment: string;
+        badge: string;
+      }
+    >
+  >({});
+
+  const openReviewDialog = (order: CustomerOrder) => {
+    setReviewOrder(order);
+    setReviewRating(5);
+    setReviewComment("");
+    setModerationOutcome(null);
+  };
+
+  const handleSubmitReview = async () => {
+    if (!reviewOrder || !reviewComment.trim()) {
+      toast.error("Tulis ulasan Anda terlebih dahulu.");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    setModerationOutcome(null);
+
+    try {
+      const res = await fetch("/api/reviews/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          commentText: reviewComment.trim(),
+          commentId: `cmt-${reviewOrder.id}`,
+          tenantId: reviewOrder.tenantNames[0],
+          rating: reviewRating,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal memproses ulasan.");
+      }
+
+      setModerationOutcome(data);
+
+      if (data.accepted) {
+        const badge =
+          data.moderation?.dashboard_badge || data.moderation?.category || "Terkirim";
+        setSubmittedReviews((prev) => ({
+          ...prev,
+          [reviewOrder.id]: {
+            rating: reviewRating,
+            comment: reviewComment.trim(),
+            badge,
+          },
+        }));
+        toast.success(`Ulasan terkirim (${badge})`);
+      } else {
+        toast.error("Ulasan otomatis ditolak oleh filter AI NLU.");
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Gagal mengirim ulasan.",
+      );
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   const filteredOrders = orders.filter((order) => {
     if (selectedFilter === "Semua") return true;
@@ -287,12 +369,22 @@ export function CustomerOrdersHistory({
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openReviewDialog(order)}
+                      className="gap-1.5 text-xs font-semibold cursor-pointer"
+                    >
+                      <MessageSquarePlus className="size-3.5" />
+                      {submittedReviews[order.id] ? "Ulas Lagi" : "Beri Ulasan"}
+                    </Button>
+
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setActiveCodeDialogOrder(order)}
-                      className="gap-1.5 text-xs font-semibold"
+                      className="gap-1.5 text-xs font-semibold cursor-pointer"
                     >
                       <QrCode className="size-3.5" />
                       Kode Pengambilan
@@ -307,13 +399,33 @@ export function CustomerOrdersHistory({
                           "Menu dari pesanan ini dimasukkan kembali ke keranjang!",
                         );
                       }}
-                      className="gap-1.5 text-xs font-semibold"
+                      className="gap-1.5 text-xs font-semibold cursor-pointer"
                     >
                       <RotateCcw className="size-3.5" />
                       Pesan Lagi
                     </Button>
                   </div>
                 </div>
+
+                {submittedReviews[order.id] && (
+                  <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3 text-xs space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                        <CheckCircle2 className="size-3.5" />
+                        Ulasan Anda ({submittedReviews[order.id].rating}/5)
+                      </span>
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] font-semibold"
+                      >
+                        {submittedReviews[order.id].badge}
+                      </Badge>
+                    </div>
+                    <p className="text-muted-foreground">
+                      &ldquo;{submittedReviews[order.id].comment}&rdquo;
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
@@ -371,6 +483,114 @@ export function CustomerOrdersHistory({
                 onClick={() => setActiveCodeDialogOrder(null)}
               >
                 Tutup
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* MODAL ULASAN & MODERASI AI NLU */}
+      {reviewOrder && (
+        <Dialog
+          open={!!reviewOrder}
+          onOpenChange={(open) => !open && setReviewOrder(null)}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-bold">
+                Beri Ulasan Pesanan #{reviewOrder.id}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="flex flex-col gap-4 py-2">
+              <div className="text-xs text-muted-foreground">
+                Tenant:{" "}
+                <strong className="text-foreground">
+                  {reviewOrder.tenantNames.join(", ")}
+                </strong>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="text-xs font-semibold text-foreground block">
+                  Rating Anda
+                </span>
+                <div className="flex items-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      className="p-1 cursor-pointer transition-transform active:scale-95"
+                      aria-label={`Beri ${star} bintang`}
+                    >
+                      <Star
+                        className={`size-6 ${
+                          star <= reviewRating
+                            ? "fill-amber-500 text-amber-500"
+                            : "text-muted-foreground/30"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="order-review-comment"
+                  className="text-xs font-semibold text-foreground block"
+                >
+                  Komentar & Saran
+                </label>
+                <Textarea
+                  id="order-review-comment"
+                  placeholder="Tulis pengalaman Anda tentang rasa, porsi, atau pelayanan tenant..."
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  className="resize-none h-24 text-xs"
+                />
+              </div>
+
+              {moderationOutcome && (
+                <div
+                  className={`rounded-xl border p-3 text-xs space-y-1 ${
+                    moderationOutcome.accepted
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+                      : "border-destructive/30 bg-destructive/10 text-destructive"
+                  }`}
+                >
+                  <p className="font-bold flex items-center gap-1.5">
+                    {moderationOutcome.accepted ? (
+                      <CheckCircle2 className="size-4 shrink-0" />
+                    ) : (
+                      <ShieldAlert className="size-4 shrink-0" />
+                    )}
+                    <span>
+                      {moderationOutcome.moderation.dashboard_badge ||
+                        moderationOutcome.moderation.category}
+                    </span>
+                  </p>
+                  <p className="text-[11px] opacity-90">
+                    {moderationOutcome.moderation.moderation_reason}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => setReviewOrder(null)}
+              >
+                Tutup
+              </Button>
+              <Button
+                type="button"
+                disabled={isSubmittingReview || !reviewComment.trim()}
+                onClick={handleSubmitReview}
+              >
+                {isSubmittingReview ? "Memeriksa NLU..." : "Kirim Ulasan"}
               </Button>
             </DialogFooter>
           </DialogContent>

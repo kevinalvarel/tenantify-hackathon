@@ -8,9 +8,7 @@ import {
   ShoppingBag,
   Sparkles,
   Utensils,
-  ArrowRight,
   Store,
-  Clock,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -33,7 +31,7 @@ type Slide = {
 const slides: Slide[] = [
   {
     id: "slide-1",
-    badge: "PROMO SPESIAL HARI INI",
+    badge: "KULINER SPESIAL HARI INI",
     title: "Pesta Kuliner Hemat Diskon s/d 50% + Cashback 40%!",
     description:
       "Gabungkan aneka hidangan lezat dan minuman segar pilihan dalam 1 pesanan kilat tanpa biaya antre meja.",
@@ -100,7 +98,7 @@ export function CustomerHeroBanner() {
 
   return (
     <section
-      aria-label="Promo Utama Food Court"
+      aria-label="Banner Utama Food Court"
       className="pt-2 pb-2 px-2 sm:px-4 max-w-7xl mx-auto w-full"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -240,4 +238,3 @@ export function CustomerHeroBanner() {
     </section>
   );
 }
-

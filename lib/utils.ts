@@ -1,4 +1,5 @@
 export { cn } from "cn";
+export { slugify } from "./slug";
 
 export const formatRupiah = (number: number): string => {
   return new Intl.NumberFormat("id-ID", {
@@ -7,3 +8,4 @@ export const formatRupiah = (number: number): string => {
     maximumFractionDigits: 0,
   }).format(number);
 };
+
