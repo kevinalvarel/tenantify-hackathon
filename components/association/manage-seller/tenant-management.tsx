@@ -143,6 +143,7 @@ export function TenantManagement({
           </div>
 
           <Button
+            nativeButton={false}
             size="sm"
             render={<Link href="/dashboard/association/register-seller" />}
             className="gap-1.5 text-xs h-9"

@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useEffect,
+} from "react";
 import {
   getSellerDataAction,
   updateProductStockAction,
@@ -28,19 +34,19 @@ type SellerContextType = {
   isRentLoading: boolean;
   handleCompleteTransaction: (
     newOrder: Order,
-    itemsSold: { productId: string; qty: number }[]
+    itemsSold: { productId: string; qty: number }[],
   ) => void;
   handleUpdateStock: (productId: string, newStock: number) => void;
   handleUpdatePrice: (productId: string, newPrice: number) => void;
   handleToggleActive: (productId: string) => void;
   handleAddProduct: (newProduct: Product) => void;
   handleDeleteProduct: (
-    productId: string
+    productId: string,
   ) => Promise<{ success: boolean; message: string }>;
   handleUpdateOrderStatus: (orderId: string, nextStatus: OrderStatus) => void;
   handlePayRentInvoice: (
     invoiceId: string,
-    paymentMethod: string
+    paymentMethod: string,
   ) => Promise<{ success: boolean; receiptNumber: string; message: string }>;
 };
 
@@ -73,31 +79,30 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
       orders
         .filter((o) => o.status === "Selesai")
         .reduce((sum, o) => sum + o.total, 0),
-    [orders]
+    [orders],
   );
 
   const totalOrders = useMemo(
     () => orders.filter((o) => o.status === "Selesai").length,
-    [orders]
+    [orders],
   );
 
   const lowStockCount = useMemo(
     () => products.filter((p) => p.stock <= 10).length,
-    [products]
+    [products],
   );
 
   const activeOrdersCount = useMemo(
     () =>
-      orders.filter(
-        (o) => o.status === "Masuk" || o.status === "Diproses"
-      ).length,
-    [orders]
+      orders.filter((o) => o.status === "Masuk" || o.status === "Diproses")
+        .length,
+    [orders],
   );
 
   // Handlers for state updates
   const handleCompleteTransaction = (
     newOrder: Order,
-    itemsSold: { productId: string; qty: number }[]
+    itemsSold: { productId: string; qty: number }[],
   ) => {
     // 1. Add to orders
     setOrders((prev) => [newOrder, ...prev]);
@@ -115,26 +120,28 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
           };
         }
         return prod;
-      })
+      }),
     );
   };
 
   const handleUpdateStock = (productId: string, newStock: number) => {
     setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, stock: newStock } : p))
+      prev.map((p) => (p.id === productId ? { ...p, stock: newStock } : p)),
     );
     updateProductStockAction(productId, newStock).catch(console.error);
   };
 
   const handleUpdatePrice = (productId: string, newPrice: number) => {
     setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, price: newPrice } : p))
+      prev.map((p) => (p.id === productId ? { ...p, price: newPrice } : p)),
     );
   };
 
   const handleToggleActive = (productId: string) => {
     setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, isActive: !p.isActive } : p))
+      prev.map((p) =>
+        p.id === productId ? { ...p, isActive: !p.isActive } : p,
+      ),
     );
     toggleProductActiveAction(productId).catch(console.error);
   };
@@ -144,7 +151,7 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleDeleteProduct = async (
-    productId: string
+    productId: string,
   ): Promise<{ success: boolean; message: string }> => {
     const previousProducts = products;
     setProducts((prev) => prev.filter((p) => p.id !== productId));
@@ -164,22 +171,25 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleUpdateOrderStatus = (orderId: string, nextStatus: OrderStatus) => {
+  const handleUpdateOrderStatus = (
+    orderId: string,
+    nextStatus: OrderStatus,
+  ) => {
     setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: nextStatus } : o))
+      prev.map((o) => (o.id === orderId ? { ...o, status: nextStatus } : o)),
     );
   };
 
   const handlePayRentInvoice = async (
     invoiceId: string,
-    paymentMethod: string
+    paymentMethod: string,
   ): Promise<{ success: boolean; receiptNumber: string; message: string }> => {
     const result = await settleRentInvoiceAction(invoiceId, paymentMethod);
 
     if (result.success && result.invoice) {
       const updated = result.invoice;
       setRentInvoices((prev) =>
-        prev.map((invoice) => (invoice.id === updated.id ? updated : invoice))
+        prev.map((invoice) => (invoice.id === updated.id ? updated : invoice)),
       );
     }
 
@@ -206,7 +216,7 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
           associationName: invoice.associationName,
           boothNumber: invoice.boothNumber,
         })),
-    [rentInvoices]
+    [rentInvoices],
   );
 
   return (

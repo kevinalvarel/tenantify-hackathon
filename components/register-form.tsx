@@ -71,12 +71,6 @@ export function RegisterForm({
     }
   };
 
-  const handleGoogleClick = () => {
-    toast.info(
-      "Daftar dengan Google akan segera tersedia pada iterasi berikutnya.",
-    );
-  };
-
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -210,19 +204,7 @@ export function RegisterForm({
           </Button>
         </Field>
 
-        <FieldSeparator>Atau lanjutkan dengan</FieldSeparator>
-
         <Field>
-          <Button
-            variant="outline"
-            type="button"
-            className="w-full gap-2"
-            onClick={handleGoogleClick}
-            disabled={isSubmitting}
-          >
-            <FaGoogle />
-            Masuk dengan Google
-          </Button>
           <FieldDescription className="text-center">
             Sudah Punya Akun?{" "}
             <Link

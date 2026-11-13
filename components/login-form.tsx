@@ -71,12 +71,6 @@ export function LoginForm({
     }
   };
 
-  const handleGoogleClick = () => {
-    toast.info(
-      "Masuk dengan Google akan segera tersedia pada iterasi berikutnya.",
-    );
-  };
-
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -153,19 +147,7 @@ export function LoginForm({
           </Button>
         </Field>
 
-        <FieldSeparator>Atau lanjutkan dengan</FieldSeparator>
-
         <Field>
-          <Button
-            variant="outline"
-            type="button"
-            className="w-full gap-2"
-            onClick={handleGoogleClick}
-            disabled={isLoading}
-          >
-            <FaGoogle />
-            Masuk dengan Google
-          </Button>
           <FieldDescription className="text-center">
             Belum Punya Akun?{" "}
             <Link
