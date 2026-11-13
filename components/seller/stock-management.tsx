@@ -71,7 +71,7 @@ type StockManagementProps = {
   onToggleActive: (productId: string) => void;
   onAddProduct: (newProduct: Product) => void;
   onDeleteProduct?: (
-    productId: string
+    productId: string,
   ) => Promise<{ success: boolean; message: string }> | void;
 };
 
@@ -768,9 +768,12 @@ export function StockManagement({
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-sm pt-1">
               Apakah Anda yakin ingin menghapus{" "}
-              <strong className="text-foreground">{productToDelete?.name}</strong>{" "}
-              ({productToDelete?.sku}) dari katalog stan? Semua data stok dan foto
-              terkait akan dihapus dari sistem. Tindakan ini tidak dapat dibatalkan.
+              <strong className="text-foreground">
+                {productToDelete?.name}
+              </strong>{" "}
+              ({productToDelete?.sku}) dari katalog stan? Semua data stok dan
+              foto terkait akan dihapus dari sistem. Tindakan ini tidak dapat
+              dibatalkan.
             </DialogDescription>
           </DialogHeader>
 

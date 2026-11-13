@@ -1,7 +1,19 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo, useEffect, useRef } from "react";
-import { getSellerDataAction, updateOrderStatusAction } from "@/servers/seller-server";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useEffect,
+} from "react";
+import {
+  getSellerDataAction,
+  updateProductStockAction,
+  toggleProductActiveAction,
+  deleteProductAction,
+} from "@/servers/seller-server";
+import { settleRentInvoiceAction } from "@/servers/rent-server";
 import {
   Product,
   Order,
@@ -9,37 +21,6 @@ import {
   RentInvoice,
   RentPaymentHistoryItem,
 } from "@/types/seller";
-import { toast } from "sonner";
-
-function playOrderAlertSound() {
-  if (typeof window === "undefined") return;
-  try {
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
-
-    const ctx = new AudioContextClass();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = "sine";
-    // Play two-tone bell chime: D5 (587Hz) then A5 (880Hz)
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
-
-    gain.gain.setValueAtTime(0.25, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.55);
-  } catch {
-    // Audio context may be restricted before first interaction
-  }
-}
 
 type SellerContextType = {
   products: Product[];
@@ -48,7 +29,6 @@ type SellerContextType = {
   totalOrders: number;
   lowStockCount: number;
   activeOrdersCount: number;
-  pendingOrdersCount: number;
   rentInvoices: RentInvoice[];
   rentPaymentHistory: RentPaymentHistoryItem[];
   isRentLoading: boolean;
@@ -60,7 +40,10 @@ type SellerContextType = {
   handleUpdatePrice: (productId: string, newPrice: number) => void;
   handleToggleActive: (productId: string) => void;
   handleAddProduct: (newProduct: Product) => void;
-  handleUpdateOrderStatus: (orderId: string, nextStatus: OrderStatus) => Promise<void>;
+  handleDeleteProduct: (
+    productId: string,
+  ) => Promise<{ success: boolean; message: string }>;
+  handleUpdateOrderStatus: (orderId: string, nextStatus: OrderStatus) => void;
   handlePayRentInvoice: (
     invoiceId: string,
     paymentMethod: string,
@@ -73,60 +56,20 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [rentInvoices, setRentInvoices] = useState<RentInvoice[]>([]);
-  const [rentPaymentHistory, setRentPaymentHistory] = useState<
-    RentPaymentHistoryItem[]
-  >([]);
-  const knownOrderIdsRef = useRef<Set<string>>(new Set());
+  const [isRentLoading, setIsRentLoading] = useState(true);
 
-  // Polling data seller & pesanan masuk secara real-time setiap 3.5 detik
   useEffect(() => {
     let isMounted = true;
-
-    const syncSellerData = async (isInitial = false) => {
-      try {
-        const data = await getSellerDataAction();
-        if (!isMounted) return;
-
-        if (data.products.length > 0) {
-          setProducts(data.products);
-        }
-
-        if (data.orders.length > 0) {
-          // Deteksi pesanan baru yang berstatus 'Masuk'
-          if (!isInitial) {
-            const newlyArrived = data.orders.filter(
-              (o) => !knownOrderIdsRef.current.has(o.id) && o.status === "Masuk"
-            );
-
-            if (newlyArrived.length > 0) {
-              playOrderAlertSound();
-              newlyArrived.forEach((o) => {
-                toast.info(`🔔 Pesanan Baru Masuk! #${o.id} dari ${o.customerName}`, {
-                  duration: 6000,
-                });
-              });
-            }
-          }
-
-          // Perbarui daftar order ID yang telah diketahui
-          data.orders.forEach((o) => knownOrderIdsRef.current.add(o.id));
-          setOrders(data.orders);
-        }
-      } catch (err) {
-        console.warn("Sinkronisasi pesanan seller error:", err);
+    getSellerDataAction().then((data) => {
+      if (isMounted) {
+        if (data.products.length > 0) setProducts(data.products);
+        if (data.orders.length > 0) setOrders(data.orders);
+        setRentInvoices(data.rentInvoices);
+        setIsRentLoading(false);
       }
-    };
-
-    // Muat data awal
-    syncSellerData(true);
-
-    const intervalId = setInterval(() => {
-      syncSellerData(false);
-    }, 3500);
-
+    });
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
     };
   }, []);
 
@@ -154,11 +97,6 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
       orders.filter((o) => o.status === "Masuk" || o.status === "Diproses")
         .length,
     [orders],
-  );
-
-  const pendingOrdersCount = useMemo(
-    () => orders.filter((o) => o.status === "Masuk").length,
-    [orders]
   );
 
   // Handlers for state updates
@@ -212,26 +150,34 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
     setProducts((prev) => [newProduct, ...prev]);
   };
 
-  const handleUpdateOrderStatus = async (
+  const handleDeleteProduct = async (
+    productId: string,
+  ): Promise<{ success: boolean; message: string }> => {
+    const previousProducts = products;
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
+
+    try {
+      const res = await deleteProductAction(productId);
+      if (!res.success) {
+        setProducts(previousProducts);
+      }
+      return res;
+    } catch (err) {
+      setProducts(previousProducts);
+      return {
+        success: false,
+        message: "Terjadi kesalahan saat menghapus produk dari database.",
+      };
+    }
+  };
+
+  const handleUpdateOrderStatus = (
     orderId: string,
-    nextStatus: OrderStatus
+    nextStatus: OrderStatus,
   ) => {
-    // 1. Optimistic UI update
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: nextStatus } : o)),
     );
-
-    // 2. Simpan status baru ke database
-    try {
-      const res = await updateOrderStatusAction(orderId, nextStatus);
-      if (!res.success) {
-        toast.error(res.message);
-      } else {
-        toast.success(res.message);
-      }
-    } catch {
-      toast.error("Gagal memperbarui status pesanan di database.");
-    }
   };
 
   const handlePayRentInvoice = async (
@@ -282,7 +228,6 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
         totalOrders,
         lowStockCount,
         activeOrdersCount,
-        pendingOrdersCount,
         rentInvoices,
         rentPaymentHistory,
         isRentLoading,
