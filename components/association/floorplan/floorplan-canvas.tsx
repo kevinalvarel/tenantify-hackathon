@@ -5,6 +5,7 @@ import {
   FloorplanData,
   FloorplanBooth,
   FloorplanZoneArea,
+  FloorplanDoor,
   EditorTool,
   EditorMode,
 } from "@/types/floorplan";
@@ -17,10 +18,11 @@ interface FloorplanCanvasProps {
   mode: EditorMode;
   activeTool: EditorTool;
   selectedId: string | null;
-  selectedType: "booth" | "zone" | null;
-  onSelect: (id: string | null, type: "booth" | "zone" | null) => void;
+  selectedType: "booth" | "zone" | "door" | null;
+  onSelect: (id: string | null, type: "booth" | "zone" | "door" | null) => void;
   onUpdateBooth: (id: string, updates: Partial<FloorplanBooth>) => void;
   onUpdateZone: (id: string, updates: Partial<FloorplanZoneArea>) => void;
+  onUpdateDoor: (id: string, updates: Partial<FloorplanDoor>) => void;
   onAddBooth: () => void;
   zoom: number;
   onZoomChange: (newZoom: number) => void;
@@ -33,6 +35,14 @@ interface FloorplanCanvasProps {
 type DragState =
   | {
       type: "drag-booth";
+      id: string;
+      startX: number;
+      startY: number;
+      elemStartX: number;
+      elemStartY: number;
+    }
+  | {
+      type: "drag-door";
       id: string;
       startX: number;
       startY: number;
@@ -76,6 +86,7 @@ export function FloorplanCanvas({
   onSelect,
   onUpdateBooth,
   onUpdateZone,
+  onUpdateDoor,
   onAddBooth,
   zoom,
   onZoomChange,
@@ -187,6 +198,25 @@ export function FloorplanCanvas({
     }
   };
 
+  // Door mouse down
+  const handleDoorMouseDown = (e: React.MouseEvent, door: FloorplanDoor) => {
+    if (mode === "preview" || activeTool === "pan" || isSpacePressed) return;
+    e.stopPropagation();
+
+    onSelect(door.id, "door");
+
+    if (activeTool === "select" && e.button === 0) {
+      setDragState({
+        type: "drag-door",
+        id: door.id,
+        startX: e.clientX,
+        startY: e.clientY,
+        elemStartX: door.x,
+        elemStartY: door.y,
+      });
+    }
+  };
+
   // Resize handle mouse down
   const handleResizeHandleMouseDown = (
     e: React.MouseEvent,
@@ -260,6 +290,25 @@ export function FloorplanCanvas({
         )
       );
       onUpdateZone(dragState.id, { x: newX, y: newY });
+      return;
+    }
+
+    if (dragState.type === "drag-door") {
+      const newX = Math.max(
+        0,
+        Math.min(
+          data.dimensions.width - 60,
+          snapCoord(dragState.elemStartX + dx, data.gridSize, data.snapToGrid)
+        )
+      );
+      const newY = Math.max(
+        0,
+        Math.min(
+          data.dimensions.height - 30,
+          snapCoord(dragState.elemStartY + dy, data.gridSize, data.snapToGrid)
+        )
+      );
+      onUpdateDoor(dragState.id, { x: newX, y: newY });
       return;
     }
 
@@ -406,6 +455,77 @@ export function FloorplanCanvas({
                     {zone.name}
                   </text>
                 </g>
+              </g>
+            );
+          })}
+
+          {/* Layer: Entrance & Exit Doors (Pintu Masuk & Keluar) */}
+          {(data.doors || []).map((door) => {
+            const isSelected = selectedType === "door" && selectedId === door.id;
+            const isExit = door.type === "exit";
+            const isBoth = door.type === "both";
+            const themeColor = isExit ? "#10b981" : isBoth ? "#6366f1" : "#c85a32";
+            const bgFill = isExit
+              ? "rgba(16, 185, 129, 0.10)"
+              : isBoth
+              ? "rgba(99, 102, 241, 0.10)"
+              : "rgba(200, 90, 50, 0.10)";
+
+            return (
+              <g
+                key={door.id}
+                onMouseDown={(e) => handleDoorMouseDown(e, door)}
+                transform={`translate(${door.x}, ${door.y}) rotate(${
+                  door.rotation || 0
+                }, ${door.width / 2}, ${door.height / 2})`}
+                className="cursor-move select-none"
+              >
+                {/* Outer Selection Highlight if selected */}
+                {isSelected && (
+                  <rect
+                    x="-3"
+                    y="-3"
+                    width={door.width + 6}
+                    height={door.height + 6}
+                    rx="10"
+                    fill="none"
+                    stroke="#ea580c"
+                    strokeWidth="2"
+                    strokeDasharray="4 3"
+                  />
+                )}
+
+                {/* Main Door Capsule */}
+                <rect
+                  x="0"
+                  y="0"
+                  width={door.width}
+                  height={door.height}
+                  rx="8"
+                  fill={bgFill}
+                  stroke={isSelected ? "#ea580c" : themeColor}
+                  strokeWidth={isSelected ? "2" : "1.5"}
+                />
+
+                {/* Dot Indicator */}
+                <circle
+                  cx="18"
+                  cy={door.height / 2}
+                  r="5"
+                  fill={themeColor}
+                />
+
+                {/* Door Label Text */}
+                <text
+                  x="32"
+                  y={door.height / 2 + 4}
+                  fontSize="11"
+                  fontWeight="700"
+                  fill={themeColor}
+                  className="font-sans select-none"
+                >
+                  {door.label}
+                </text>
               </g>
             );
           })}

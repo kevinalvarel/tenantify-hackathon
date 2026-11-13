@@ -5,14 +5,17 @@ import {
   FloorplanData,
   FloorplanBooth,
   FloorplanZoneArea,
+  FloorplanDoor,
   EditorMode,
   EditorTool,
 } from "@/types/floorplan";
 import {
   DEFAULT_FLOORPLAN_DATA,
+  DEFAULT_DOORS,
   TEMPLATES_LIST,
   generateBoothId,
   generateZoneId,
+  generateDoorId,
 } from "./floorplan-data";
 import { FloorplanToolbar } from "./floorplan-toolbar";
 import { FloorplanCanvas } from "./floorplan-canvas";
@@ -28,6 +31,7 @@ const INITIAL_FLOORPLAN: FloorplanData = {
   areaName: "Area Bazaar",
   zones: [],
   booths: [],
+  doors: DEFAULT_DOORS,
 };
 
 export function FloorplanDesigner() {
@@ -51,7 +55,9 @@ export function FloorplanDesigner() {
   const [mode, setMode] = useState<EditorMode>("design");
   const [activeTool, setActiveTool] = useState<EditorTool>("select");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedType, setSelectedType] = useState<"booth" | "zone" | null>(null);
+  const [selectedType, setSelectedType] = useState<
+    "booth" | "zone" | "door" | null
+  >(null);
 
   // Canvas Viewport States
   const [zoom, setZoom] = useState<number>(0.8);
@@ -66,9 +72,16 @@ export function FloorplanDesigner() {
     if (associationLoading || initializedFromDatabase.current) return;
     initializedFromDatabase.current = true;
 
+    let customDoors: FloorplanDoor[] | undefined;
+    try {
+      const raw = localStorage.getItem("tenantify_floorplan_doors");
+      if (raw) customDoors = JSON.parse(raw);
+    } catch {}
+
     const mapped = floorplanFromAssociation(
       associationZones,
-      associationBooths
+      associationBooths,
+      customDoors,
     );
     setData((prev) => ({ ...prev, ...mapped }));
     setHistory([{ ...INITIAL_FLOORPLAN, ...mapped }]);
@@ -76,14 +89,17 @@ export function FloorplanDesigner() {
   }, [associationLoading, associationZones, associationBooths]);
 
   // Commit state to history stack
-  const commitToHistory = useCallback((newData: FloorplanData) => {
-    setHistory((prev) => {
-      const truncated = prev.slice(0, historyIndex + 1);
-      return [...truncated, newData];
-    });
-    setHistoryIndex((prev) => prev + 1);
-    setHasUnsavedChanges(true);
-  }, [historyIndex]);
+  const commitToHistory = useCallback(
+    (newData: FloorplanData) => {
+      setHistory((prev) => {
+        const truncated = prev.slice(0, historyIndex + 1);
+        return [...truncated, newData];
+      });
+      setHistoryIndex((prev) => prev + 1);
+      setHasUnsavedChanges(true);
+    },
+    [historyIndex],
+  );
 
   // Undo action
   const handleUndo = useCallback(() => {
@@ -108,7 +124,10 @@ export function FloorplanDesigner() {
   }, [history, historyIndex]);
 
   // Element Selection
-  const handleSelect = (id: string | null, type: "booth" | "zone" | null) => {
+  const handleSelect = (
+    id: string | null,
+    type: "booth" | "zone" | "door" | null,
+  ) => {
     setSelectedId(id);
     setSelectedType(type);
   };
@@ -117,7 +136,7 @@ export function FloorplanDesigner() {
   const handleUpdateBooth = (id: string, updates: Partial<FloorplanBooth>) => {
     setData((prev) => {
       const updatedBooths = prev.booths.map((b) =>
-        b.id === id ? { ...b, ...updates } : b
+        b.id === id ? { ...b, ...updates } : b,
       );
       return { ...prev, booths: updatedBooths };
     });
@@ -125,14 +144,79 @@ export function FloorplanDesigner() {
   };
 
   // Update Zone
-  const handleUpdateZone = (id: string, updates: Partial<FloorplanZoneArea>) => {
+  const handleUpdateZone = (
+    id: string,
+    updates: Partial<FloorplanZoneArea>,
+  ) => {
     setData((prev) => {
       const updatedZones = prev.zones.map((z) =>
-        z.id === id ? { ...z, ...updates } : z
+        z.id === id ? { ...z, ...updates } : z,
       );
       return { ...prev, zones: updatedZones };
     });
     setHasUnsavedChanges(true);
+  };
+
+  // Update Door
+  const handleUpdateDoor = (id: string, updates: Partial<FloorplanDoor>) => {
+    setData((prev) => {
+      const updatedDoors = (prev.doors || []).map((d) =>
+        d.id === id ? { ...d, ...updates } : d,
+      );
+      return { ...prev, doors: updatedDoors };
+    });
+    setHasUnsavedChanges(true);
+  };
+
+  // Add new entrance or exit door
+  const handleAddDoor = (type: "entrance" | "exit" = "entrance") => {
+    const isExit = type === "exit";
+    const countDoors = (data.doors || []).filter((d) => d.type === type).length;
+    const label = isExit
+      ? countDoors === 0
+        ? "Pintu Keluar"
+        : `Pintu Keluar ${countDoors + 1}`
+      : countDoors === 0
+        ? "Pintu Masuk Utama"
+        : `Pintu Masuk ${countDoors + 1}`;
+
+    const defaultY = isExit ? Math.max(60, data.dimensions.height - 70) : 20;
+    const defaultX = isExit ? Math.max(60, data.dimensions.width - 260) : 60;
+
+    const newDoor: FloorplanDoor = {
+      id: generateDoorId(),
+      label,
+      type,
+      x: defaultX,
+      y: defaultY,
+      width: isExit ? 200 : 340,
+      height: 32,
+      rotation: 0,
+    };
+
+    const nextData = {
+      ...data,
+      doors: [...(data.doors || []), newDoor],
+    };
+    setData(nextData);
+    commitToHistory(nextData);
+    setSelectedId(newDoor.id);
+    setSelectedType("door");
+    toast.success(`${label} berhasil ditambahkan`);
+  };
+
+  // Delete door
+  const handleDeleteDoor = (id: string) => {
+    const doorToDelete = (data.doors || []).find((d) => d.id === id);
+    const nextData = {
+      ...data,
+      doors: (data.doors || []).filter((d) => d.id !== id),
+    };
+    setData(nextData);
+    commitToHistory(nextData);
+    setSelectedId(null);
+    setSelectedType(null);
+    toast.info(`Akses ${doorToDelete?.label || "pintu"} telah dihapus`);
   };
 
   // Add new booth
@@ -203,7 +287,7 @@ export function FloorplanDesigner() {
     const boothToDelete = data.booths.find((b) => b.id === id);
     if (boothToDelete?.status === "occupied" || boothToDelete?.tenantId) {
       toast.error(
-        "Booth terisi tidak bisa dihapus. Kosongkan booth terlebih dahulu."
+        "Booth terisi tidak bisa dihapus. Kosongkan booth terlebih dahulu.",
       );
       return;
     }
@@ -224,11 +308,11 @@ export function FloorplanDesigner() {
     const zoneHasOccupiedBooth = data.booths.some(
       (booth) =>
         booth.zoneCode === zoneToDelete?.code &&
-        (booth.status === "occupied" || Boolean(booth.tenantId))
+        (booth.status === "occupied" || Boolean(booth.tenantId)),
     );
     if (zoneHasOccupiedBooth) {
       toast.error(
-        "Zona masih memiliki booth terisi. Kosongkan booth terlebih dahulu."
+        "Zona masih memiliki booth terisi. Kosongkan booth terlebih dahulu.",
       );
       return;
     }
@@ -282,7 +366,7 @@ export function FloorplanDesigner() {
     const nextData = {
       ...data,
       booths: data.booths.map((b) =>
-        b.id === id ? { ...b, rotation: nextRotation } : b
+        b.id === id ? { ...b, rotation: nextRotation } : b,
       ),
     };
     setData(nextData);
@@ -335,7 +419,7 @@ export function FloorplanDesigner() {
     downloadAnchor.setAttribute("href", dataStr);
     downloadAnchor.setAttribute(
       "download",
-      `floorplan-${data.title.toLowerCase().replace(/\s+/g, "-")}.json`
+      `floorplan-${data.title.toLowerCase().replace(/\s+/g, "-")}.json`,
     );
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
@@ -376,7 +460,7 @@ export function FloorplanDesigner() {
     }
     if (associationLoadError) {
       toast.error(
-        "Data denah belum termuat dari database. Muat ulang halaman sebelum menyimpan."
+        "Data denah belum termuat dari database. Muat ulang halaman sebelum menyimpan.",
       );
       return;
     }
@@ -419,8 +503,19 @@ export function FloorplanDesigner() {
       return;
     }
 
+    try {
+      localStorage.setItem(
+        "tenantify_floorplan_doors",
+        JSON.stringify(data.doors || []),
+      );
+    } catch {}
+
     if (result.data) {
-      const mapped = floorplanFromAssociation(result.data.zones, result.data.booths);
+      const mapped = floorplanFromAssociation(
+        result.data.zones,
+        result.data.booths,
+        data.doors,
+      );
       const nextData = {
         ...data,
         ...mapped,
@@ -454,7 +549,11 @@ export function FloorplanDesigner() {
       }
 
       // Undo (Ctrl+Z)
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.key.toLowerCase() === "z" &&
+        !e.shiftKey
+      ) {
         e.preventDefault();
         handleUndo();
         return;
@@ -477,6 +576,8 @@ export function FloorplanDesigner() {
           handleDeleteBooth(selectedId);
         } else if (selectedType === "zone") {
           handleDeleteZone(selectedId);
+        } else if (selectedType === "door") {
+          handleDeleteDoor(selectedId);
         }
         return;
       }
@@ -489,25 +590,42 @@ export function FloorplanDesigner() {
         return;
       }
 
-      // Arrow keys nudge selected booth
+      // Arrow keys nudge selected booth or door
       if (
         selectedId &&
-        selectedType === "booth" &&
+        (selectedType === "booth" || selectedType === "door") &&
         ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)
       ) {
         e.preventDefault();
         const step = e.shiftKey ? 40 : 20;
-        const currentBooth = data.booths.find((b) => b.id === selectedId);
-        if (!currentBooth) return;
 
-        let newX = currentBooth.x;
-        let newY = currentBooth.y;
-        if (e.key === "ArrowUp") newY = Math.max(0, currentBooth.y - step);
-        if (e.key === "ArrowDown") newY = currentBooth.y + step;
-        if (e.key === "ArrowLeft") newX = Math.max(0, currentBooth.x - step);
-        if (e.key === "ArrowRight") newX = currentBooth.x + step;
+        if (selectedType === "booth") {
+          const currentBooth = data.booths.find((b) => b.id === selectedId);
+          if (!currentBooth) return;
 
-        handleUpdateBooth(selectedId, { x: newX, y: newY });
+          let newX = currentBooth.x;
+          let newY = currentBooth.y;
+          if (e.key === "ArrowUp") newY = Math.max(0, currentBooth.y - step);
+          if (e.key === "ArrowDown") newY = currentBooth.y + step;
+          if (e.key === "ArrowLeft") newX = Math.max(0, currentBooth.x - step);
+          if (e.key === "ArrowRight") newX = currentBooth.x + step;
+
+          handleUpdateBooth(selectedId, { x: newX, y: newY });
+        } else if (selectedType === "door") {
+          const currentDoor = (data.doors || []).find(
+            (d) => d.id === selectedId,
+          );
+          if (!currentDoor) return;
+
+          let newX = currentDoor.x;
+          let newY = currentDoor.y;
+          if (e.key === "ArrowUp") newY = Math.max(0, currentDoor.y - step);
+          if (e.key === "ArrowDown") newY = currentDoor.y + step;
+          if (e.key === "ArrowLeft") newX = Math.max(0, currentDoor.x - step);
+          if (e.key === "ArrowRight") newX = currentDoor.x + step;
+
+          handleUpdateDoor(selectedId, { x: newX, y: newY });
+        }
       }
     };
 
@@ -516,9 +634,15 @@ export function FloorplanDesigner() {
   }, [
     handleUndo,
     handleRedo,
+    handleDeleteBooth,
+    handleDeleteZone,
+    handleDeleteDoor,
+    handleUpdateBooth,
+    handleUpdateDoor,
     selectedId,
     selectedType,
     data.booths,
+    data.doors,
   ]);
 
   return (
@@ -530,7 +654,8 @@ export function FloorplanDesigner() {
             Desain Denah & Tata Letak Stan
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Rancang posisi stan bazaar dan pembagian zona untuk pengunjung Tenantify.
+            Rancang posisi stan bazaar, pembagian zona, dan akses pintu
+            masuk/keluar untuk pengunjung Tenantify.
           </p>
         </div>
 
@@ -563,6 +688,7 @@ export function FloorplanDesigner() {
         }
         onAddBooth={handleAddBooth}
         onAddZone={handleAddZone}
+        onAddDoor={handleAddDoor}
         onSave={handleSave}
         onExportJSON={handleExportJSON}
         onImportJSON={handleImportJSON}
@@ -584,6 +710,7 @@ export function FloorplanDesigner() {
               onSelect={handleSelect}
               onUpdateBooth={handleUpdateBooth}
               onUpdateZone={handleUpdateZone}
+              onUpdateDoor={handleUpdateDoor}
               onAddBooth={handleAddBooth}
               zoom={zoom}
               onZoomChange={setZoom}
@@ -603,8 +730,10 @@ export function FloorplanDesigner() {
               onSelect={handleSelect}
               onUpdateBooth={handleUpdateBooth}
               onUpdateZone={handleUpdateZone}
+              onUpdateDoor={handleUpdateDoor}
               onDeleteBooth={handleDeleteBooth}
               onDeleteZone={handleDeleteZone}
+              onDeleteDoor={handleDeleteDoor}
               onDuplicateBooth={handleDuplicateBooth}
               onRotateBooth={handleRotateBooth}
               onUpdateCanvasSettings={handleUpdateCanvasSettings}
@@ -614,12 +743,8 @@ export function FloorplanDesigner() {
           </div>
         </div>
       ) : (
-        <FloorplanPreview
-          data={data}
-          onExitPreview={() => setMode("design")}
-        />
+        <FloorplanPreview data={data} onExitPreview={() => setMode("design")} />
       )}
     </div>
   );
 }
-

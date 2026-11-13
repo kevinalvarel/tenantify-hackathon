@@ -185,6 +185,54 @@ export function FloorplanPreview({
             </g>
           ))}
 
+          {/* Entrance & Exit Doors */}
+          {(data.doors || []).map((door) => {
+            const isExit = door.type === "exit";
+            const isBoth = door.type === "both";
+            const themeColor = isExit ? "#10b981" : isBoth ? "#6366f1" : "#c85a32";
+            const bgFill = isExit
+              ? "rgba(16, 185, 129, 0.10)"
+              : isBoth
+              ? "rgba(99, 102, 241, 0.10)"
+              : "rgba(200, 90, 50, 0.10)";
+
+            return (
+              <g
+                key={door.id}
+                transform={`translate(${door.x}, ${door.y}) rotate(${
+                  door.rotation || 0
+                }, ${door.width / 2}, ${door.height / 2})`}
+              >
+                <rect
+                  x="0"
+                  y="0"
+                  width={door.width}
+                  height={door.height}
+                  rx="8"
+                  fill={bgFill}
+                  stroke={themeColor}
+                  strokeWidth="1.5"
+                />
+                <circle
+                  cx="18"
+                  cy={door.height / 2}
+                  r="5"
+                  fill={themeColor}
+                />
+                <text
+                  x="32"
+                  y={door.height / 2 + 4}
+                  fontSize="11"
+                  fontWeight="700"
+                  fill={themeColor}
+                  className="font-sans select-none"
+                >
+                  {door.label}
+                </text>
+              </g>
+            );
+          })}
+
           {/* Booths */}
           {data.booths.map((booth) => {
             const isMatch = filteredBooths.some((b) => b.id === booth.id);

@@ -2,8 +2,10 @@ import type { AreaZone, BoothSlot } from "@/types/association";
 import type {
   FloorplanBooth,
   FloorplanData,
+  FloorplanDoor,
   FloorplanZoneArea,
 } from "@/types/floorplan";
+import { DEFAULT_DOORS } from "./floorplan-data";
 
 const ZONE_TONES = [
   { color: "rgba(201, 100, 66, 0.08)", borderColor: "rgba(201, 100, 66, 0.4)" },
@@ -12,7 +14,11 @@ const ZONE_TONES = [
   { color: "rgba(202, 138, 4, 0.08)", borderColor: "rgba(202, 138, 4, 0.4)" },
 ];
 
-export function floorplanFromAssociation(zones: AreaZone[], booths: BoothSlot[]) {
+export function floorplanFromAssociation(
+  zones: AreaZone[],
+  booths: BoothSlot[],
+  doors?: FloorplanDoor[]
+) {
   const zoneAreas: FloorplanZoneArea[] = zones.map((zone, index) => {
     const layout = zone.layout;
     const tone = ZONE_TONES[index % ZONE_TONES.length];
@@ -58,13 +64,18 @@ export function floorplanFromAssociation(zones: AreaZone[], booths: BoothSlot[])
     };
   });
 
-  return { zones: zoneAreas, booths: mappedBooths };
+  return {
+    zones: zoneAreas,
+    booths: mappedBooths,
+    doors: doors && doors.length > 0 ? doors : DEFAULT_DOORS,
+  };
 }
 
 export function sanitizeTemplate(data: FloorplanData): FloorplanData {
   return {
     ...data,
     zones: data.zones.map((zone) => ({ ...zone })),
+    doors: (data.doors || DEFAULT_DOORS).map((door) => ({ ...door })),
     booths: data.booths.map(
       (booth): FloorplanBooth => ({
         ...booth,

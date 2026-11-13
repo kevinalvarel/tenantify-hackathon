@@ -414,7 +414,6 @@ export function CustomerNavbar() {
             )}
           </Button>
 
-          {/* User Profile Avatar Dropdown (when logged in) or Masuk / Daftar button (when guest) */}
           {isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger

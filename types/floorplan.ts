@@ -1,5 +1,18 @@
 export type BoothStatus = "available" | "occupied" | "reserved";
 
+export type DoorType = "entrance" | "exit" | "both";
+
+export interface FloorplanDoor {
+  id: string;
+  label: string;
+  type: DoorType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+}
+
 export interface FloorplanBooth {
   id: string;
   code: string;
@@ -46,10 +59,11 @@ export interface FloorplanData {
   snapToGrid: boolean;
   zones: FloorplanZoneArea[];
   booths: FloorplanBooth[];
+  doors: FloorplanDoor[];
   lastSavedAt: string;
 }
 
-export type EditorTool = "select" | "pan" | "booth" | "zone";
+export type EditorTool = "select" | "pan" | "booth" | "zone" | "door";
 
 export type EditorMode = "design" | "preview";
 

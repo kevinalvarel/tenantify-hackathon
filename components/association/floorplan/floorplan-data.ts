@@ -1,4 +1,27 @@
-import { FloorplanData, FloorplanBooth, FloorplanZoneArea } from "@/types/floorplan";
+import { FloorplanData, FloorplanDoor } from "@/types/floorplan";
+
+export const DEFAULT_DOORS: FloorplanDoor[] = [
+  {
+    id: "door-main-entrance",
+    label: "Pintu Masuk Utama",
+    type: "entrance",
+    x: 60,
+    y: 20,
+    width: 340,
+    height: 32,
+    rotation: 0,
+  },
+  {
+    id: "door-main-exit",
+    label: "Pintu Keluar",
+    type: "exit",
+    x: 1080,
+    y: 840,
+    width: 200,
+    height: 32,
+    rotation: 0,
+  },
+];
 
 export const DEFAULT_FLOORPLAN_DATA: FloorplanData = {
   version: "1.0",
@@ -11,6 +34,7 @@ export const DEFAULT_FLOORPLAN_DATA: FloorplanData = {
   gridSize: 20,
   snapToGrid: true,
   lastSavedAt: new Date().toISOString(),
+  doors: DEFAULT_DOORS,
   zones: [
     {
       id: "zone-kuliner",
@@ -67,7 +91,8 @@ export const DEFAULT_FLOORPLAN_DATA: FloorplanData = {
       tenantAvatar: "KS",
       category: "Minuman & Kopi",
       rating: 4.8,
-      description: "Menyajikan racikan kopi susu gula aren dan mocktail khas lokal.",
+      description:
+        "Menyajikan racikan kopi susu gula aren dan mocktail khas lokal.",
     },
     {
       id: "booth-a02",
@@ -88,7 +113,8 @@ export const DEFAULT_FLOORPLAN_DATA: FloorplanData = {
       tenantAvatar: "AG",
       category: "Makanan Berat",
       rating: 4.7,
-      description: "Aneka olahan ayam krispi bumbu rempah dengan level cabai pilihan.",
+      description:
+        "Aneka olahan ayam krispi bumbu rempah dengan level cabai pilihan.",
     },
     {
       id: "booth-a03",
@@ -163,7 +189,8 @@ export const DEFAULT_FLOORPLAN_DATA: FloorplanData = {
       tenantAvatar: "CD",
       category: "Dessert & Minuman",
       rating: 4.6,
-      description: "Cendol pandan alami santan segar dengan topping durian montong.",
+      description:
+        "Cendol pandan alami santan segar dengan topping durian montong.",
     },
     {
       id: "booth-a07",
@@ -223,7 +250,8 @@ export const DEFAULT_FLOORPLAN_DATA: FloorplanData = {
       tenantAvatar: "BC",
       category: "Fashion & Busana",
       rating: 4.9,
-      description: "Koleksi busana batik katun primisima dengan siluet modern kasual.",
+      description:
+        "Koleksi busana batik katun primisima dengan siluet modern kasual.",
     },
     {
       id: "booth-b02",
@@ -260,7 +288,8 @@ export const DEFAULT_FLOORPLAN_DATA: FloorplanData = {
       tenantAvatar: "NS",
       category: "Fashion Muslim",
       rating: 4.8,
-      description: "Voal premium motif etnik nusantara dengan teknik printing sublim.",
+      description:
+        "Voal premium motif etnik nusantara dengan teknik printing sublim.",
     },
 
     // Zona Kriya (ZC)
@@ -321,21 +350,40 @@ export const DEFAULT_FLOORPLAN_DATA: FloorplanData = {
   ],
 };
 
-export const TEMPLATES_LIST: { id: string; name: string; description: string; data: FloorplanData }[] = [
+export const TEMPLATES_LIST: {
+  id: string;
+  name: string;
+  description: string;
+  data: FloorplanData;
+}[] = [
   {
     id: "default-bazaar",
     name: "Bazaar Grand City (3 Zona)",
-    description: "Layout bazaar terpadu dengan zona Kuliner, Fashion, dan Kriya.",
+    description:
+      "Layout bazaar terpadu dengan zona Kuliner, Fashion, dan Kriya.",
     data: DEFAULT_FLOORPLAN_DATA,
   },
   {
     id: "culinary-festival",
     name: "Festival Kuliner & Food Court",
-    description: "Tata letak khusus area kuliner 2 baris berhadapan dengan area meja makan tengah.",
+    description:
+      "Tata letak khusus area kuliner 2 baris berhadapan dengan area meja makan tengah.",
     data: {
       ...DEFAULT_FLOORPLAN_DATA,
       title: "Denah Festival Kuliner Nusantara",
       dimensions: { width: 1200, height: 700 },
+      doors: [
+        {
+          id: "door-f-entrance",
+          label: "Pintu Masuk Festival",
+          type: "entrance",
+          x: 60,
+          y: 20,
+          width: 280,
+          height: 32,
+          rotation: 0,
+        },
+      ],
       zones: [
         {
           id: "zone-kuliner-utama",
@@ -460,7 +508,8 @@ export const TEMPLATES_LIST: { id: string; name: string; description: string; da
   {
     id: "empty-canvas",
     name: "Kanvas Kosong (Mulai dari Awal)",
-    description: "Mulai mendesain tata letak denah stan dari lembar kanvas kosong.",
+    description:
+      "Mulai mendesain tata letak denah stan dari lembar kanvas kosong.",
     data: {
       version: "1.0",
       title: "Denah Baru",
@@ -471,11 +520,16 @@ export const TEMPLATES_LIST: { id: string; name: string; description: string; da
       lastSavedAt: new Date().toISOString(),
       zones: [],
       booths: [],
+      doors: [],
     },
   },
 ];
 
-export function snapCoord(value: number, gridSize: number, enabled: boolean): number {
+export function snapCoord(
+  value: number,
+  gridSize: number,
+  enabled: boolean,
+): number {
   if (!enabled) return Math.round(value);
   return Math.round(value / gridSize) * gridSize;
 }
@@ -488,3 +542,6 @@ export function generateZoneId(): string {
   return "zone-" + Math.random().toString(36).substring(2, 9);
 }
 
+export function generateDoorId(): string {
+  return "door-" + Math.random().toString(36).substring(2, 9);
+}
