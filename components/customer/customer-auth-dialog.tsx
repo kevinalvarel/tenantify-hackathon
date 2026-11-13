@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -57,6 +57,7 @@ export function CustomerAuthDialog({
   variant,
 }: CustomerAuthDialogProps = {}) {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("sign-in");
   const [loading, setLoading] = useState(false);
@@ -95,7 +96,9 @@ export function CustomerAuthDialog({
       toast.success(response.message);
       setValues(emptyValues);
       setOpen(false);
-      router.push("/customer");
+      if (pathname.includes("/auth")) {
+        router.push("/profile");
+      }
       router.refresh();
     } catch (error) {
       if (error instanceof Error && "issues" in error) {
@@ -251,4 +254,3 @@ export function CustomerAuthDialog({
     </Dialog>
   );
 }
-

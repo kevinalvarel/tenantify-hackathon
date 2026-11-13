@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ArrowRight,
   Check,
+  User,
 } from "lucide-react";
 import { motion, useScroll, useMotionValueEvent } from "motion/react";
 import { useCustomer } from "@/context/customer-context";
@@ -102,18 +103,14 @@ export function CustomerNavbar() {
     const previous = lastScrollY.current;
     const diff = latest - previous;
 
-    // Selalu tampilkan jika posisi di dekat bagian paling atas (<= 30px)
     if (latest <= 30) {
       setIsVisible(true);
     } else if (Math.abs(diff) > 5) {
-      // Jika dropdown atau mobile menu sedang terbuka, tetap tampilkan
       if (mobileMenuOpen || foodDropdownOpen) {
         setIsVisible(true);
       } else if (diff > 0) {
-        // Scroll ke bawah -> sembunyikan navbar
         setIsVisible(false);
       } else if (diff < 0) {
-        // Scroll ke atas -> munculkan kembali navbar
         setIsVisible(true);
       }
     }
@@ -148,7 +145,7 @@ export function CustomerNavbar() {
         return;
       }
       toast.success(res.message);
-      router.push("/auth/sign-in");
+      router.push("/");
       router.refresh();
     } catch {
       toast.error("Gagal keluar dari akun.");
@@ -166,7 +163,9 @@ export function CustomerNavbar() {
     toast.success(`Filter: Kategori "${categoryName}"`);
 
     if (pathname === "/customer" || pathname === "/dashboard/customer") {
-      const catalogEl = document.getElementById("pilihan-menu") || document.getElementById("explore-catalog");
+      const catalogEl =
+        document.getElementById("pilihan-menu") ||
+        document.getElementById("explore-catalog");
       if (catalogEl) {
         catalogEl.scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -214,15 +213,15 @@ export function CustomerNavbar() {
           </span>
         </Link>
 
-        {/* Center: Clean Title-Case Navigation Links */}
         <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink min-w-0">
-          {/* 1. Beranda */}
           <Link
             href="/customer"
             onClick={() => setSelectedCategory("Semua")}
             className={cn(
               "px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-colors select-none whitespace-nowrap",
-              (pathname === "/customer" || pathname === "/dashboard/customer") && selectedCategory === "Semua"
+              (pathname === "/customer" ||
+                pathname === "/dashboard/customer") &&
+                selectedCategory === "Semua"
                 ? "text-white bg-[#c85a32] shadow-sm"
                 : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/50",
             )}
@@ -471,6 +470,18 @@ export function CustomerNavbar() {
 
                 <DropdownMenuSeparator className="my-1" />
 
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/profile")}
+                    className="gap-2.5 text-xs font-medium cursor-pointer rounded-lg py-2"
+                  >
+                    <User className="size-4 text-primary" />
+                    <span>Profil & Riwayat Pesanan</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+
+                <DropdownMenuSeparator className="my-1" />
+
                 {/* Multi-role Switcher */}
                 <DropdownMenuGroup>
                   <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -538,7 +549,9 @@ export function CustomerNavbar() {
             }}
             className={cn(
               "flex items-center justify-between px-4 py-2.5 rounded-2xl text-xs font-semibold transition-colors",
-              (pathname === "/customer" || pathname === "/dashboard/customer") && selectedCategory === "Semua"
+              (pathname === "/customer" ||
+                pathname === "/dashboard/customer") &&
+                selectedCategory === "Semua"
                 ? "bg-[#c85a32] text-white"
                 : "text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800",
             )}

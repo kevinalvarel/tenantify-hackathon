@@ -169,4 +169,49 @@ export const logout = async (): Promise<AuthResponse> => {
   }
 };
 
+export const updateCustomerProfile = async (data: {
+  name: string;
+}): Promise<AuthResponse> => {
+  try {
+    const cleanName = data.name?.trim();
+    if (!cleanName) {
+      return {
+        success: false,
+        message: "Nama tidak boleh kosong.",
+      };
+    }
+
+    const headerList = await headers();
+    const currentSession = await auth.api.getSession({
+      headers: headerList,
+    });
+
+    if (!currentSession?.user) {
+      return {
+        success: false,
+        message: "Sesi tidak ditemukan. Silakan masuk terlebih dahulu.",
+      };
+    }
+
+    await db
+      .update(user)
+      .set({
+        name: cleanName,
+        updatedAt: new Date(),
+      })
+      .where(eq(user.id, currentSession.user.id));
+
+    return {
+      success: true,
+      message: "Profil pengguna berhasil diperbarui.",
+    };
+  } catch (error) {
+    const err = error as { message?: string };
+    return {
+      success: false,
+      message: err.message || "Gagal memperbarui profil pengguna.",
+    };
+  }
+};
+
 export const signOut = logout;
