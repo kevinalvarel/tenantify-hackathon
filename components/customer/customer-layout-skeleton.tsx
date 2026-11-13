@@ -127,4 +127,3 @@ export function CustomerLayoutSkeleton() {
     </div>
   );
 }
-
