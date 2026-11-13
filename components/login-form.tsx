@@ -64,6 +64,7 @@ export function LoginForm({
       toast.success(response.message);
       router.push("/dashboard");
       router.refresh();
+      setIsLoading(false);
     } catch {
       toast.error("Terjadi kendala jaringan saat mencoba masuk.");
       setIsLoading(false);

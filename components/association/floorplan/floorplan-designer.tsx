@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   FloorplanData,
   FloorplanBooth,
@@ -18,17 +18,33 @@ import { FloorplanToolbar } from "./floorplan-toolbar";
 import { FloorplanCanvas } from "./floorplan-canvas";
 import { FloorplanInspector } from "./floorplan-inspector";
 import { FloorplanPreview } from "./floorplan-preview";
+import { floorplanFromAssociation, sanitizeTemplate } from "./floorplan-sync";
 import { useAssociation } from "@/context/association-context";
 import { toast } from "sonner";
 
+const INITIAL_FLOORPLAN: FloorplanData = {
+  ...DEFAULT_FLOORPLAN_DATA,
+  title: "Denah Bazaar",
+  areaName: "Area Bazaar",
+  zones: [],
+  booths: [],
+};
+
 export function FloorplanDesigner() {
-  const { tenants: associationTenants, zones: associationZones } = useAssociation();
+  const {
+    tenants: associationTenants,
+    zones: associationZones,
+    booths: associationBooths,
+    isLoading: associationLoading,
+    loadError: associationLoadError,
+    handleSaveFloorplan,
+  } = useAssociation();
 
   // Core Floorplan Data State
-  const [data, setData] = useState<FloorplanData>(DEFAULT_FLOORPLAN_DATA);
+  const [data, setData] = useState<FloorplanData>(INITIAL_FLOORPLAN);
 
   // History Stack for Undo/Redo
-  const [history, setHistory] = useState<FloorplanData[]>([DEFAULT_FLOORPLAN_DATA]);
+  const [history, setHistory] = useState<FloorplanData[]>([INITIAL_FLOORPLAN]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
 
   // UI & Tool States
@@ -42,6 +58,22 @@ export function FloorplanDesigner() {
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 20, y: 20 });
   const [showGrid, setShowGrid] = useState<boolean>(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const initializedFromDatabase = useRef(false);
+
+  // Load the saved layout once the association data is ready
+  useEffect(() => {
+    if (associationLoading || initializedFromDatabase.current) return;
+    initializedFromDatabase.current = true;
+
+    const mapped = floorplanFromAssociation(
+      associationZones,
+      associationBooths
+    );
+    setData((prev) => ({ ...prev, ...mapped }));
+    setHistory([{ ...INITIAL_FLOORPLAN, ...mapped }]);
+    setHistoryIndex(0);
+  }, [associationLoading, associationZones, associationBooths]);
 
   // Commit state to history stack
   const commitToHistory = useCallback((newData: FloorplanData) => {
@@ -125,8 +157,7 @@ export function FloorplanDesigner() {
       rotation: 0,
       status: "available",
       sizeMeters: "3x3 m",
-      priceMonthly: 3000000,
-      category: "Kuliner",
+      priceMonthly: 0,
     };
 
     const nextData = {
@@ -170,6 +201,12 @@ export function FloorplanDesigner() {
   // Delete booth
   const handleDeleteBooth = (id: string) => {
     const boothToDelete = data.booths.find((b) => b.id === id);
+    if (boothToDelete?.status === "occupied" || boothToDelete?.tenantId) {
+      toast.error(
+        "Booth terisi tidak bisa dihapus. Kosongkan booth terlebih dahulu."
+      );
+      return;
+    }
     const nextData = {
       ...data,
       booths: data.booths.filter((b) => b.id !== id),
@@ -184,6 +221,17 @@ export function FloorplanDesigner() {
   // Delete zone
   const handleDeleteZone = (id: string) => {
     const zoneToDelete = data.zones.find((z) => z.id === id);
+    const zoneHasOccupiedBooth = data.booths.some(
+      (booth) =>
+        booth.zoneCode === zoneToDelete?.code &&
+        (booth.status === "occupied" || Boolean(booth.tenantId))
+    );
+    if (zoneHasOccupiedBooth) {
+      toast.error(
+        "Zona masih memiliki booth terisi. Kosongkan booth terlebih dahulu."
+      );
+      return;
+    }
     const nextData = {
       ...data,
       zones: data.zones.filter((z) => z.id !== id),
@@ -267,8 +315,9 @@ export function FloorplanDesigner() {
   const handleSelectTemplate = (templateId: string) => {
     const template = TEMPLATES_LIST.find((t) => t.id === templateId);
     if (template) {
-      setData(template.data);
-      setHistory([template.data]);
+      const sanitized = sanitizeTemplate(template.data);
+      setData(sanitized);
+      setHistory([sanitized]);
       setHistoryIndex(0);
       setSelectedId(null);
       setSelectedType(null);
@@ -318,10 +367,72 @@ export function FloorplanDesigner() {
     reader.readAsText(file);
   };
 
-  // Save changes
-  const handleSave = () => {
+  // Save changes to the database
+  const handleSave = async () => {
+    if (isSaving) return;
+    if (associationLoading) {
+      toast.error("Data zona masih dimuat. Coba lagi sebentar.");
+      return;
+    }
+    if (associationLoadError) {
+      toast.error(
+        "Data denah belum termuat dari database. Muat ulang halaman sebelum menyimpan."
+      );
+      return;
+    }
+
+    setIsSaving(true);
+    const result = await handleSaveFloorplan({
+      zones: data.zones.map((zone) => ({
+        code: zone.code,
+        name: zone.name,
+        layout: {
+          x: zone.x,
+          y: zone.y,
+          width: zone.width,
+          height: zone.height,
+          color: zone.color,
+          borderColor: zone.borderColor,
+        },
+      })),
+      booths: data.booths.map((booth) => ({
+        code: booth.code,
+        zoneCode: booth.zoneCode,
+        label: booth.label,
+        sizeMeters: booth.sizeMeters,
+        priceMonthly: booth.priceMonthly,
+        status: booth.status,
+        tenantId: booth.tenantId,
+        layout: {
+          x: booth.x,
+          y: booth.y,
+          width: booth.width,
+          height: booth.height,
+          rotation: booth.rotation,
+        },
+      })),
+    });
+    setIsSaving(false);
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+
+    if (result.data) {
+      const mapped = floorplanFromAssociation(result.data.zones, result.data.booths);
+      const nextData = {
+        ...data,
+        ...mapped,
+        lastSavedAt: new Date().toISOString(),
+      };
+      setData(nextData);
+      setHistory([nextData]);
+      setHistoryIndex(0);
+    }
+
     setHasUnsavedChanges(false);
-    toast.success("Denah berhasil disimpan dan siap dipublikasikan ke pengunjung");
+    toast.success(result.message);
   };
 
   // Fit View

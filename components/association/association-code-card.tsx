@@ -51,7 +51,7 @@ export function AssociationCodeCard({
               Kode Unik Pengelola
             </p>
             <p className="font-mono text-xl font-bold tracking-[0.3em]">
-              {code ?? "—"}
+              {code ?? "Belum dibuat"}
             </p>
             <p className="text-[11px] text-muted-foreground">
               Bagikan kode ini ke pembeli agar mereka bisa menemukan area Anda.

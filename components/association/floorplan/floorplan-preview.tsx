@@ -411,7 +411,9 @@ export function FloorplanPreview({
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">Harga Sewa:</span>
                         <span className="font-bold text-foreground font-mono text-sm">
-                          {formatRupiah(activeBooth.priceMonthly)} / bulan
+                          {activeBooth.priceMonthly > 0
+                            ? `${formatRupiah(activeBooth.priceMonthly)} / bulan`
+                            : "Harga belum diisi"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">

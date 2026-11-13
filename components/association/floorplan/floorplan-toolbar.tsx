@@ -30,6 +30,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -162,7 +163,9 @@ export function FloorplanToolbar({
                     </Button>
                   }
                 />
-                <TooltipContent side="bottom">Alat Pilih Objek (Shortcut: V)</TooltipContent>
+                <TooltipContent side="bottom">
+                  Alat Pilih Objek (Shortcut: V)
+                </TooltipContent>
               </Tooltip>
 
               <Tooltip>
@@ -181,7 +184,9 @@ export function FloorplanToolbar({
                     </Button>
                   }
                 />
-                <TooltipContent side="bottom">Geser Kanvas (Shortcut: H)</TooltipContent>
+                <TooltipContent side="bottom">
+                  Geser Kanvas (Shortcut: H)
+                </TooltipContent>
               </Tooltip>
 
               <Tooltip>
@@ -199,7 +204,9 @@ export function FloorplanToolbar({
                     </Button>
                   }
                 />
-                <TooltipContent side="bottom">Tambahkan stan bazaar baru ke kanvas</TooltipContent>
+                <TooltipContent side="bottom">
+                  Tambahkan stan bazaar baru ke kanvas
+                </TooltipContent>
               </Tooltip>
 
               <Tooltip>
@@ -217,7 +224,9 @@ export function FloorplanToolbar({
                     </Button>
                   }
                 />
-                <TooltipContent side="bottom">Tambahkan area pembatas zona</TooltipContent>
+                <TooltipContent side="bottom">
+                  Tambahkan area pembatas zona
+                </TooltipContent>
               </Tooltip>
             </div>
           )}
@@ -277,7 +286,11 @@ export function FloorplanToolbar({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => onZoomChange(Math.max(0.4, Number((zoom - 0.1).toFixed(1))))}
+                    onClick={() =>
+                      onZoomChange(
+                        Math.max(0.4, Number((zoom - 0.1).toFixed(1))),
+                      )
+                    }
                     className="size-7"
                     aria-label="Perkecil Kanvas"
                   >
@@ -299,7 +312,11 @@ export function FloorplanToolbar({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => onZoomChange(Math.min(2.0, Number((zoom + 0.1).toFixed(1))))}
+                    onClick={() =>
+                      onZoomChange(
+                        Math.min(2.0, Number((zoom + 0.1).toFixed(1))),
+                      )
+                    }
                     className="size-7"
                     aria-label="Perbesar Kanvas"
                   >
@@ -325,7 +342,9 @@ export function FloorplanToolbar({
                   </Button>
                 }
               />
-              <TooltipContent side="bottom">Sesuaikan Tampilan (Fit)</TooltipContent>
+              <TooltipContent side="bottom">
+                Sesuaikan Tampilan (Fit)
+              </TooltipContent>
             </Tooltip>
           </div>
 
@@ -348,7 +367,9 @@ export function FloorplanToolbar({
                   }
                 />
                 <TooltipContent side="bottom">
-                  {showGrid ? "Sembunyikan Kisi (Grid)" : "Tampilkan Kisi (Grid)"}
+                  {showGrid
+                    ? "Sembunyikan Kisi (Grid)"
+                    : "Tampilkan Kisi (Grid)"}
                 </TooltipContent>
               </Tooltip>
 
@@ -390,20 +411,26 @@ export function FloorplanToolbar({
               }
             />
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="text-xs">Pilihan Template Denah</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {TEMPLATES_LIST.map((tpl) => (
-                <DropdownMenuItem
-                  key={tpl.id}
-                  onClick={() => onSelectTemplate(tpl.id)}
-                  className="cursor-pointer flex flex-col items-start gap-0.5"
-                >
-                  <span className="font-medium text-xs text-foreground">{tpl.name}</span>
-                  <span className="text-[10px] text-muted-foreground line-clamp-1">
-                    {tpl.description}
-                  </span>
-                </DropdownMenuItem>
-              ))}
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="text-xs">
+                  Pilihan Template Denah
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {TEMPLATES_LIST.map((tpl) => (
+                  <DropdownMenuItem
+                    key={tpl.id}
+                    onClick={() => onSelectTemplate(tpl.id)}
+                    className="cursor-pointer flex flex-col items-start gap-0.5"
+                  >
+                    <span className="font-medium text-xs text-foreground">
+                      {tpl.name}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground line-clamp-1">
+                      {tpl.description}
+                    </span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
 

@@ -17,6 +17,7 @@ import {
   Megaphone,
   User,
   Map,
+  Grid3X3,
 } from "lucide-react";
 import { IconType } from "react-icons";
 import { FaMoneyBill } from "react-icons/fa";
@@ -38,22 +39,22 @@ export const ASSOCIATION_NAV: DashboardNavGroup[] = [
     label: "Dashboard",
     items: [
       {
-        title: "General",
+        title: "Beranda",
         url: "/dashboard/association",
         icon: Building2,
       },
       {
-        title: "Statistik",
+        title: "Analitik",
         url: "/dashboard/association/analytics",
         icon: ChartNoAxesColumn,
       },
     ],
   },
   {
-    label: "Manajemen UMKM",
+    label: "Manajemen Pedagang",
     items: [
       {
-        title: "Kelola Pedagang",
+        title: "Daftar Pedagang",
         url: "/dashboard/association/manage-seller",
         icon: UsersRound,
       },
@@ -65,15 +66,15 @@ export const ASSOCIATION_NAV: DashboardNavGroup[] = [
     ],
   },
   {
-    label: "Manajemen Booth dan Floorplan",
+    label: "Manajemen Area",
     items: [
       {
-        title: "Kelola Floorplan",
+        title: "Denah Area",
         url: "/dashboard/association/floorplan",
         icon: Map,
       },
       {
-        title: "Kelola Zona Tenant",
+        title: "Zona Tenant",
         url: "/dashboard/association/zone",
         icon: Store,
       },
@@ -83,7 +84,7 @@ export const ASSOCIATION_NAV: DashboardNavGroup[] = [
     label: "Pengaturan",
     items: [
       {
-        title: "Pengaturan",
+        title: "Pengaturan Area",
         url: "/dashboard/association/settings",
         icon: Settings,
       },

@@ -515,14 +515,16 @@ export function FloorplanInspector({
             </div>
           </div>
 
-          <div className="pt-2 border-t">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Potensi Omzet Sewa:</span>
-              <span className="font-semibold text-foreground font-mono">
-                {formatRupiah(totalPotentialRevenue)}
-              </span>
+          {totalPotentialRevenue > 0 && (
+            <div className="pt-2 border-t">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Potensi Omzet Sewa:</span>
+                <span className="font-semibold text-foreground font-mono">
+                  {formatRupiah(totalPotentialRevenue)}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 

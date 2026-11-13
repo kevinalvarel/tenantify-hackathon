@@ -33,13 +33,32 @@ export interface BoothSlot {
   id: string;
   zoneCode: string;
   boothNumber: string;
+  label?: string;
   tenantId?: string;
   tenantName?: string;
   category?: string;
   status: "occupied" | "available" | "reserved";
   size: string;
   priceMonthly: number;
+  layout?: BoothLayout | null;
 }
+
+export type ZoneLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: string;
+  borderColor: string;
+};
+
+export type BoothLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+};
 
 export interface AreaZone {
   id: string;
@@ -49,4 +68,5 @@ export interface AreaZone {
   categoryFocus: string;
   totalBooths: number;
   occupiedBooths: number;
+  layout?: ZoneLayout | null;
 }

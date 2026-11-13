@@ -1,0 +1,167 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "81264f29-070a-47e3-bf8f-214711e2c4c1",
+  "prevIds": [
+    "33bae347-9305-42db-90d9-a481d6571f6b"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "booth_slots",
+        "label"
+      ],
+      "writes": [
+        "s|col|public.booth_slots.label",
+        "n|col|public.booth_slots.label",
+        "e|col|public.booth_slots.label"
+      ],
+      "reads": [
+        "n|tbl|public.booth_slots",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "booth_slots",
+        "layout"
+      ],
+      "writes": [
+        "s|col|public.booth_slots.layout",
+        "n|col|public.booth_slots.layout",
+        "e|col|public.booth_slots.layout"
+      ],
+      "reads": [
+        "n|tbl|public.booth_slots",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "zones",
+        "layout"
+      ],
+      "writes": [
+        "s|col|public.zones.layout",
+        "n|col|public.zones.layout",
+        "e|col|public.zones.layout"
+      ],
+      "reads": [
+        "n|tbl|public.zones",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "booth_slots",
+        "booth_slots_zone_number_idx"
+      ],
+      "writes": [
+        "s|idx|public.booth_slots_zone_number_idx",
+        "n|idx|public.booth_slots_zone_number_idx",
+        "e|idx|public.booth_slots_zone_number_idx",
+        "n|rel|public.booth_slots_zone_number_idx"
+      ],
+      "reads": [
+        "n|tbl|public.booth_slots",
+        "n|sch|public",
+        "n|col|public.booth_slots.zone_id",
+        "n|col|public.booth_slots.booth_number"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "booth_slots",
+        "name": "label",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "booth_slots",
+        "name": "layout",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "zones",
+        "name": "layout",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "booth_slots",
+        "name": "booth_slots_zone_number_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "zone_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "booth_number",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    }
+  ]
+}

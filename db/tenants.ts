@@ -1,8 +1,34 @@
 import { relations } from "drizzle-orm/_relations";
-import { pgTable, text, timestamp, boolean, integer, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  index,
+  jsonb,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { user } from "./users";
 import { products } from "./products";
 import { tenantOrders } from "./orders";
+
+export type ZoneLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: string;
+  borderColor: string;
+};
+
+export type BoothLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+};
 
 export const zones = pgTable("zones", {
   id: text("id").primaryKey(),
@@ -12,6 +38,7 @@ export const zones = pgTable("zones", {
   categoryFocus: text("category_focus"),
   totalBooths: integer("total_booths").default(0).notNull(),
   occupiedBooths: integer("occupied_booths").default(0).notNull(),
+  layout: jsonb("layout").$type<ZoneLayout>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -57,10 +84,12 @@ export const boothSlots = pgTable(
       .notNull()
       .references(() => zones.id, { onDelete: "cascade" }),
     boothNumber: text("booth_number").notNull(),
+    label: text("label"),
     tenantId: text("tenant_id").references(() => tenants.id, { onDelete: "set null" }),
     status: text("status").notNull().default("available"), // available | occupied | reserved
     size: text("size").notNull().default("3x3 m"),
     priceMonthly: integer("price_monthly").notNull().default(0),
+    layout: jsonb("layout").$type<BoothLayout>(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -70,8 +99,31 @@ export const boothSlots = pgTable(
   (table) => [
     index("booth_slots_zoneId_idx").on(table.zoneId),
     index("booth_slots_tenantId_idx").on(table.tenantId),
+    uniqueIndex("booth_slots_zone_number_idx").on(
+      table.zoneId,
+      table.boothNumber
+    ),
   ]
 );
+
+export const associationProfiles = pgTable("association_profiles", {
+  id: text("id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull().default("Area Bazaar"),
+  description: text("description"),
+  address: text("address"),
+  phone: text("phone"),
+  email: text("email"),
+  notifyNewTenant: boolean("notify_new_tenant").notNull().default(true),
+  notifyNewReview: boolean("notify_new_review").notNull().default(true),
+  notifyPaymentDue: boolean("notify_payment_due").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
 
 export const zonesRelations = relations(zones, ({ many }) => ({
   boothSlots: many(boothSlots),
