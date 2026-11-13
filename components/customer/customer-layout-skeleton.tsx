@@ -19,8 +19,8 @@ export function CustomerLayoutSkeleton() {
         aria-hidden="true"
       />
 
-      {/* Customer Top Navbar Skeleton */}
-      <header className="fixed top-3 inset-x-0 z-50 px-3 sm:px-6 pointer-events-none flex flex-col items-center">
+      {/* Customer Top Navbar Skeleton (Desktop Only) */}
+      <header className="hidden md:flex fixed top-3 inset-x-0 z-50 px-3 sm:px-6 pointer-events-none flex-col items-center">
         <div className="pointer-events-auto w-full max-w-[1240px] flex items-center justify-between px-3 sm:px-5 lg:px-6 py-2 sm:py-2.5 rounded-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border border-neutral-200/90 dark:border-neutral-800/90 shadow-lg shadow-black/5 min-w-0">
           {/* Brand Logo & Name */}
           <div className="flex items-center gap-2 px-1 sm:px-1.5">
@@ -46,7 +46,7 @@ export function CustomerLayoutSkeleton() {
       </header>
 
       {/* Main Page Canvas Skeleton */}
-      <main className="relative z-10 flex-1 w-full max-w-[1400px] mx-auto pt-20 sm:pt-24 p-3 sm:p-6 min-w-0">
+      <main className="relative z-10 flex-1 w-full max-w-[1400px] mx-auto pt-4 sm:pt-6 md:pt-24 pb-24 md:pb-6 px-3 sm:px-6 min-w-0">
         <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-full min-w-0">
           {/* 1. Hero Promo Banner Skeleton */}
           <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-neutral-200/80 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xs p-6 sm:p-10 shadow-xs flex flex-col justify-between min-h-[220px] sm:min-h-[280px]">
@@ -124,6 +124,21 @@ export function CustomerLayoutSkeleton() {
           </div>
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation Skeleton */}
+      <div className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t border-neutral-200/80 dark:border-neutral-800/80 px-2 pt-1 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+        <div className="grid grid-cols-4 max-w-md mx-auto w-full items-center">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="min-h-[48px] flex flex-col items-center justify-center gap-1.5"
+            >
+              <Skeleton className="size-5 rounded-full" />
+              <Skeleton className="h-2.5 w-10 rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

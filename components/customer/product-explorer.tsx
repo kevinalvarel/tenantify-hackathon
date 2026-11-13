@@ -69,7 +69,7 @@ function FloatingScrollToTop() {
       type="button"
       onClick={scrollToTop}
       aria-label="Kembali ke atas"
-      className="fixed bottom-6 right-6 z-40 size-11 rounded-full bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+      className="fixed bottom-20 md:bottom-6 right-6 z-40 size-11 rounded-full bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
     >
       <ChevronUp className="size-5 stroke-[2.5]" />
     </button>

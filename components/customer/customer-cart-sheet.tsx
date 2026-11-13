@@ -58,23 +58,26 @@ export function CustomerCartSheet({
   onClearCart,
   onCheckoutSuccess,
 }: CustomerCartSheetProps) {
-  const [orderType, setOrderType] = useState<"Dine-in (Makan di Tempat)" | "Takeaway (Bawa Pulang)">(
-    "Dine-in (Makan di Tempat)"
-  );
+  const [orderType, setOrderType] = useState<
+    "Dine-in (Makan di Tempat)" | "Takeaway (Bawa Pulang)"
+  >("Dine-in (Makan di Tempat)");
   const [tableNumber, setTableNumber] = useState("Meja 08");
-  const [paymentMethod, setPaymentMethod] = useState<CustomerOrder["paymentMethod"]>("QRIS");
+  const [paymentMethod, setPaymentMethod] =
+    useState<CustomerOrder["paymentMethod"]>("QRIS");
   const [successOrder, setSuccessOrder] = useState<CustomerOrder | null>(null);
 
   // Calculations
   const subtotal = cart.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
-    0
+    0,
   );
   const platformFee = cart.length > 0 ? 1000 : 0;
   const total = subtotal + platformFee;
 
   // Distinct tenants in the cart
-  const involvedTenants = Array.from(new Set(cart.map((i) => i.product.tenantName)));
+  const involvedTenants = Array.from(
+    new Set(cart.map((i) => i.product.tenantName)),
+  );
 
   const handleCheckout = () => {
     if (cart.length === 0) {
@@ -89,7 +92,8 @@ export function CustomerCartSheet({
       id: orderId,
       pickupCode,
       orderType,
-      tableNumber: orderType === "Dine-in (Makan di Tempat)" ? tableNumber : undefined,
+      tableNumber:
+        orderType === "Dine-in (Makan di Tempat)" ? tableNumber : undefined,
       tenantNames: involvedTenants,
       items: cart.map((item) => ({
         productName: item.product.name,
@@ -116,7 +120,10 @@ export function CustomerCartSheet({
   return (
     <>
       <Sheet open={isOpen} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="flex flex-col w-full sm:max-w-md p-0">
+        <SheetContent
+          side="right"
+          className="flex flex-col w-full sm:max-w-md p-0"
+        >
           <SheetHeader className="p-4 border-b">
             <div className="flex items-center justify-between">
               <SheetTitle className="flex items-center gap-2 text-base font-bold">
@@ -138,7 +145,8 @@ export function CustomerCartSheet({
               <p className="text-xs text-primary font-medium flex items-center gap-1.5">
                 <Sparkles className="size-3.5 shrink-0" />
                 <span>
-                  Pesanan Lintas {involvedTenants.length} Tenant ({involvedTenants.join(", ")})
+                  Pesanan Lintas {involvedTenants.length} Tenant (
+                  {involvedTenants.join(", ")})
                 </span>
               </p>
             )}
@@ -149,9 +157,12 @@ export function CustomerCartSheet({
             {cart.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-6">
                 <ShoppingBag className="size-12 mb-3 opacity-30" />
-                <p className="text-sm font-semibold text-foreground">Keranjang Anda Kosong</p>
+                <p className="text-sm font-semibold text-foreground">
+                  Keranjang Anda Kosong
+                </p>
                 <p className="text-xs mt-1">
-                  Pilih menu favorit Anda dari berbagai tenant di bazaar untuk mulai memesan.
+                  Pilih menu favorit Anda dari berbagai tenant di bazaar untuk
+                  mulai memesan.
                 </p>
               </div>
             ) : (
@@ -224,7 +235,9 @@ export function CustomerCartSheet({
             <div className="border-t bg-muted/20 p-4 flex flex-col gap-3">
               {/* Dine-in vs Takeaway Toggle */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-bold text-foreground">Metode Pengambilan</span>
+                <span className="text-xs font-bold text-foreground">
+                  Metode Pengambilan
+                </span>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -249,25 +262,13 @@ export function CustomerCartSheet({
                     Bawa Pulang
                   </button>
                 </div>
-
-                {orderType === "Dine-in (Makan di Tempat)" && (
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      Nomor Meja Anda:
-                    </span>
-                    <Input
-                      value={tableNumber}
-                      onChange={(e) => setTableNumber(e.target.value)}
-                      placeholder="Contoh: Meja 12"
-                      className="h-8 text-xs font-semibold"
-                    />
-                  </div>
-                )}
               </div>
 
               {/* Payment Method Selector */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-bold text-foreground">Metode Pembayaran</span>
+                <span className="text-xs font-bold text-foreground">
+                  Metode Pembayaran
+                </span>
                 <div className="grid grid-cols-3 gap-1.5 text-xs">
                   <button
                     type="button"
@@ -311,7 +312,9 @@ export function CustomerCartSheet({
               {/* Pricing breakdown */}
               <div className="flex flex-col gap-1 text-xs border-t pt-2">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal ({cart.reduce((a, b) => a + b.quantity, 0)} item)</span>
+                  <span>
+                    Subtotal ({cart.reduce((a, b) => a + b.quantity, 0)} item)
+                  </span>
                   <span>{formatRupiah(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
@@ -320,7 +323,9 @@ export function CustomerCartSheet({
                 </div>
                 <div className="flex justify-between text-sm font-bold text-foreground border-t pt-1.5">
                   <span>Total Tagihan</span>
-                  <span className="text-primary text-base font-extrabold">{formatRupiah(total)}</span>
+                  <span className="text-primary text-base font-extrabold">
+                    {formatRupiah(total)}
+                  </span>
                 </div>
               </div>
 
@@ -338,7 +343,10 @@ export function CustomerCartSheet({
 
       {/* SUCCESS CONFIRMATION MODAL & PICKUP CODE */}
       {successOrder && (
-        <Dialog open={!!successOrder} onOpenChange={(open) => !open && setSuccessOrder(null)}>
+        <Dialog
+          open={!!successOrder}
+          onOpenChange={(open) => !open && setSuccessOrder(null)}
+        >
           <DialogContent className="sm:max-w-md">
             <DialogHeader className="text-center">
               <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-2">
@@ -351,19 +359,24 @@ export function CustomerCartSheet({
 
             <div className="flex flex-col gap-3 p-4 bg-muted/40 rounded-xl border text-center">
               <div>
-                <p className="text-xs text-muted-foreground font-medium">KODE PENGAMBILAN PESANAN</p>
+                <p className="text-xs text-muted-foreground font-medium">
+                  KODE PENGAMBILAN PESANAN
+                </p>
                 <p className="text-3xl font-extrabold text-primary font-mono tracking-wider my-1">
                   {successOrder.pickupCode}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  Tunjukkan kode ini ke booth tenant saat pesanan Anda siap diambil.
+                  Tunjukkan kode ini ke booth tenant saat pesanan Anda siap
+                  diambil.
                 </p>
               </div>
 
               <div className="border-t pt-2 flex flex-col gap-1 text-xs text-left">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">ID Pesanan:</span>
-                  <span className="font-mono font-bold">#{successOrder.id}</span>
+                  <span className="font-mono font-bold">
+                    #{successOrder.id}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tipe:</span>
@@ -372,7 +385,9 @@ export function CustomerCartSheet({
                 {successOrder.tableNumber && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Lokasi Meja:</span>
-                    <span className="font-semibold">{successOrder.tableNumber}</span>
+                    <span className="font-semibold">
+                      {successOrder.tableNumber}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between">
@@ -383,7 +398,9 @@ export function CustomerCartSheet({
                 </div>
                 <div className="flex justify-between font-bold pt-1 border-t">
                   <span>Total Bayar:</span>
-                  <span className="text-primary">{formatRupiah(successOrder.total)}</span>
+                  <span className="text-primary">
+                    {formatRupiah(successOrder.total)}
+                  </span>
                 </div>
               </div>
             </div>

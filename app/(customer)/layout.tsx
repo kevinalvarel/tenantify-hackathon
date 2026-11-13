@@ -3,6 +3,7 @@
 import { CustomerProvider, useCustomer } from "@/context/customer-context";
 import { CustomerNavbar } from "@/components/customer/customer-navbar";
 import { CustomerCartSheet } from "@/components/customer/customer-cart-sheet";
+import { CustomerBottomNav } from "@/components/customer/customer-bottom-nav";
 import { CustomerLayoutSkeleton } from "@/components/customer/customer-layout-skeleton";
 import { Suspense } from "react";
 
@@ -33,13 +34,18 @@ function CustomerLayoutContent({ children }: { children: React.ReactNode }) {
         aria-hidden="true"
       />
 
-      {/* Customer Top Navbar (Replaces Sidebar) */}
-      <CustomerNavbar />
+      {/* Customer Top Navbar (Desktop Only: md:block) */}
+      <div className="hidden md:block">
+        <CustomerNavbar />
+      </div>
 
-      {/* Main Page Canvas */}
-      <main className="relative z-10 flex-1 w-full max-w-[1400px] mx-auto pt-20 sm:pt-24 p-3 sm:p-6 min-w-0">
+      {/* Main Page Canvas: padding top & bottom adaptif untuk mobile vs desktop */}
+      <main className="relative z-10 flex-1 w-full max-w-[1400px] mx-auto pt-4 sm:pt-6 md:pt-24 pb-24 md:pb-6 px-3 sm:px-6 min-w-0">
         {children}
       </main>
+
+      {/* Customer Bottom Navigation (Mobile Only: md:hidden) */}
+      <CustomerBottomNav />
 
       {/* Cart Drawer Sheet */}
       <CustomerCartSheet
