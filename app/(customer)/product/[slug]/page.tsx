@@ -2,6 +2,8 @@ import { ProductDetailView } from "@/components/customer/product-detail-view";
 import { getProductBySlug } from "@/data/customer-demo";
 import { Metadata } from "next";
 
+export const instant = false;
+
 type PageProps = {
   params: Promise<{ slug: string }> | { slug: string };
 };

@@ -19,7 +19,6 @@ import CodeSlots, {
 } from "@/components/customer/ui/number-slots";
 import { useSession } from "@/lib/auth/auth-client";
 import { logout } from "@/servers/auth-server";
-import { CustomerAuthDialog } from "./customer-auth-dialog";
 
 type Association = { code: string; name: string };
 
@@ -155,14 +154,7 @@ export function JoinForm({
               {loggingOut ? "Keluar..." : "Keluar"}
             </Button>
           </div>
-        ) : (
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-muted-foreground">
-              Masuk atau daftar untuk menyimpan beberapa asosiasi.
-            </p>
-            <CustomerAuthDialog />
-          </div>
-        ))}
+        ) : null)}
 
       <form action="/join" method="get" className="flex flex-col gap-3">
         <Label htmlFor="code">Kode Pengelola</Label>

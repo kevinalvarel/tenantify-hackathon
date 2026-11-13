@@ -19,7 +19,8 @@ export default function CustomerExplorePage() {
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-full min-w-0">
-      <section aria-label="Promo Utama Hari Ini">
+      {/* Hero Banner Carousel (hidden on smartphones/mobile, visible on sm and up) */}
+      <section aria-label="Promo Utama Hari Ini" className="hidden sm:block">
         <CustomerHeroBanner />
       </section>
 
