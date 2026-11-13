@@ -46,6 +46,7 @@ export type CustomerProduct = {
   mcdCategory?: string;
   price: number;
   originalPrice?: number;
+  stock?: number;
   description: string;
   rating: number;
   image?: string;

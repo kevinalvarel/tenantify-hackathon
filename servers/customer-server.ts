@@ -14,7 +14,7 @@ import {
   orderItems,
   zones,
 } from "@/db/schema";
-import { and, eq, inArray, desc } from "drizzle-orm";
+import { and, eq, inArray, desc, or, ilike, ne } from "drizzle-orm";
 import type {
   CustomerProduct,
   Tenant,
@@ -24,6 +24,7 @@ import type {
 } from "@/types/customer";
 import { findPresetUmkmByCode } from "@/data/umkm-registry";
 import { AreaZone, BoothSlot } from "@/types/association";
+import { slugify } from "@/lib/slug";
 
 export async function resolveUmkmByCodeAction(rawCode: string): Promise<{
   success: boolean;
@@ -100,6 +101,48 @@ export async function resolveUmkmByCodeAction(rawCode: string): Promise<{
       console.warn("Database lookup warning for association code:", dbErr);
     }
 
+    // 3. Check Database for direct Tenant (by tenant ID, booth number, or tenant name)
+    try {
+      const [matchedTenant] = await db
+        .select({
+          tenant: tenants,
+          boothNumber: boothSlots.boothNumber,
+        })
+        .from(tenants)
+        .leftJoin(boothSlots, eq(tenants.id, boothSlots.tenantId))
+        .where(
+          or(
+            eq(tenants.id, normalizedCode),
+            eq(tenants.id, rawCode.trim()),
+            ilike(tenants.name, normalizedCode),
+            ilike(tenants.name, `%${rawCode.trim()}%`),
+          ),
+        )
+        .limit(1);
+
+      if (matchedTenant) {
+        return {
+          success: true,
+          message: `Berhasil mendeteksi ${matchedTenant.tenant.name}`,
+          umkm: {
+            code: matchedTenant.tenant.id,
+            name: matchedTenant.tenant.name,
+            type: "umkm",
+            description:
+              matchedTenant.tenant.description ||
+              `Stan kuliner ${matchedTenant.tenant.name}`,
+            location: matchedTenant.boothNumber
+              ? `Stan ${matchedTenant.boothNumber}`
+              : matchedTenant.tenant.zone || "Area Bazaar & Sentra UMKM",
+            category: matchedTenant.tenant.category,
+            tenantIds: [matchedTenant.tenant.id],
+          },
+        };
+      }
+    } catch (dbTenantErr) {
+      console.warn("Database lookup warning for tenant:", dbTenantErr);
+    }
+
     return {
       success: false,
       message:
@@ -114,12 +157,12 @@ export async function resolveUmkmByCodeAction(rawCode: string): Promise<{
   }
 }
 
-export async function getCustomerDataAction(): Promise<{
+export async function getCustomerDataAction(filterTenantIds?: string[]): Promise<{
   products: CustomerProduct[];
   tenants: Tenant[];
 }> {
   try {
-    // 1. Fetch active tenants
+    // 1. Fetch tenants (excluding inactive ones)
     const tenantRows = await db
       .select({
         tenant: tenants,
@@ -127,7 +170,7 @@ export async function getCustomerDataAction(): Promise<{
       })
       .from(tenants)
       .leftJoin(boothSlots, eq(tenants.id, boothSlots.tenantId))
-      .where(eq(tenants.status, "active"));
+      .where(ne(tenants.status, "inactive"));
 
     const mappedTenants: Tenant[] = tenantRows.map((r) => {
       const t = r.tenant;
@@ -144,7 +187,7 @@ export async function getCustomerDataAction(): Promise<{
         category: t.category,
         zone: t.zone || "Food Court",
         boothNumber: r.boothNumber || "Stan",
-        rating: Number(t.rating) || 0,
+        rating: Number(t.rating) || 5.0,
         totalReviews: t.totalReviews || 0,
         isOpen: t.isOpen,
         avatarText: avatarText || "T",
@@ -153,26 +196,35 @@ export async function getCustomerDataAction(): Promise<{
 
     const tenantMap = new Map(mappedTenants.map((t) => [t.id, t]));
 
-    // 2. Fetch active products
+    // 2. Fetch active products from database
     const productRows = await db
       .select()
       .from(products)
       .where(eq(products.isActive, true));
 
-    const mappedProducts: CustomerProduct[] = productRows.map((p) => {
+    // If specific tenantIds are requested, filter products strictly for those tenants
+    const filteredRows =
+      filterTenantIds && filterTenantIds.length > 0
+        ? productRows.filter((p) => filterTenantIds.includes(p.tenantId))
+        : productRows;
+
+    const mappedProducts: CustomerProduct[] = filteredRows.map((p) => {
       const parentTenant = tenantMap.get(p.tenantId);
+      const safeSlug = slugify(p.name) + "-" + p.id.slice(-6);
       return {
         id: p.id,
+        slug: safeSlug,
         tenantId: p.tenantId,
-        tenantName: parentTenant?.name || "Tenant",
+        tenantName: parentTenant?.name || "Stan UMKM",
         boothNumber: parentTenant?.boothNumber || "Stan",
         name: p.name,
-        category: p.category,
+        category: (p.category as CustomerProduct["category"]) || "Makanan",
         price: p.price,
+        stock: p.stock ?? 0,
         description: p.description || "",
         image: p.image || undefined,
-        rating: Number(p.rating) || 0,
-        isPopular: p.isPopular,
+        rating: Number(p.rating) || 5.0,
+        isPopular: p.isPopular ?? false,
       };
     });
 
@@ -186,6 +238,59 @@ export async function getCustomerDataAction(): Promise<{
       products: [],
       tenants: [],
     };
+  }
+}
+
+export async function getProductByIdOrSlugAction(
+  slugOrId: string,
+): Promise<CustomerProduct | null> {
+  try {
+    if (!slugOrId) return null;
+    const clean = decodeURIComponent(slugOrId).trim().toLowerCase();
+
+    const productRows = await db
+      .select({
+        product: products,
+        tenantName: tenants.name,
+        boothNumber: boothSlots.boothNumber,
+      })
+      .from(products)
+      .leftJoin(tenants, eq(products.tenantId, tenants.id))
+      .leftJoin(boothSlots, eq(tenants.id, boothSlots.tenantId))
+      .where(eq(products.isActive, true));
+
+    const match = productRows.find((r) => {
+      const p = r.product;
+      const genSlug = slugify(p.name) + "-" + p.id.slice(-6);
+      return (
+        p.id.toLowerCase() === clean ||
+        genSlug.toLowerCase() === clean ||
+        slugify(p.name).toLowerCase() === clean ||
+        p.name.toLowerCase() === clean
+      );
+    });
+
+    if (!match) return null;
+
+    const p = match.product;
+    return {
+      id: p.id,
+      slug: slugify(p.name) + "-" + p.id.slice(-6),
+      tenantId: p.tenantId,
+      tenantName: match.tenantName || "Stan UMKM",
+      boothNumber: match.boothNumber || "Stan",
+      name: p.name,
+      category: (p.category as CustomerProduct["category"]) || "Makanan",
+      price: p.price,
+      stock: p.stock ?? 0,
+      description: p.description || "",
+      image: p.image || undefined,
+      rating: Number(p.rating) || 5.0,
+      isPopular: p.isPopular ?? false,
+    };
+  } catch (error) {
+    console.error("Gagal mengambil detail produk:", error);
+    return null;
   }
 }
 

@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   X,
   ChevronUp,
+  RefreshCw,
 } from "lucide-react";
 import { CustomerProduct, Tenant } from "@/types/customer";
 import { formatRupiah, cn } from "@/lib/utils";
@@ -78,6 +79,7 @@ function FloatingScrollToTop() {
 
 function ProductCardImage({ product }: { product: CustomerProduct }) {
   const [imgError, setImgError] = useState(false);
+  const isOutOfStock = product.stock !== undefined && product.stock <= 0;
 
   return (
     <div className="relative h-48 w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
@@ -86,23 +88,42 @@ function ProductCardImage({ product }: { product: CustomerProduct }) {
           src={product.image}
           alt={product.name}
           fill
+          unoptimized={product.image.startsWith("http")}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          className={cn(
+            "object-cover group-hover:scale-105 transition-transform duration-500",
+            isOutOfStock && "grayscale opacity-60",
+          )}
           onError={() => setImgError(true)}
         />
       ) : (
         <TenantifyPlaceholder size="md" subtitle={product.category} />
       )}
 
+      {/* Out of Stock Overlay / Stock Indicator */}
+      {isOutOfStock ? (
+        <span className="absolute top-3 left-3 bg-red-600/95 text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full shadow-md backdrop-blur-xs flex items-center gap-1">
+          Stok Habis
+        </span>
+      ) : product.stock !== undefined && product.stock <= 5 ? (
+        <span className="absolute top-3 left-3 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-md">
+          Sisa {product.stock}
+        </span>
+      ) : product.stock !== undefined && product.stock > 0 ? (
+        <span className="absolute top-3 left-3 bg-emerald-600/90 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-md">
+          Stok {product.stock}
+        </span>
+      ) : null}
+
       {/* Floating Rating Pill */}
       <span className="absolute top-3 right-3 bg-white/95 dark:bg-neutral-900/90 backdrop-blur-sm text-neutral-900 dark:text-neutral-100 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
         <Star className="size-3.5 fill-[#c85a32] text-[#c85a32]" />
-        <span>{product.rating}</span>
+        <span>{product.rating > 0 ? Number(product.rating).toFixed(1) : "5.0"}</span>
       </span>
 
       {/* Discount Tag */}
       {product.originalPrice && product.originalPrice > product.price && (
-        <span className="absolute top-3 left-3 bg-[#c85a32] text-white text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full shadow-md">
+        <span className="absolute bottom-3 left-3 bg-[#c85a32] text-white text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full shadow-md">
           Hemat {formatRupiah(product.originalPrice - product.price)}
         </span>
       )}
@@ -118,25 +139,36 @@ function ProductCard({
   onAddToCart: (product: CustomerProduct) => void;
 }) {
   const productSlug = product.slug || slugify(product.name);
+  const isOutOfStock = product.stock !== undefined && product.stock <= 0;
 
   return (
     <Link
       href={`/customer/product/${productSlug}`}
-      className="bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between border border-neutral-200/80 dark:border-neutral-800 hover:border-[#c85a32]/40 cursor-pointer select-none"
+      className={cn(
+        "bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between border border-neutral-200/80 dark:border-neutral-800 hover:border-[#c85a32]/40 cursor-pointer select-none",
+        isOutOfStock && "opacity-80",
+      )}
     >
       <div>
         <ProductCardImage product={product} />
 
         <div className="p-4 sm:p-5 space-y-2">
-          <p className="text-xs text-[#c85a32] font-bold flex items-center gap-1">
-            <Store className="size-3 shrink-0" />
-            <span className="truncate">{product.tenantName}</span>
-          </p>
-          <h3 className="font-bold text-base sm:text-lg text-neutral-900 dark:text-neutral-100 group-hover:text-[#c85a32] transition-colors line-clamp-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-[#c85a32] font-bold flex items-center gap-1 min-w-0">
+              <Store className="size-3 shrink-0" />
+              <span className="truncate">{product.tenantName}</span>
+            </p>
+            {product.category && (
+              <span className="text-[10px] font-semibold text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-md shrink-0">
+                {product.category}
+              </span>
+            )}
+          </div>
+          <h3 className="font-bold text-base sm:text-lg text-neutral-900 dark:text-neutral-100 group-hover:text-[#c85a32] transition-colors line-clamp-1 capitalize">
             {product.name}
           </h3>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed font-normal">
-            {product.description}
+            {product.description || `Menu hidangan istimewa dari ${product.tenantName}.`}
           </p>
         </div>
       </div>
@@ -151,23 +183,47 @@ function ProductCard({
           <p className="text-base sm:text-lg font-extrabold text-[#c85a32]">
             {formatRupiah(product.price)}
           </p>
+          {product.stock !== undefined && (
+            <p
+              className={cn(
+                "text-[10px] font-medium mt-0.5",
+                isOutOfStock ? "text-red-500 font-bold" : "text-neutral-400 dark:text-neutral-500",
+              )}
+            >
+              {isOutOfStock ? "Stok habis" : `Tersedia ${product.stock} porsi`}
+            </p>
+          )}
         </div>
 
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onAddToCart(product);
-            toast.success(
-              `"${product.name}" berhasil ditambahkan ke keranjang!`,
-            );
-          }}
-          className="flex items-center gap-1.5 bg-[#c85a32] hover:bg-[#b34a24] text-white px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-[#c85a32]/20 hover:shadow-lg transition-all active:scale-95 cursor-pointer"
-        >
-          <Plus className="size-4 stroke-[2.5]" />
-          <span>Tambah</span>
-        </button>
+        {isOutOfStock ? (
+          <button
+            type="button"
+            disabled
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            className="flex items-center gap-1.5 bg-neutral-200 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold cursor-not-allowed select-none"
+          >
+            <span>Habis</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onAddToCart(product);
+              toast.success(
+                `"${product.name}" berhasil ditambahkan ke keranjang!`,
+              );
+            }}
+            className="flex items-center gap-1.5 bg-[#c85a32] hover:bg-[#b34a24] text-white px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-[#c85a32]/20 hover:shadow-lg transition-all active:scale-95 cursor-pointer"
+          >
+            <Plus className="size-4 stroke-[2.5]" />
+            <span>Tambah</span>
+          </button>
+        )}
       </div>
     </Link>
   );
@@ -180,7 +236,13 @@ export function ProductExplorer({
   selectedTenantId: externalTenantId,
   onSelectTenant: externalSetTenant,
 }: ProductExplorerProps) {
-  const { selectedCategory, setSelectedCategory } = useCustomer();
+  const {
+    selectedCategory,
+    setSelectedCategory,
+    leaveUmkm,
+    refreshProducts,
+    isLoadingProducts,
+  } = useCustomer();
   const [searchQuery, setSearchQuery] = useState("");
   const [internalTenantId, setInternalTenantId] = useState<string>("all");
   const selectedTenantId =
@@ -463,8 +525,55 @@ export function ProductExplorer({
           ))}
         </div>
 
-        {/* Empty State */}
-        {filteredProducts.length === 0 && (
+        {/* Loading Indicator */}
+        {isLoadingProducts && (
+          <div className="flex flex-col items-center justify-center p-12 text-center">
+            <RefreshCw className="size-8 text-[#c85a32] animate-spin mb-3" />
+            <p className="text-sm font-semibold text-neutral-600 dark:text-neutral-300">
+              Menarik daftar menu terkini dari stan UMKM...
+            </p>
+          </div>
+        )}
+
+        {/* Empty State 1: Belum ada menu yang tersedia di UMKM ini */}
+        {!isLoadingProducts && products.length === 0 && (
+          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-800 p-10 sm:p-16 text-center bg-white dark:bg-neutral-900/60 shadow-xs">
+            <div className="size-16 rounded-3xl bg-[#c85a32]/10 text-[#c85a32] flex items-center justify-center mb-4">
+              <UtensilsCrossed className="size-8" />
+            </div>
+            <h3 className="text-lg sm:text-xl font-extrabold text-neutral-900 dark:text-neutral-100">
+              Belum ada menu yang tersedia di UMKM ini
+            </h3>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 max-w-md mt-2 leading-relaxed">
+              Pemilik stan UMKM ini belum mendisplay produk menu di etalase katalognya.
+              Silakan cek kembali beberapa saat lagi atau beralih ke UMKM lainnya.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  refreshProducts();
+                  toast.info("Memperbarui menu produk dari database...");
+                }}
+                className="rounded-full text-xs font-semibold gap-1.5 cursor-pointer hover:border-[#c85a32] hover:text-[#c85a32]"
+              >
+                <RefreshCw className="size-3.5" />
+                <span>Muat Ulang Menu</span>
+              </Button>
+              <Button
+                size="sm"
+                onClick={leaveUmkm}
+                className="rounded-full bg-[#c85a32] hover:bg-[#b34a24] text-white text-xs font-bold px-5 shadow-sm cursor-pointer"
+              >
+                <span>Pilih UMKM Lain</span>
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State 2: Filter / Search tidak menemukan menu */}
+        {!isLoadingProducts && products.length > 0 && filteredProducts.length === 0 && (
           <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-800 p-12 sm:p-16 text-center text-muted-foreground bg-white dark:bg-neutral-900/40">
             <div className="flex size-14 items-center justify-center rounded-full bg-[#ffdbcf] text-[#c85a32] mb-3">
               <UtensilsCrossed className="size-6" />

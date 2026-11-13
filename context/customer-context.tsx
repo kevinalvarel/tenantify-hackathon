@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useCallback,
 } from "react";
 import {
   CustomerProduct,
@@ -15,7 +16,7 @@ import {
   Tenant,
   ActiveUmkm,
 } from "@/types/customer";
-import { demoProducts, demoTenants, slugify } from "@/data/customer-demo";
+import { slugify } from "@/lib/slug";
 import {
   getCustomerDataAction,
   resolveUmkmByCodeAction,
@@ -80,6 +81,8 @@ type CustomerContextType = {
   cartItemCount: number;
   cartTotal: number;
   activeOrdersCount: number;
+  isLoadingProducts: boolean;
+  refreshProducts: (targetUmkm?: ActiveUmkm | null) => Promise<void>;
 };
 
 const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
@@ -102,8 +105,9 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     }
     return null;
   });
-  const [allProducts, setAllProducts] = useState<CustomerProduct[]>(demoProducts);
-  const [allTenants, setAllTenants] = useState<Tenant[]>(demoTenants);
+  const [allProducts, setAllProducts] = useState<CustomerProduct[]>([]);
+  const [allTenants, setAllTenants] = useState<Tenant[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
   const ordersRef = useRef<CustomerOrder[]>(orders);
   useEffect(() => {
@@ -127,8 +131,33 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshProducts = useCallback(
+    async (targetUmkm?: ActiveUmkm | null) => {
+      const target = targetUmkm !== undefined ? targetUmkm : activeUmkm;
+      if (!target) {
+        setAllProducts([]);
+        return;
+      }
+
+      setIsLoadingProducts(true);
+      try {
+        const data = await getCustomerDataAction(target.tenantIds);
+        setAllProducts(data.products);
+        if (data.tenants.length > 0) {
+          setAllTenants(data.tenants);
+        }
+      } catch (err) {
+        console.error("Gagal menarik data produk dari database:", err);
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    },
+    [activeUmkm],
+  );
+
   const leaveUmkm = () => {
     setActiveUmkm(null);
+    setAllProducts([]);
     setSelectedCategory("Semua");
     toast.info("Anda telah keluar dari UMKM. Masukkan kode baru untuk melihat menu.");
   };
@@ -138,6 +167,7 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     if (res.success && res.umkm) {
       setActiveUmkm(res.umkm);
       setSelectedCategory("Semua");
+      await refreshProducts(res.umkm);
       toast.success(`Terhubung ke ${res.umkm.name}!`);
       return res;
     }
@@ -226,37 +256,33 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Tarik produk spesifik UMKM saat activeUmkm berubah
   useEffect(() => {
-    let isMounted = true;
-    getCustomerDataAction().then((data) => {
-      if (!isMounted) return;
-      if (data.products.length > 0) {
-        const enrichedProducts = data.products.map((dbProd) => {
-          const demoMatch = demoProducts.find(
-            (d) =>
-              d.id === dbProd.id ||
-              d.name.toLowerCase() === dbProd.name.toLowerCase(),
-          );
-          return {
-            ...demoMatch,
-            ...dbProd,
-            slug: dbProd.slug || demoMatch?.slug || slugify(dbProd.name),
-            image: dbProd.image || demoMatch?.image,
-            originalPrice: dbProd.originalPrice ?? demoMatch?.originalPrice,
-            soldCount: dbProd.soldCount ?? demoMatch?.soldCount,
-            mcdCategory: dbProd.mcdCategory ?? demoMatch?.mcdCategory,
-          };
-        });
-        setAllProducts(enrichedProducts);
-      }
-      if (data.tenants.length > 0) {
-        setAllTenants(data.tenants);
-      }
-    });
-    return () => {
-      isMounted = false;
+    if (activeUmkm) {
+      refreshProducts(activeUmkm);
+    } else {
+      setAllProducts([]);
+    }
+  }, [activeUmkm?.code, refreshProducts]);
+
+  // Sinkronisasi otomatis data produk secara berkala (misal saat Seller menambah menu di dashboard)
+  useEffect(() => {
+    if (!activeUmkm) return;
+
+    const handleFocus = () => {
+      refreshProducts(activeUmkm);
     };
-  }, []);
+
+    window.addEventListener("focus", handleFocus);
+    const prodInterval = setInterval(() => {
+      refreshProducts(activeUmkm);
+    }, 6000);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      clearInterval(prodInterval);
+    };
+  }, [activeUmkm, refreshProducts]);
 
   // Filter products strictly based on active UMKM
   const products = useMemo(() => {
@@ -430,6 +456,8 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
         cartItemCount,
         cartTotal,
         activeOrdersCount,
+        isLoadingProducts,
+        refreshProducts,
       }}
     >
       {children}
