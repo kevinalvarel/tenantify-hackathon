@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { CustomerCartItem, CustomerOrder } from "@/types/customer";
+import { createCustomerOrderAction } from "@/servers/customer-server";
 import { formatRupiah } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,14 +42,6 @@ type CustomerCartSheetProps = {
   onCheckoutSuccess: (newOrder: CustomerOrder) => void;
 };
 
-function generateCustomerPickupCode() {
-  return `TNT-${Date.now().toString().slice(-3)}`;
-}
-
-function generateCustomerOrderId() {
-  return `ORD-${Date.now().toString().slice(-4)}`;
-}
-
 export function CustomerCartSheet({
   isOpen,
   onOpenChange,
@@ -65,6 +58,7 @@ export function CustomerCartSheet({
   const [paymentMethod, setPaymentMethod] =
     useState<CustomerOrder["paymentMethod"]>("QRIS");
   const [successOrder, setSuccessOrder] = useState<CustomerOrder | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Calculations
   const subtotal = cart.reduce(
@@ -79,42 +73,49 @@ export function CustomerCartSheet({
     new Set(cart.map((i) => i.product.tenantName)),
   );
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cart.length === 0) {
       toast.error("Keranjang belanja kosong.");
       return;
     }
 
-    const pickupCode = generateCustomerPickupCode();
-    const orderId = generateCustomerOrderId();
+    setIsSubmitting(true);
+    try {
+      const res = await createCustomerOrderAction({
+        orderType,
+        tableNumber:
+          orderType === "Dine-in (Makan di Tempat)" ? tableNumber : undefined,
+        paymentMethod,
+        items: cart.map((item) => ({
+          productId: item.product.id,
+          productName: item.product.name,
+          tenantId: item.product.tenantId,
+          tenantName: item.product.tenantName,
+          price: item.product.price,
+          quantity: item.quantity,
+          notes: item.notes,
+        })),
+        subtotal,
+        platformFee,
+        total,
+      });
 
-    const createdOrder: CustomerOrder = {
-      id: orderId,
-      pickupCode,
-      orderType,
-      tableNumber:
-        orderType === "Dine-in (Makan di Tempat)" ? tableNumber : undefined,
-      tenantNames: involvedTenants,
-      items: cart.map((item) => ({
-        productName: item.product.name,
-        tenantName: item.product.tenantName,
-        price: item.product.price,
-        quantity: item.quantity,
-        notes: item.notes,
-      })),
-      subtotal,
-      platformFee,
-      total,
-      status: "Diterima",
-      paymentMethod,
-      createdAt: "Baru saja",
-    };
+      if (!res.success || !res.order) {
+        toast.error(res.message || "Gagal membuat pesanan.");
+        return;
+      }
 
-    onCheckoutSuccess(createdOrder);
-    setSuccessOrder(createdOrder);
-    onClearCart();
-    onOpenChange(false);
-    toast.success(`Pesanan #${orderId} berhasil dibuat!`);
+      onCheckoutSuccess(res.order);
+      setSuccessOrder(res.order);
+      onClearCart();
+      onOpenChange(false);
+      toast.success(res.message);
+    } catch (err) {
+      console.error("Checkout error:", err);
+      toast.error("Terjadi kendala saat memproses pesanan. Silakan coba lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -262,6 +263,20 @@ export function CustomerCartSheet({
                     Bawa Pulang
                   </button>
                 </div>
+                {orderType === "Dine-in (Makan di Tempat)" && (
+                  <div className="mt-1.5 flex flex-col gap-1">
+                    <span className="text-[11px] text-muted-foreground font-medium">
+                      Nomor / Lokasi Meja:
+                    </span>
+                    <Input
+                      type="text"
+                      value={tableNumber}
+                      onChange={(e) => setTableNumber(e.target.value)}
+                      placeholder="Contoh: Meja 08"
+                      className="text-xs h-8 bg-background"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Payment Method Selector */}
@@ -330,11 +345,14 @@ export function CustomerCartSheet({
               </div>
 
               <Button
-                className="w-full font-bold py-5 gap-2"
+                className="w-full font-bold py-5 gap-2 cursor-pointer active:scale-95 transition-all"
                 onClick={handleCheckout}
+                disabled={isSubmitting}
               >
                 <CheckCircle2 className="size-4" />
-                Bayar Sekarang ({formatRupiah(total)})
+                {isSubmitting
+                  ? "Mengirim Pesanan ke UMKM..."
+                  : `Bayar Sekarang (${formatRupiah(total)})`}
               </Button>
             </div>
           )}

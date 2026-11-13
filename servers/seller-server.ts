@@ -5,21 +5,14 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/drizzle";
 import { tenants, products, tenantOrders, orderItems } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray, desc } from "drizzle-orm";
 import type {
   Order,
   Product,
   OrderStatus,
   OrderType,
   PaymentMethod,
-  RentInvoice,
 } from "@/types/seller";
-import {
-  productSchema,
-  type TProductInput,
-} from "@/validations/product-validation";
-import { deleteBlobAction } from "@/servers/blob-server";
-import { loadRentInvoices } from "@/servers/rent-data";
 
 export async function getSellerDataAction(): Promise<{
   products: Product[];
@@ -35,22 +28,28 @@ export async function getSellerDataAction(): Promise<{
       return { products: [], orders: [], rentInvoices: [] };
     }
 
-    // Find the tenant belonging to this seller
-    const [sellerTenant] = await db
+    // Find all tenants belonging to this seller
+    let sellerTenants = await db
       .select()
       .from(tenants)
-      .where(eq(tenants.sellerId, session.user.id))
-      .limit(1);
+      .where(eq(tenants.sellerId, session.user.id));
 
-    if (!sellerTenant) {
-      return { products: [], orders: [], rentInvoices: [] };
+    // Fallback: If seller user has no tenants directly assigned, link to active tenants
+    if (sellerTenants.length === 0) {
+      sellerTenants = await db.select().from(tenants).limit(5);
     }
 
-    // 1. Fetch products for this tenant
+    if (sellerTenants.length === 0) {
+      return { products: [], orders: [] };
+    }
+
+    const tenantIds = sellerTenants.map((t) => t.id);
+
+    // 1. Fetch products for this seller's tenants
     const productRows = await db
       .select()
       .from(products)
-      .where(eq(products.tenantId, sellerTenant.id));
+      .where(inArray(products.tenantId, tenantIds));
 
     const mappedProducts: Product[] = productRows.map((p) => ({
       id: p.id,
@@ -64,11 +63,12 @@ export async function getSellerDataAction(): Promise<{
       isActive: p.isActive,
     }));
 
-    // 2. Fetch tenant
+    // 2. Fetch tenant orders for this seller's tenants, ordered by newest first
     const orderRows = await db
       .select()
       .from(tenantOrders)
-      .where(eq(tenantOrders.tenantId, sellerTenant.id));
+      .where(inArray(tenantOrders.tenantId, tenantIds))
+      .orderBy(desc(tenantOrders.createdAt));
 
     const mappedOrders: Order[] = [];
     for (const ord of orderRows) {
@@ -81,17 +81,16 @@ export async function getSellerDataAction(): Promise<{
         ? new Intl.DateTimeFormat("id-ID", {
             day: "2-digit",
             month: "short",
-            year: "numeric",
             hour: "2-digit",
             minute: "2-digit",
           }).format(new Date(ord.createdAt))
-        : "";
+        : "Baru saja";
 
       mappedOrders.push({
         id: ord.id,
         customerName: ord.customerName || "Pelanggan",
         tableNumber: ord.tableNumber || undefined,
-        type: (ord.type as OrderType) || "POS Kasir",
+        type: (ord.type as OrderType) || "Online Order",
         items: items.map((it) => ({
           productName: it.productName,
           price: it.price,
@@ -123,210 +122,46 @@ export async function getSellerDataAction(): Promise<{
   }
 }
 
-export type ProductActionResult = {
+export async function updateOrderStatusAction(
+  orderId: string,
+  newStatus: OrderStatus,
+): Promise<{
   success: boolean;
   message: string;
-  product?: Product;
-};
-
-export async function createProductAction(
-  input: TProductInput,
-): Promise<ProductActionResult> {
-  const parsed = productSchema.safeParse(input);
-  if (!parsed.success) {
-    return {
-      success: false,
-      message: parsed.error.issues[0]?.message || "Data produk tidak valid.",
-    };
-  }
-
+}> {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
 
-    let tenantId = "";
-    if (session) {
-      // Find the tenant belonging to this seller
-      const [sellerTenant] = await db
-        .select()
-        .from(tenants)
-        .where(eq(tenants.sellerId, session.user.id))
-        .limit(1);
-
-      if (sellerTenant) {
-        tenantId = sellerTenant.id;
-      }
+    if (!session) {
+      return { success: false, message: "Sesi tidak valid. Silakan login." };
     }
 
-    if (!tenantId) {
-      const [firstTenant] = await db.select().from(tenants).limit(1);
-      if (firstTenant) {
-        tenantId = firstTenant.id;
-      } else {
-        return {
-          success: false,
-          message:
-            "Tenant UMKM Anda tidak ditemukan. Hubungi pengelola bazaar.",
-        };
-      }
-    }
-
-    const data = parsed.data;
-    const newId = crypto.randomUUID();
-    const sku = data.sku?.trim() || `SKU-${Date.now().toString().slice(-4)}`;
-
-    await db.insert(products).values({
-      id: newId,
-      tenantId,
-      sku,
-      name: data.name,
-      category: data.category,
-      price: data.price,
-      stock: data.stock,
-      description: data.description || null,
-      image: data.image || null,
-      isActive: true,
-    });
-
-    revalidatePath("/dashboard/seller/stock");
+    // Update in tenantOrders
+    await db
+      .update(tenantOrders)
+      .set({
+        status: newStatus,
+        updatedAt: new Date(),
+      })
+      .where(eq(tenantOrders.id, orderId));
 
     return {
       success: true,
-      message: `Menu "${data.name}" berhasil ditambahkan ke katalog stan.`,
-      product: {
-        id: newId,
-        sku,
-        name: data.name,
-        category: data.category,
-        price: data.price,
-        stock: data.stock,
-        description: data.description || undefined,
-        image: data.image || undefined,
-        isActive: true,
-      },
+      message:
+        newStatus === "Diproses"
+          ? `Pesanan #${orderId} berhasil dikonfirmasi dan mulai diproses!`
+          : newStatus === "Dibatalkan"
+            ? `Pesanan #${orderId} telah ditolak.`
+            : `Status pesanan #${orderId} berhasil diubah menjadi ${newStatus}.`,
     };
   } catch (error) {
-    console.error("Gagal menambahkan produk:", error);
-    const err = error as { message?: string };
+    console.error("Gagal mengupdate status pesanan:", error);
     return {
       success: false,
-      message: err.message || "Gagal menyimpan produk ke database.",
+      message: "Terjadi kesalahan saat mengupdate status pesanan di database.",
     };
   }
 }
 
-export async function updateProductStockAction(
-  productId: string,
-  newStock: number,
-): Promise<{ success: boolean; message: string }> {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session) {
-      return { success: false, message: "Sesi tidak valid." };
-    }
-
-    await db
-      .update(products)
-      .set({
-        stock: Math.max(0, newStock),
-        isActive: newStock > 0 ? true : false,
-      })
-      .where(eq(products.id, productId));
-
-    revalidatePath("/dashboard/seller/stock");
-
-    return { success: true, message: "Stok produk berhasil diperbarui." };
-  } catch (error) {
-    console.error("Gagal memperbarui stok:", error);
-    return { success: false, message: "Gagal memperbarui stok produk." };
-  }
-}
-
-export async function toggleProductActiveAction(
-  productId: string,
-): Promise<{ success: boolean; message: string }> {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session) {
-      return { success: false, message: "Sesi tidak valid." };
-    }
-
-    const [existing] = await db
-      .select({ isActive: products.isActive })
-      .from(products)
-      .where(eq(products.id, productId))
-      .limit(1);
-
-    if (!existing) {
-      return { success: false, message: "Produk tidak ditemukan." };
-    }
-
-    await db
-      .update(products)
-      .set({
-        isActive: !existing.isActive,
-      })
-      .where(eq(products.id, productId));
-
-    revalidatePath("/dashboard/seller/stock");
-
-    return { success: true, message: "Status produk berhasil diubah." };
-  } catch (error) {
-    console.error("Gagal mengubah status produk:", error);
-    return { success: false, message: "Gagal mengubah status produk." };
-  }
-}
-
-export async function deleteProductAction(
-  productId: string,
-): Promise<{ success: boolean; message: string }> {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session) {
-      return { success: false, message: "Sesi tidak valid." };
-    }
-
-    const [existingProduct] = await db
-      .select({ id: products.id, name: products.name, image: products.image })
-      .from(products)
-      .where(eq(products.id, productId))
-      .limit(1);
-
-    if (!existingProduct) {
-      return { success: false, message: "Produk tidak ditemukan." };
-    }
-
-    // Hapus blob image dari Vercel Blob jika produk memiliki foto
-    if (
-      existingProduct.image &&
-      existingProduct.image.includes("blob.vercel-storage.com")
-    ) {
-      deleteBlobAction(existingProduct.image).catch((err) =>
-        console.error("Gagal menghapus blob image produk:", err),
-      );
-    }
-
-    // Hapus produk dari database
-    await db.delete(products).where(eq(products.id, productId));
-
-    revalidatePath("/dashboard/seller/stock");
-
-    return {
-      success: true,
-      message: `Menu "${existingProduct.name}" berhasil dihapus dari katalog.`,
-    };
-  } catch (error) {
-    console.error("Gagal menghapus produk:", error);
-    return { success: false, message: "Gagal menghapus produk dari database." };
-  }
-}
