@@ -5,10 +5,11 @@ import {
   FloorplanData,
   FloorplanBooth,
   FloorplanZoneArea,
+  FloorplanDoor,
   BoothStatus,
 } from "@/types/floorplan";
 import { AreaZone, AssociationTenant } from "@/types/association";
-import { formatRupiah } from "@/lib/utils";
+import { formatRupiah, cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,9 @@ import {
 import {
   Store,
   Layers,
+  DoorOpen,
+  LogIn,
+  LogOut,
   RotateCw,
   Copy,
   Trash2,
@@ -38,12 +42,14 @@ import {
 interface FloorplanInspectorProps {
   data: FloorplanData;
   selectedId: string | null;
-  selectedType: "booth" | "zone" | null;
-  onSelect: (id: string | null, type: "booth" | "zone" | null) => void;
+  selectedType: "booth" | "zone" | "door" | null;
+  onSelect: (id: string | null, type: "booth" | "zone" | "door" | null) => void;
   onUpdateBooth: (id: string, updates: Partial<FloorplanBooth>) => void;
   onUpdateZone: (id: string, updates: Partial<FloorplanZoneArea>) => void;
+  onUpdateDoor: (id: string, updates: Partial<FloorplanDoor>) => void;
   onDeleteBooth: (id: string) => void;
   onDeleteZone: (id: string) => void;
+  onDeleteDoor: (id: string) => void;
   onDuplicateBooth: (id: string) => void;
   onRotateBooth: (id: string) => void;
   onUpdateCanvasSettings: (settings: {
@@ -64,8 +70,10 @@ export function FloorplanInspector({
   onSelect,
   onUpdateBooth,
   onUpdateZone,
+  onUpdateDoor,
   onDeleteBooth,
   onDeleteZone,
+  onDeleteDoor,
   onDuplicateBooth,
   onRotateBooth,
   onUpdateCanvasSettings,
@@ -80,6 +88,11 @@ export function FloorplanInspector({
   const selectedZone =
     selectedType === "zone"
       ? data.zones.find((z) => z.id === selectedId) || null
+      : null;
+
+  const selectedDoor =
+    selectedType === "door"
+      ? (data.doors || []).find((d) => d.id === selectedId) || null
       : null;
 
   // Global metrics when nothing is selected
@@ -468,7 +481,172 @@ export function FloorplanInspector({
     );
   }
 
-  // 3. Panel when nothing is selected (Overview & Quick Layers Jump)
+  // 3. Panel when a Door / Gate is selected
+  if (selectedDoor) {
+    const isExit = selectedDoor.type === "exit";
+    const isBoth = selectedDoor.type === "both";
+
+    return (
+      <Card className="h-full border bg-card shadow-xs flex flex-col overflow-hidden">
+        <CardHeader className="p-4 border-b pb-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  "size-8 rounded-lg flex items-center justify-center shrink-0",
+                  isExit
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : isBoth
+                    ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                    : "bg-[#c85a32]/10 text-[#c85a32]"
+                )}
+              >
+                {isExit ? (
+                  <LogOut className="size-4" />
+                ) : isBoth ? (
+                  <DoorOpen className="size-4" />
+                ) : (
+                  <LogIn className="size-4" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <CardTitle className="text-sm font-bold truncate max-w-[160px]">
+                  {selectedDoor.label}
+                </CardTitle>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-[10px] px-1.5 py-0 mt-0.5",
+                    isExit
+                      ? "text-emerald-600 border-emerald-500/30"
+                      : isBoth
+                      ? "text-indigo-600 border-indigo-500/30"
+                      : "text-[#c85a32] border-[#c85a32]/30"
+                  )}
+                >
+                  {isExit
+                    ? "Pintu Keluar"
+                    : isBoth
+                    ? "Masuk & Keluar"
+                    : "Pintu Masuk"}
+                </Badge>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onDeleteDoor(selectedDoor.id)}
+              className="h-7 text-xs gap-1 px-2 text-destructive hover:bg-destructive/10 cursor-pointer"
+              title="Hapus Pintu"
+            >
+              <Trash2 className="size-3" />
+              <span>Hapus</span>
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-4 space-y-4 text-xs overflow-y-auto max-h-[500px]">
+          {/* Label Name */}
+          <div className="space-y-1">
+            <Label className="text-[11px]">Nama / Label Pintu</Label>
+            <Input
+              value={selectedDoor.label}
+              onChange={(e) =>
+                onUpdateDoor(selectedDoor.id, { label: e.target.value })
+              }
+              className="h-8 text-xs"
+              placeholder="Contoh: Pintu Masuk Utama dan Kasir Bazaar"
+            />
+          </div>
+
+          {/* Type Selector */}
+          <div className="space-y-1">
+            <Label className="text-[11px]">Tipe Akses Gerbang</Label>
+            <Select
+              value={selectedDoor.type}
+              onValueChange={(val) => {
+                if (val) {
+                  onUpdateDoor(selectedDoor.id, {
+                    type: val as "entrance" | "exit" | "both",
+                  });
+                }
+              }}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Pilih Tipe Pintu" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="entrance">Pintu Masuk (Entrance)</SelectItem>
+                <SelectItem value="exit">Pintu Keluar (Exit)</SelectItem>
+                <SelectItem value="both">Pintu Masuk & Keluar (Dua Arah)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Position & Dimensions */}
+          <div className="space-y-1 pt-1 border-t">
+            <Label className="text-[11px] font-semibold text-muted-foreground">
+              Posisi & Dimensi Kanvas
+            </Label>
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              <div>
+                <span className="text-[10px] text-muted-foreground">Posisi X (px)</span>
+                <Input
+                  type="number"
+                  value={selectedDoor.x}
+                  onChange={(e) =>
+                    onUpdateDoor(selectedDoor.id, { x: Number(e.target.value) || 0 })
+                  }
+                  className="h-7 text-xs font-mono"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground">Posisi Y (px)</span>
+                <Input
+                  type="number"
+                  value={selectedDoor.y}
+                  onChange={(e) =>
+                    onUpdateDoor(selectedDoor.id, { y: Number(e.target.value) || 0 })
+                  }
+                  className="h-7 text-xs font-mono"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground">Lebar (px)</span>
+                <Input
+                  type="number"
+                  value={selectedDoor.width}
+                  onChange={(e) =>
+                    onUpdateDoor(selectedDoor.id, {
+                      width: Math.max(60, Number(e.target.value) || 60),
+                    })
+                  }
+                  className="h-7 text-xs font-mono"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] text-muted-foreground">Tinggi (px)</span>
+                <Input
+                  type="number"
+                  value={selectedDoor.height}
+                  onChange={(e) =>
+                    onUpdateDoor(selectedDoor.id, {
+                      height: Math.max(20, Number(e.target.value) || 20),
+                    })
+                  }
+                  className="h-7 text-xs font-mono"
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // 4. Panel when nothing is selected (Overview & Quick Layers Jump)
   return (
     <div className="flex flex-col gap-4">
       {/* Metric Summary Card */}
@@ -580,6 +758,60 @@ export function FloorplanInspector({
           )}
         </CardContent>
       </Card>
+
+      {/* Door Layers */}
+      {data.doors && data.doors.length > 0 && (
+        <Card className="border bg-card shadow-xs flex flex-col">
+          <CardHeader className="p-3.5 border-b pb-2">
+            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              Akses Pintu Masuk / Keluar ({data.doors.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-2 space-y-1">
+            {data.doors.map((door) => (
+              <button
+                key={door.id}
+                type="button"
+                onClick={() => onSelect(door.id, "door")}
+                className="w-full flex items-center justify-between p-2 rounded-md hover:bg-muted/80 text-left transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={cn(
+                      "size-2 rounded-full shrink-0",
+                      door.type === "exit"
+                        ? "bg-emerald-500"
+                        : door.type === "both"
+                        ? "bg-indigo-500"
+                        : "bg-[#c85a32]"
+                    )}
+                  />
+                  <span className="text-xs text-foreground truncate max-w-[140px] font-medium">
+                    {door.label}
+                  </span>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-[9px] px-1.5 h-4 shrink-0 font-normal",
+                    door.type === "exit"
+                      ? "text-emerald-600 border-emerald-500/30"
+                      : door.type === "both"
+                      ? "text-indigo-600 border-indigo-500/30"
+                      : "text-[#c85a32] border-[#c85a32]/30"
+                  )}
+                >
+                  {door.type === "exit"
+                    ? "Keluar"
+                    : door.type === "both"
+                    ? "Dua Arah"
+                    : "Masuk"}
+                </Badge>
+              </button>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

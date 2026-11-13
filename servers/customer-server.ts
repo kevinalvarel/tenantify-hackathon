@@ -1,99 +1,10 @@
 "use server";
 
 import { db } from "@/drizzle";
-import { tenants, boothSlots, products, user, associationProfiles } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
-import type { CustomerProduct, Tenant, ActiveUmkm } from "@/types/customer";
-import { findPresetUmkmByCode } from "@/data/umkm-registry";
-
-export async function resolveUmkmByCodeAction(rawCode: string): Promise<{
-  success: boolean;
-  message: string;
-  umkm?: ActiveUmkm;
-}> {
-  try {
-    if (!rawCode || typeof rawCode !== "string") {
-      return { success: false, message: "Kode unik wajib diisi." };
-    }
-
-    const normalizedCode = rawCode.trim().toUpperCase();
-
-    // 1. First check in Preset / Configured Registry (fastest & robust)
-    const preset = findPresetUmkmByCode(normalizedCode);
-    if (preset) {
-      return {
-        success: true,
-        message: `Berhasil mendeteksi ${preset.name}`,
-        umkm: {
-          code: preset.code,
-          name: preset.name,
-          type: preset.type,
-          description: preset.description,
-          location: preset.location,
-          category: preset.category,
-          tenantIds: preset.tenantIds,
-        },
-      };
-    }
-
-    // 2. Check Database for association user
-    try {
-      const [assocUser] = await db
-        .select({
-          id: user.id,
-          name: user.name,
-          role: user.role,
-          associationCode: user.associationCode,
-        })
-        .from(user)
-        .where(
-          and(
-            eq(user.associationCode, normalizedCode),
-            eq(user.role, "association"),
-          ),
-        )
-        .limit(1);
-
-      if (assocUser) {
-        // Fetch association profile if available
-        const [profile] = await db
-          .select()
-          .from(associationProfiles)
-          .where(eq(associationProfiles.id, assocUser.id))
-          .limit(1);
-
-        return {
-          success: true,
-          message: `Berhasil mendeteksi Paguyuban ${assocUser.name}`,
-          umkm: {
-            code: normalizedCode,
-            name: profile?.name || assocUser.name,
-            type: "paguyuban",
-            description:
-              profile?.description ||
-              "Paguyuban Multi-UMKM & Pusat Kuliner Terpadu",
-            location: profile?.address || "Area Bazaar & Sentra UMKM",
-            tenantIds: [], // All tenants
-          },
-        };
-      }
-    } catch (dbErr) {
-      console.warn("Database lookup warning for association code:", dbErr);
-    }
-
-    return {
-      success: false,
-      message:
-        "Kode unik UMKM tidak ditemukan. Coba kode sample seperti 5S5CTP (Paguyuban Cilegon Juare), KEB001, atau BBK001.",
-    };
-  } catch (error) {
-    console.error("Error resolving UMKM by code:", error);
-    return {
-      success: false,
-      message: "Terjadi kesalahan saat memeriksa kode. Silakan coba lagi.",
-    };
-  }
-}
+import { tenants, boothSlots, products, zones } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import type { CustomerProduct, Tenant } from "@/types/customer";
+import type { AreaZone, BoothSlot } from "@/types/association";
 
 export async function getCustomerDataAction(): Promise<{
   products: CustomerProduct[];
@@ -165,6 +76,73 @@ export async function getCustomerDataAction(): Promise<{
     return {
       products: [],
       tenants: [],
+    };
+  }
+}
+
+export async function getCustomerFloorplanAction(): Promise<{
+  zones: AreaZone[];
+  booths: BoothSlot[];
+}> {
+  try {
+    const zoneRows = await db.select().from(zones).orderBy(zones.code);
+
+    const boothRows = await db
+      .select({
+        id: boothSlots.id,
+        boothNumber: boothSlots.boothNumber,
+        label: boothSlots.label,
+        status: boothSlots.status,
+        size: boothSlots.size,
+        priceMonthly: boothSlots.priceMonthly,
+        layout: boothSlots.layout,
+        tenantId: boothSlots.tenantId,
+        zoneCode: zones.code,
+        tenantName: tenants.name,
+        category: tenants.category,
+      })
+      .from(boothSlots)
+      .leftJoin(zones, eq(boothSlots.zoneId, zones.id))
+      .leftJoin(tenants, eq(boothSlots.tenantId, tenants.id))
+      .orderBy(boothSlots.boothNumber);
+
+    const mappedBooths: BoothSlot[] = boothRows.map((b) => ({
+      id: b.id,
+      zoneCode: b.zoneCode || "",
+      boothNumber: b.boothNumber,
+      label: b.label || undefined,
+      tenantId: b.tenantId || undefined,
+      tenantName: b.tenantName || undefined,
+      category: b.category || undefined,
+      status: (b.status as "occupied" | "available" | "reserved") || "available",
+      size: b.size,
+      priceMonthly: b.priceMonthly,
+      layout: b.layout ?? null,
+    }));
+
+    const mappedZones: AreaZone[] = zoneRows.map((z) => {
+      const zoneBooths = mappedBooths.filter((b) => b.zoneCode === z.code);
+      return {
+        id: z.id,
+        name: z.name,
+        code: z.code,
+        description: z.description || "",
+        categoryFocus: z.categoryFocus || "",
+        totalBooths: zoneBooths.length,
+        occupiedBooths: zoneBooths.filter((b) => b.status === "occupied").length,
+        layout: z.layout ?? null,
+      };
+    });
+
+    return {
+      zones: mappedZones,
+      booths: mappedBooths,
+    };
+  } catch (error) {
+    console.error("Gagal memuat denah customer dari database:", error);
+    return {
+      zones: [],
+      booths: [],
     };
   }
 }

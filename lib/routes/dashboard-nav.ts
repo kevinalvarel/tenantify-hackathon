@@ -84,7 +84,7 @@ export const ASSOCIATION_NAV: DashboardNavGroup[] = [
     label: "Pengaturan",
     items: [
       {
-        title: "Pengaturan Area",
+        title: "Pengaturan",
         url: "/dashboard/association/settings",
         icon: Settings,
       },

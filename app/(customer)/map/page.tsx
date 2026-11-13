@@ -1,21 +1,12 @@
-"use client";
+import { Metadata } from "next";
+import { CustomerMapView } from "@/components/customer/customer-map-view";
 
-import { useRouter } from "next/navigation";
-import { useCustomer } from "@/context/customer-context";
-import { TenantMapPreview } from "@/components/customer/tenant-map-preview";
+export const metadata: Metadata = {
+  title: "Denah Interaktif Bazaar - Tenantify",
+  description:
+    "Jelajahi tata letak stan bazaar dan denah resmi yang disinkronkan langsung dengan pengelola asosiasi bazaar.",
+};
 
 export default function CustomerMapPage() {
-  const router = useRouter();
-  const { tenants } = useCustomer();
-
-  const handleSelectTenant = () => {
-    router.push("/customer");
-  };
-
-  return (
-    <TenantMapPreview
-      tenants={tenants}
-      onSelectTenant={handleSelectTenant}
-    />
-  );
+  return <CustomerMapView />;
 }

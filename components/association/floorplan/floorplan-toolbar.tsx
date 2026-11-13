@@ -6,6 +6,9 @@ import {
   Hand,
   Store,
   Layers,
+  DoorOpen,
+  LogIn,
+  LogOut,
   Undo2,
   Redo2,
   ZoomIn,
@@ -58,6 +61,7 @@ interface FloorplanToolbarProps {
   onToggleSnap: () => void;
   onAddBooth: () => void;
   onAddZone: () => void;
+  onAddDoor: (type?: "entrance" | "exit") => void;
   onSave: () => void;
   onExportJSON: () => void;
   onImportJSON: (file: File) => void;
@@ -83,6 +87,7 @@ export function FloorplanToolbar({
   onToggleSnap,
   onAddBooth,
   onAddZone,
+  onAddDoor,
   onSave,
   onExportJSON,
   onImportJSON,
@@ -228,6 +233,59 @@ export function FloorplanToolbar({
                   Tambahkan area pembatas zona
                 </TooltipContent>
               </Tooltip>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2.5 gap-1.5 text-xs border-dashed border-[#c85a32]/40 text-[#c85a32] hover:bg-[#c85a32]/10"
+                      aria-label="Tambah Pintu Masuk atau Keluar"
+                    >
+                      <DoorOpen className="size-3.5" />
+                      <span>Tambah Pintu</span>
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="start" className="w-52">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="text-xs">
+                      Pilihan Akses Masuk / Keluar
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onAddDoor("entrance")}
+                      className="gap-2.5 cursor-pointer text-xs"
+                    >
+                      <LogIn className="size-3.5 text-[#c85a32]" />
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                          Pintu Masuk Utama
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          Akses pengunjung & kasir utama
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onAddDoor("exit")}
+                      className="gap-2.5 cursor-pointer text-xs"
+                    >
+                      <LogOut className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                          Pintu Keluar
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          Akses keluar pengunjung bazaar
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
 

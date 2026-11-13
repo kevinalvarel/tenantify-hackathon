@@ -91,7 +91,7 @@ export const saveFloorplanSchema = z.object({
         code: z.string().trim().min(1).max(8),
         name: z.string().trim().min(1).max(80),
         layout: zoneLayoutSchema,
-      })
+      }),
     )
     .max(100),
   booths: z
@@ -105,7 +105,7 @@ export const saveFloorplanSchema = z.object({
         status: z.enum(["available", "reserved", "occupied"]),
         tenantId: z.string().trim().max(64).optional(),
         layout: boothLayoutSchema,
-      })
+      }),
     )
     .max(2000),
 });

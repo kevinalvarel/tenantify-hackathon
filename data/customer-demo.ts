@@ -515,8 +515,6 @@ export function getProductBySlug(slug: string): CustomerProduct | undefined {
     (p) =>
       p.slug?.toLowerCase() === clean ||
       slugify(p.name).toLowerCase() === clean ||
-      p.id.toLowerCase() === clean
+      p.id.toLowerCase() === clean,
   );
 }
-
-
