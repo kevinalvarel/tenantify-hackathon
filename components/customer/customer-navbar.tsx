@@ -19,6 +19,7 @@ import { motion, useScroll, useMotionValueEvent } from "motion/react";
 import { useCustomer } from "@/context/customer-context";
 import { useSession } from "@/lib/auth/auth-client";
 import { logout } from "@/servers/auth-server";
+import { CustomerAuthDialog } from "@/components/customer/customer-auth-dialog";
 import { formatRupiah } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,6 +79,8 @@ export function CustomerNavbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
+  const isJoinPage = pathname?.includes("/join");
+  const isLoggedIn = !!session?.user;
   const {
     cartItemCount,
     cartTotal,
@@ -371,24 +374,35 @@ export function CustomerNavbar() {
           {/* Cart CTA */}
           <Button
             onClick={() => setIsCartOpen(true)}
-            className="group relative flex items-center gap-2 h-9 sm:h-10 px-4 sm:px-5 rounded-full font-semibold text-xs sm:text-[13px] transition-all duration-200 cursor-pointer select-none active:scale-95 bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-[0_4px_12px_rgba(200,90,50,0.25)] border-none shrink-0"
+            className={cn(
+              "group relative flex items-center justify-center font-semibold text-xs sm:text-[13px] transition-all duration-200 cursor-pointer select-none active:scale-95 bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-[0_4px_12px_rgba(200,90,50,0.25)] border-none shrink-0",
+              isJoinPage
+                ? "size-9 sm:size-10 p-0 rounded-full"
+                : "h-9 sm:h-10 px-4 sm:px-5 rounded-full gap-2",
+            )}
+            aria-label="Keranjang Belanja"
           >
-            <ShoppingBag className="size-4 shrink-0 transition-transform group-hover:scale-110 text-white" />
-            <span className="hidden sm:inline">Keranjang</span>
+            <ShoppingBag className="size-4 sm:size-4.5 shrink-0 transition-transform group-hover:scale-110 text-white" />
 
-            {cartItemCount > 0 ? (
+            {!isJoinPage && (
               <>
-                <Badge className="flex items-center justify-center size-5 p-0 rounded-full bg-white text-[#c85a32] text-[11px] font-bold border-none shrink-0">
-                  {cartItemCount}
-                </Badge>
-                <span className="hidden xl:inline text-xs font-semibold text-white/90">
-                  • {formatRupiah(cartTotal)}
-                </span>
+                <span className="hidden sm:inline">Keranjang</span>
+
+                {cartItemCount > 0 ? (
+                  <>
+                    <Badge className="flex items-center justify-center size-5 p-0 rounded-full bg-white text-[#c85a32] text-[11px] font-bold border-none shrink-0">
+                      {cartItemCount}
+                    </Badge>
+                    <span className="hidden xl:inline text-xs font-semibold text-white/90">
+                      • {formatRupiah(cartTotal)}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-[11px] sm:text-xs text-white/80 font-semibold">
+                    (0)
+                  </span>
+                )}
               </>
-            ) : (
-              <span className="text-[11px] sm:text-xs text-white/80 font-semibold">
-                (0)
-              </span>
             )}
 
             {cartItemCount > 0 && (
@@ -401,96 +415,100 @@ export function CustomerNavbar() {
             )}
           </Button>
 
-          {/* User Profile Avatar Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  className="flex items-center p-0.5 h-auto rounded-full hover:ring-2 hover:ring-neutral-200 dark:hover:ring-neutral-700 transition-all cursor-pointer outline-none shrink-0"
-                  aria-label="Profil Pengguna"
-                />
-              }
-            >
-              <Avatar className="size-8 sm:size-9 ring-1 ring-neutral-200 dark:ring-neutral-800">
-                <AvatarImage src={userAvatar} alt={userName} />
-                <AvatarFallback className="text-xs font-bold bg-primary/20 text-primary">
-                  {getInitials(userName)}
-                </AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              align="end"
-              sideOffset={10}
-              className="w-60 p-2 shadow-2xl rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-neutral-800"
-            >
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="p-2 font-normal">
-                  <div className="flex items-center gap-2.5">
-                    <Avatar className="size-9">
-                      <AvatarImage src={userAvatar} alt={userName} />
-                      <AvatarFallback className="text-xs font-bold bg-primary/20 text-primary">
-                        {getInitials(userName)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold truncate text-foreground">
-                          {userName}
-                        </span>
-                        <Badge
-                          variant="secondary"
-                          className="text-[9px] px-1 py-0 uppercase bg-primary/20 text-neutral-900 dark:text-primary font-bold"
-                        >
-                          Customer
-                        </Badge>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground truncate">
-                        {userEmail}
-                      </span>
-                    </div>
-                  </div>
-                </DropdownMenuLabel>
-              </DropdownMenuGroup>
-
-              <DropdownMenuSeparator className="my-1" />
-
-              {/* Multi-role Switcher */}
-              <DropdownMenuGroup>
-                <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Beralih Peran
-                </div>
-                <DropdownMenuItem
-                  onClick={() => router.push("/dashboard/seller")}
-                  className="gap-2.5 text-xs font-medium cursor-pointer rounded-lg py-2"
-                >
-                  <Store className="size-4 text-primary" />
-                  <span>Seller Hub (Penjual)</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => router.push("/dashboard/association")}
-                  className="gap-2.5 text-xs font-medium cursor-pointer rounded-lg py-2"
-                >
-                  <Building2 className="size-4 text-primary" />
-                  <span>Pengelola Bazaar</span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-
-              <DropdownMenuSeparator className="my-1" />
-
-              {/* Logout */}
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="gap-2.5 text-xs font-semibold cursor-pointer rounded-lg py-2 text-destructive"
+          {/* User Profile Avatar Dropdown (when logged in) or Masuk / Daftar button (when guest) */}
+          {isLoggedIn ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    className="flex items-center p-0.5 h-auto rounded-full hover:ring-2 hover:ring-neutral-200 dark:hover:ring-neutral-700 transition-all cursor-pointer outline-none shrink-0"
+                    aria-label="Profil Pengguna"
+                  />
+                }
               >
-                <LogOut className="size-4" />
-                <span>{isLoggingOut ? "Keluar..." : "Log out"}</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <Avatar className="size-8 sm:size-9 ring-1 ring-neutral-200 dark:ring-neutral-800">
+                  <AvatarImage src={userAvatar} alt={userName} />
+                  <AvatarFallback className="text-xs font-bold bg-primary/20 text-primary">
+                    {getInitials(userName)}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="end"
+                sideOffset={10}
+                className="w-60 p-2 shadow-2xl rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-neutral-800"
+              >
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="p-2 font-normal">
+                    <div className="flex items-center gap-2.5">
+                      <Avatar className="size-9">
+                        <AvatarImage src={userAvatar} alt={userName} />
+                        <AvatarFallback className="text-xs font-bold bg-primary/20 text-primary">
+                          {getInitials(userName)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold truncate text-foreground">
+                            {userName}
+                          </span>
+                          <Badge
+                            variant="secondary"
+                            className="text-[9px] px-1 py-0 uppercase bg-primary/20 text-neutral-900 dark:text-primary font-bold"
+                          >
+                            Customer
+                          </Badge>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground truncate">
+                          {userEmail}
+                        </span>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                </DropdownMenuGroup>
+
+                <DropdownMenuSeparator className="my-1" />
+
+                {/* Multi-role Switcher */}
+                <DropdownMenuGroup>
+                  <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Beralih Peran
+                  </div>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/dashboard/seller")}
+                    className="gap-2.5 text-xs font-medium cursor-pointer rounded-lg py-2"
+                  >
+                    <Store className="size-4 text-primary" />
+                    <span>Seller Hub (Penjual)</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/dashboard/association")}
+                    className="gap-2.5 text-xs font-medium cursor-pointer rounded-lg py-2"
+                  >
+                    <Building2 className="size-4 text-primary" />
+                    <span>Pengelola Bazaar</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+
+                <DropdownMenuSeparator className="my-1" />
+
+                {/* Logout */}
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="gap-2.5 text-xs font-semibold cursor-pointer rounded-lg py-2 text-destructive"
+                >
+                  <LogOut className="size-4" />
+                  <span>{isLoggingOut ? "Keluar..." : "Log out"}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <CustomerAuthDialog />
+          )}
 
           {/* Mobile Hamburger Toggle Button */}
           <Button
@@ -603,6 +621,12 @@ export function CustomerNavbar() {
           >
             <span>Denah Bazaar</span>
           </Link>
+
+          {!isLoggedIn && (
+            <div className="pt-2">
+              <CustomerAuthDialog className="w-full justify-center h-10" />
+            </div>
+          )}
         </div>
       )}
     </header>
