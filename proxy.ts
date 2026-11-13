@@ -2,15 +2,58 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const host =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    request.nextUrl.hostname ||
+    "";
+
+  const isSellerSubdomain =
+    host.startsWith("seller.") ||
+    host.includes("seller.tenantify.vercel.app") ||
+    host.includes("seller.localhost");
+
+  if (isSellerSubdomain) {
+    if (!pathname.startsWith("/auth") && !pathname.startsWith("/dashboard")) {
+      if (pathname === "/") {
+        return NextResponse.rewrite(new URL("/landing", request.url));
+      }
+      if (
+        pathname.startsWith("/product") ||
+        pathname.startsWith("/service") ||
+        pathname.startsWith("/solutions")
+      ) {
+        return NextResponse.rewrite(
+          new URL(`/landing${pathname}`, request.url),
+        );
+      }
+    }
+  }
+
+  if (pathname === "/customer" || pathname === "/customer/") {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+  if (pathname.startsWith("/customer/")) {
+    const cleanPath = pathname.replace(/^\/customer/, "") || "/";
+    return NextResponse.redirect(new URL(cleanPath, request.url));
+  }
+
+  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const isAuthRoute =
+    pathname === "/auth/sign-in" || pathname === "/auth/sign-up";
+
+  if (!isDashboardRoute && !isAuthRoute) {
+    return NextResponse.next();
+  }
+
   const session = await auth.api.getSession({
     headers: request.headers,
   });
 
-  const { pathname } = request.nextUrl;
   const role =
     (session?.user as { role?: string } | undefined)?.role || "customer";
 
-  // Role Helper
   const getRoleDashboard = (userRole: string) => {
     switch (userRole) {
       case "developer":
@@ -20,13 +63,12 @@ export async function proxy(request: NextRequest) {
         return "/dashboard/seller";
       case "customer":
       default:
-        return "/customer";
+        return "/";
     }
   };
 
-  // 1. Autentikasi Dashboard & Customer
   if (!session) {
-    if (pathname.startsWith("/dashboard") || pathname.startsWith("/customer")) {
+    if (isDashboardRoute) {
       const signInUrl = new URL("/auth/sign-in", request.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(signInUrl);
@@ -34,22 +76,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Role Gateway
-  if (pathname === "/auth/sign-in" || pathname === "/auth/sign-up") {
+  if (isAuthRoute) {
     return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
   }
 
-  // 3. Role Gateway
   if (pathname === "/dashboard" || pathname === "/dashboard/") {
     return NextResponse.redirect(new URL(getRoleDashboard(role), request.url));
   }
 
-  // 4. Role Guard untuk sub-dashboard
   if (role === "developer") {
     return NextResponse.next();
   }
 
-  // Role 'association' hanya boleh mengakses /dashboard/association
   if (pathname.startsWith("/dashboard/association")) {
     if (role !== "association") {
       return NextResponse.redirect(
@@ -59,7 +97,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Role 'seller' hanya boleh mengakses /dashboard/seller
   if (pathname.startsWith("/dashboard/seller")) {
     if (role !== "seller") {
       return NextResponse.redirect(
@@ -69,14 +106,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Role 'customer' hanya boleh mengakses /customer
-  if (pathname.startsWith("/customer")) {
-    if (role !== "customer" && role !== "developer") {
-      return NextResponse.redirect(
-        new URL(getRoleDashboard(role), request.url),
-      );
-    }
-    return NextResponse.next();
+  if (isDashboardRoute && role === "customer") {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();
@@ -84,11 +115,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard",
-    "/dashboard/:path*",
-    "/customer",
-    "/customer/:path*",
-    "/auth/sign-in",
-    "/auth/sign-up",
+    "/((?!api|_next/static|_next/image|favicon.ico|fonts|icons|images|.*\\..*).*)",
   ],
 };
