@@ -12,35 +12,47 @@ import {
   CustomerProduct,
   CustomerCartItem,
   CustomerOrder,
-  CustomerOrderStatus,
   Tenant,
   ActiveUmkm,
 } from "@/types/customer";
 import { demoProducts, demoTenants, slugify } from "@/data/customer-demo";
-import { getCustomerDataAction, resolveUmkmByCodeAction } from "@/servers/customer-server";
+import {
+  getCustomerDataAction,
+  resolveUmkmByCodeAction,
+  getCustomerOrdersAction,
+} from "@/servers/customer-server";
 import { toast } from "sonner";
 
-const ORDER_PROGRESS_STEPS: Array<{
-  delayMs: number;
-  status: CustomerOrderStatus;
-  toastMessage: (orderId: string) => string;
-}> = [
-    {
-      delayMs: 4000,
-      status: "Disiapkan",
-      toastMessage: (id) => `Pesanan #${id} dikonfirmasi dan sedang disiapkan!`,
-    },
-    {
-      delayMs: 10000,
-      status: "Siap Diambil",
-      toastMessage: (id) => `Pesanan #${id} sudah siap diambil di booth!`,
-    },
-    {
-      delayMs: 18000,
-      status: "Selesai",
-      toastMessage: (id) => `Pesanan #${id} selesai. Selamat menikmati!`,
-    },
-  ];
+function playCustomerChime() {
+  if (typeof window === "undefined") return;
+  try {
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    const ctx = new AudioContextClass();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    // Play upbeat 3-tone chime: E5 (659Hz) -> G#5 (830Hz) -> B5 (987Hz)
+    osc.frequency.setValueAtTime(659.25, ctx.currentTime);
+    osc.frequency.setValueAtTime(830.61, ctx.currentTime + 0.1);
+    osc.frequency.setValueAtTime(987.77, ctx.currentTime + 0.22);
+
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.65);
+  } catch {
+    // Audio context may be restricted before interaction
+  }
+}
 
 type CustomerContextType = {
   products: CustomerProduct[];
@@ -93,11 +105,14 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
   const [allProducts, setAllProducts] = useState<CustomerProduct[]>(demoProducts);
   const [allTenants, setAllTenants] = useState<Tenant[]>(demoTenants);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
+  const ordersRef = useRef<CustomerOrder[]>(orders);
+  useEffect(() => {
+    ordersRef.current = orders;
+  }, [orders]);
   const [cart, setCart] = useState<CustomerCartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
   const [isNutritionModalOpen, setIsNutritionModalOpen] = useState(false);
-  const orderTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const setActiveUmkm = (umkm: ActiveUmkm | null) => {
     setActiveUmkmState(umkm);
@@ -130,10 +145,84 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     return res;
   };
 
+  // Sinkronisasi status pesanan dari database secara otomatis setiap 3.5 detik
   useEffect(() => {
-    const timers = orderTimersRef.current;
+    let isMounted = true;
+
+    const syncLiveOrders = async () => {
+      try {
+        let storedIds: string[] = [];
+        try {
+          storedIds = JSON.parse(
+            window.localStorage.getItem("tenantify:customer_order_ids") || "[]",
+          );
+        } catch {
+          storedIds = [];
+        }
+
+        const currentIds = Array.from(
+          new Set([...ordersRef.current.map((o) => o.id), ...storedIds]),
+        );
+
+        if (currentIds.length === 0) return;
+
+        const dbOrders = await getCustomerOrdersAction(currentIds);
+        if (!isMounted || dbOrders.length === 0) return;
+
+        setOrders((prev) => {
+          const prevMap = new Map(prev.map((o) => [o.id, o]));
+
+          // Periksa apakah status pesanan berubah dari database
+          dbOrders.forEach((dbOrd) => {
+            const oldOrd = prevMap.get(dbOrd.id);
+            if (oldOrd && oldOrd.status !== dbOrd.status) {
+              if (dbOrd.status === "Disiapkan") {
+                playCustomerChime();
+                toast.success(
+                  `🎉 Pesanan #${dbOrd.id} telah DIKONFIRMASI oleh UMKM dan sedang disiapkan!`,
+                  { duration: 7000 },
+                );
+              } else if (dbOrd.status === "Dibatalkan") {
+                toast.error(
+                  `⚠️ Pesanan #${dbOrd.id} ditolak atau dibatalkan oleh UMKM.`,
+                  { duration: 7000 },
+                );
+              } else if (dbOrd.status === "Siap Diambil") {
+                playCustomerChime();
+                toast.success(
+                  `🔔 Pesanan #${dbOrd.id} siap diambil di booth UMKM!`,
+                  { duration: 7000 },
+                );
+              } else if (dbOrd.status === "Selesai") {
+                toast.success(
+                  `✅ Pesanan #${dbOrd.id} telah selesai. Selamat menikmati!`,
+                  { duration: 5000 },
+                );
+              }
+            }
+          });
+
+          // Merge pesanan dari database
+          const merged = [...dbOrders];
+          prev.forEach((p) => {
+            if (!merged.some((m) => m.id === p.id)) {
+              merged.push(p);
+            }
+          });
+          return merged;
+        });
+      } catch (err) {
+        console.warn("Sinkronisasi pesanan customer error:", err);
+      }
+    };
+
+    // Jalankan pertama kali
+    syncLiveOrders();
+
+    const intervalId = setInterval(syncLiveOrders, 3500);
     return () => {
-      timers.forEach((timerId) => clearTimeout(timerId));
+      isMounted = false;
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -262,22 +351,23 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
   };
 
   const checkoutOrder = (newOrder: CustomerOrder) => {
+    // 1. Simpan ke state lokal
     setOrders((prev) => [newOrder, ...prev]);
 
-    ORDER_PROGRESS_STEPS.forEach(({ delayMs, status, toastMessage }) => {
-      const timerId = setTimeout(() => {
-        setOrders((prev) =>
-          prev.map((order) =>
-            order.id === newOrder.id && order.status !== "Dibatalkan"
-              ? { ...order, status }
-              : order
-          )
+    // 2. Simpan order ID ke localStorage agar riwayat pesanan tetap tersimpan
+    try {
+      const stored: string[] = JSON.parse(
+        window.localStorage.getItem("tenantify:customer_order_ids") || "[]",
+      );
+      if (!stored.includes(newOrder.id)) {
+        window.localStorage.setItem(
+          "tenantify:customer_order_ids",
+          JSON.stringify([newOrder.id, ...stored]),
         );
-        toast.info(toastMessage(newOrder.id));
-      }, delayMs);
-
-      orderTimersRef.current.push(timerId);
-    });
+      }
+    } catch {
+      // ignore
+    }
   };
 
   const reorder = (order: CustomerOrder) => {

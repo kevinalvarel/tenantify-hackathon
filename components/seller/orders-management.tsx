@@ -113,8 +113,36 @@ export function OrdersManagement({
     );
   };
 
+  const pendingIncomingCount = orders.filter((o) => o.status === "Masuk").length;
+
   return (
     <div className="flex flex-col gap-4">
+      {/* Alert Banner Notifikasi Pesanan Masuk */}
+      {pendingIncomingCount > 0 && (
+        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3.5 sm:p-4 flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-full bg-amber-500/20 text-amber-600 flex items-center justify-center shrink-0 animate-pulse">
+              <AlertCircle className="size-5" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-bold text-foreground">
+                Terdapat {pendingIncomingCount} Pesanan Masuk Baru!
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Pesanan customer menunggu konfirmasi dari UMKM Anda untuk segera diproses.
+              </p>
+            </div>
+          </div>
+          <Button
+            size="xs"
+            onClick={() => setActiveTab("Masuk")}
+            className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shrink-0 cursor-pointer"
+          >
+            Lihat Pesanan ({pendingIncomingCount})
+          </Button>
+        </div>
+      )}
+
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center justify-between">
         <div className="flex flex-1 gap-2 items-center">
@@ -269,25 +297,20 @@ export function OrdersManagement({
                     <Button
                       size="xs"
                       variant="default"
-                      onClick={() => {
-                        onUpdateOrderStatus(order.id, "Diproses");
-                        toast.success(`Pesanan #${order.id} diterima dan mulai diproses.`);
-                      }}
-                      className="flex-1 gap-1 text-xs"
+                      onClick={() => onUpdateOrderStatus(order.id, "Diproses")}
+                      className="flex-1 gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold cursor-pointer active:scale-95 transition-all shadow-xs"
                     >
-                      <ChefHat className="size-3.5" />
-                      Terima & Masak
+                      <Check className="size-3.5" />
+                      Konfirmasi Pesanan
                     </Button>
                     <Button
                       size="xs"
                       variant="outline"
-                      onClick={() => {
-                        onUpdateOrderStatus(order.id, "Dibatalkan");
-                        toast.info(`Pesanan #${order.id} telah dibatalkan.`);
-                      }}
-                      className="text-destructive hover:bg-destructive/10 text-xs"
+                      onClick={() => onUpdateOrderStatus(order.id, "Dibatalkan")}
+                      className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs font-semibold gap-1 cursor-pointer active:scale-95 transition-all"
                     >
-                      Tolak
+                      <X className="size-3.5" />
+                      Tolak Pesanan
                     </Button>
                   </>
                 )}
@@ -300,7 +323,7 @@ export function OrdersManagement({
                       onUpdateOrderStatus(order.id, "Selesai");
                       toast.success(`Pesanan #${order.id} telah selesai!`);
                     }}
-                    className="flex-1 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                    className="flex-1 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer"
                   >
                     <Check className="size-3.5" />
                     Tandai Siap / Selesai
@@ -382,7 +405,7 @@ export function OrdersManagement({
               </div>
             </div>
 
-            <DialogFooter className="gap-2 sm:justify-between">
+            <DialogFooter className="gap-2 sm:justify-between flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
@@ -392,13 +415,43 @@ export function OrdersManagement({
                 <Printer className="size-3.5" />
                 Cetak Tiket
               </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setSelectedOrderForDetail(null)}
-              >
-                Tutup
-              </Button>
+              <div className="flex gap-1.5 items-center">
+                {selectedOrderForDetail.status === "Masuk" && (
+                  <>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => {
+                        onUpdateOrderStatus(selectedOrderForDetail.id, "Diproses");
+                        setSelectedOrderForDetail(null);
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1 font-semibold cursor-pointer"
+                    >
+                      <Check className="size-3.5" />
+                      Konfirmasi Pesanan
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onUpdateOrderStatus(selectedOrderForDetail.id, "Dibatalkan");
+                        setSelectedOrderForDetail(null);
+                      }}
+                      className="text-destructive border-destructive/30 hover:bg-destructive/10 text-xs gap-1 font-semibold cursor-pointer"
+                    >
+                      <X className="size-3.5" />
+                      Tolak Pesanan
+                    </Button>
+                  </>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedOrderForDetail(null)}
+                >
+                  Tutup
+                </Button>
+              </div>
             </DialogFooter>
           </DialogContent>
         </Dialog>
