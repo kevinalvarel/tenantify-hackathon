@@ -3,7 +3,8 @@
 import { CustomerProvider, useCustomer } from "@/context/customer-context";
 import { CustomerNavbar } from "@/components/customer/customer-navbar";
 import { CustomerCartSheet } from "@/components/customer/customer-cart-sheet";
-
+import { CustomerLayoutSkeleton } from "@/components/customer/customer-layout-skeleton";
+import { Suspense } from "react";
 
 function CustomerLayoutContent({ children }: { children: React.ReactNode }) {
   const {
@@ -50,9 +51,6 @@ function CustomerLayoutContent({ children }: { children: React.ReactNode }) {
         onClearCart={clearCart}
         onCheckoutSuccess={checkoutOrder}
       />
-
-
-
     </div>
   );
 }
@@ -64,7 +62,9 @@ export default function CustomerLayout({
 }) {
   return (
     <CustomerProvider>
-      <CustomerLayoutContent>{children}</CustomerLayoutContent>
+      <Suspense fallback={<CustomerLayoutSkeleton />}>
+        <CustomerLayoutContent>{children}</CustomerLayoutContent>
+      </Suspense>
     </CustomerProvider>
   );
 }
