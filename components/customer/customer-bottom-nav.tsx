@@ -9,6 +9,7 @@ import {
   Receipt,
   ShoppingBag,
   User,
+  LogIn,
 } from "lucide-react";
 import { useCustomer } from "@/context/customer-context";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -18,7 +19,7 @@ export function CustomerBottomNav() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const router = useRouter();
-  const { cartItemCount, activeOrdersCount, setIsCartOpen, isCartOpen } =
+  const { cartItemCount, activeOrdersCount, setIsCartOpen, isCartOpen, activeUmkm } =
     useCustomer();
   const [scrollSection, setScrollSection] = useState<"beranda" | "menu">(
     "beranda",
@@ -59,14 +60,18 @@ export function CustomerBottomNav() {
   };
 
   const handleMenuClick = () => {
-    if (pathname === "/") {
+    if (!activeUmkm) {
+      router.push("/join");
+      return;
+    }
+    if (pathname === "/" || pathname === "/customer") {
       const explorerEl = document.getElementById("customer-product-explorer");
       if (explorerEl) {
         explorerEl.scrollIntoView({ behavior: "smooth", block: "start" });
       }
       setScrollSection("menu");
     } else {
-      router.push("/#customer-product-explorer");
+      router.push("/customer#customer-product-explorer");
     }
   };
 
@@ -75,7 +80,7 @@ export function CustomerBottomNav() {
       aria-label="Navigasi Bawah Mobile"
       className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t border-neutral-200/80 dark:border-neutral-800/80 px-2 pt-1 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
     >
-      <div className="grid grid-cols-5 max-w-md mx-auto w-full items-center">
+      <div className="grid grid-cols-4 max-w-md mx-auto w-full items-center">
         {/* 1. Beranda */}
         <button
           type="button"
@@ -92,20 +97,29 @@ export function CustomerBottomNav() {
           <span className="text-[11px] leading-none mt-1">Beranda</span>
         </button>
 
-        {/* 2. Menu (Jelajah) */}
+        {/* 2. Menu atau Join */}
         <button
           type="button"
           onClick={handleMenuClick}
           className={cn(
             "min-h-[48px] flex flex-col items-center justify-center py-1 transition-all active:scale-95 cursor-pointer",
-            isMenuActive
+            isMenuActive || (!activeUmkm && pathname.includes("/join"))
               ? "text-[#c85a32] font-semibold"
               : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200",
           )}
-          aria-label="Pilihan Menu Makanan"
+          aria-label={activeUmkm ? "Pilihan Menu Makanan" : "Join UMKM"}
         >
-          <UtensilsCrossed className="size-5 stroke-[2]" />
-          <span className="text-[11px] leading-none mt-1">Menu</span>
+          {activeUmkm ? (
+            <>
+              <UtensilsCrossed className="size-5 stroke-[2]" />
+              <span className="text-[11px] leading-none mt-1">Menu</span>
+            </>
+          ) : (
+            <>
+              <LogIn className="size-5 stroke-[2]" />
+              <span className="text-[11px] leading-none mt-1">Join</span>
+            </>
+          )}
         </button>
 
         {/* 3. Pesanan */}
