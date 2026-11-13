@@ -281,10 +281,22 @@ export async function createCustomerOrderAction(
 
       // 4. Masukkan item pesanan ke orderItems
       for (const it of groupItems) {
+        let validProductId: string | null = null;
+        if (it.productId) {
+          const [prodExists] = await db
+            .select({ id: products.id })
+            .from(products)
+            .where(eq(products.id, it.productId))
+            .limit(1);
+          if (prodExists) {
+            validProductId = it.productId;
+          }
+        }
+
         await db.insert(orderItems).values({
           id: `OI-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           tenantOrderId,
-          productId: it.productId || null,
+          productId: validProductId,
           productName: it.productName,
           price: it.price,
           quantity: it.quantity,
