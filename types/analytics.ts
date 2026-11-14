@@ -1,5 +1,22 @@
 export type AnalyticsRange = 7 | 30;
 
+export type AssociationOrderRecord = {
+  id: string;
+  orderId?: string | null;
+  tenantId: string;
+  customerName?: string | null;
+  subtotal: number;
+  tax: number;
+  total: number;
+  status: string;
+  paymentMethod: string;
+  isPaid: boolean;
+  createdAt: Date | string;
+  tenantCategory?: string | null;
+  tenantName?: string | null;
+  tenantOwner?: string | null;
+};
+
 export type DailyAnalyticsPoint = {
   date: string;
   label: string;

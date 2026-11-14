@@ -5,8 +5,11 @@ import { db } from "@/drizzle";
 import { user } from "@/db/schema";
 import { AssociationDashboard } from "@/components/association/dashboard/association-dashboard";
 import { AssociationCodeCard } from "@/components/association/association-code-card";
+import { getHighestMerchantTurnoverAction } from "@/servers/association-server";
+import { connection } from "next/server";
 
 export default async function DashboardPage() {
+  await connection();
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -21,10 +24,12 @@ export default async function DashboardPage() {
     associationCode = row?.code ?? null;
   }
 
+  const highestMerchantData = await getHighestMerchantTurnoverAction();
+
   return (
     <div className="flex flex-col gap-4">
       <AssociationCodeCard initialCode={associationCode} />
-      <AssociationDashboard />
+      <AssociationDashboard initialHighestMerchant={highestMerchantData} />
     </div>
   );
 }
