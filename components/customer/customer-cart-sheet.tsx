@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ShoppingBag,
   Plus,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { CustomerCartItem, CustomerOrder } from "@/types/customer";
 import { createCustomerOrderAction } from "@/servers/customer-server";
+import { useSession } from "@/lib/auth/auth-client";
 import { formatRupiah } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +53,8 @@ export function CustomerCartSheet({
   onClearCart,
   onCheckoutSuccess,
 }: CustomerCartSheetProps) {
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
   const [orderType, setOrderType] = useState<
     "Dine-in (Makan di Tempat)" | "Takeaway (Bawa Pulang)"
   >("Dine-in (Makan di Tempat)");
@@ -76,6 +80,13 @@ export function CustomerCartSheet({
   const handleCheckout = async () => {
     if (cart.length === 0) {
       toast.error("Keranjang belanja kosong.");
+      return;
+    }
+
+    if (!session?.user) {
+      toast.error("Masuk sebagai pembeli dulu untuk memesan.");
+      onOpenChange(false);
+      router.push("/auth/sign-in");
       return;
     }
 
@@ -347,12 +358,14 @@ export function CustomerCartSheet({
               <Button
                 className="w-full font-bold py-5 gap-2 cursor-pointer active:scale-95 transition-all"
                 onClick={handleCheckout}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isPending}
               >
                 <CheckCircle2 className="size-4" />
                 {isSubmitting
                   ? "Mengirim Pesanan ke UMKM..."
-                  : `Bayar Sekarang (${formatRupiah(total)})`}
+                  : !session?.user
+                    ? "Masuk untuk memesan"
+                    : `Bayar Sekarang (${formatRupiah(total)})`}
               </Button>
             </div>
           )}

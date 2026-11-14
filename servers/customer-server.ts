@@ -328,10 +328,16 @@ export async function createCustomerOrderAction(
       headers: await headers(),
     });
 
-    const customerId = session?.user?.id || null;
-    const customerName =
-      session?.user?.name ||
-      (input.tableNumber ? `Pelanggan (${input.tableNumber})` : "Pelanggan");
+    const role = (session?.user as { role?: string } | undefined)?.role;
+    if (!session?.user || role !== "customer") {
+      return {
+        success: false,
+        message: "Silakan masuk sebagai pembeli untuk memesan.",
+      };
+    }
+
+    const customerId = session.user.id;
+    const customerName = session.user.name;
 
     const orderId = `ORD-${Date.now().toString().slice(-4)}`;
     const pickupCode = `TNT-${Date.now().toString().slice(-3)}`;

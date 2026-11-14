@@ -42,8 +42,9 @@ export async function proxy(request: NextRequest) {
   const isDashboardRoute = pathname.startsWith("/dashboard");
   const isAuthRoute =
     pathname === "/auth/sign-in" || pathname === "/auth/sign-up";
+  const isCustomerAccountRoute = pathname === "/profile" || pathname === "/orders";
 
-  if (!isDashboardRoute && !isAuthRoute) {
+  if (!isDashboardRoute && !isAuthRoute && !isCustomerAccountRoute) {
     return NextResponse.next();
   }
 
@@ -68,7 +69,7 @@ export async function proxy(request: NextRequest) {
   };
 
   if (!session) {
-    if (isDashboardRoute) {
+    if (isDashboardRoute || isCustomerAccountRoute) {
       const signInUrl = new URL("/auth/sign-in", request.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(signInUrl);
