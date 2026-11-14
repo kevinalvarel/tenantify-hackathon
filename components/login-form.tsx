@@ -79,9 +79,10 @@ export function LoginForm({
     >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Masuk ke Tenantify</h1>
+          <h1 className="text-2xl font-bold">Masuk ke Dashboard Anda</h1>
           <p className="text-sm text-balance text-muted-foreground">
-            Masukan Email dan Kata Sandi Anda
+            Pedagang dan pengurus paguyuban masuk lewat pintu yang sama.
+            Gunakan email dan kata sandi akun Anda.
           </p>
         </div>
 
@@ -142,19 +143,19 @@ export function LoginForm({
                 Memproses...
               </>
             ) : (
-              "Masuk"
+              "Masuk ke Dashboard"
             )}
           </Button>
         </Field>
 
         <Field>
           <FieldDescription className="text-center">
-            Belum Punya Akun?{" "}
+            Belum punya akun pengurus?{" "}
             <Link
               href="/auth/sign-up"
               className="font-medium underline underline-offset-4 hover:text-primary"
             >
-              Daftar
+              Daftarkan paguyuban
             </Link>
           </FieldDescription>
         </Field>
