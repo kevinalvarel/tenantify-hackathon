@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ShoppingBag,
   Plus,
@@ -54,6 +54,7 @@ export function CustomerCartSheet({
   onCheckoutSuccess,
 }: CustomerCartSheetProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, isPending } = useSession();
   const [orderType, setOrderType] = useState<
     "Dine-in (Makan di Tempat)" | "Takeaway (Bawa Pulang)"
@@ -86,7 +87,8 @@ export function CustomerCartSheet({
     if (!session?.user) {
       toast.error("Masuk sebagai pembeli dulu untuk memesan.");
       onOpenChange(false);
-      router.push("/auth/sign-in");
+      const next = pathname || "/";
+      router.push(`/?login=1&next=${encodeURIComponent(next)}`);
       return;
     }
 

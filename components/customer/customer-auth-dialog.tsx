@@ -49,16 +49,20 @@ export type CustomerAuthDialogProps = {
   trigger?: React.ReactNode;
   className?: string;
   variant?: "default" | "outline" | "ghost" | "secondary";
+  autoOpen?: boolean;
+  callbackUrl?: string;
 };
 
 export function CustomerAuthDialog({
   trigger,
   className,
   variant,
+  autoOpen = false,
+  callbackUrl,
 }: CustomerAuthDialogProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(autoOpen);
   const [mode, setMode] = useState<Mode>("sign-in");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
@@ -96,7 +100,9 @@ export function CustomerAuthDialog({
       toast.success(response.message);
       setValues(emptyValues);
       setOpen(false);
-      if (pathname.includes("/auth")) {
+      if (callbackUrl) {
+        router.push(callbackUrl);
+      } else if (pathname.includes("/auth")) {
         router.push("/profile");
       }
       router.refresh();
@@ -124,28 +130,30 @@ export function CustomerAuthDialog({
         if (!next) setErrors({});
       }}
     >
-      <DialogTrigger
-        render={
-          trigger ? (
-            (trigger as React.ReactElement)
-          ) : (
-            <Button
-              type="button"
-              variant={variant || "default"}
-              size="sm"
-              className={cn(
-                "h-9 sm:h-10 px-3 sm:px-3.5 2xl:px-4 rounded-full font-semibold text-xs sm:text-[13px] gap-1.5 shrink-0 bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-sm transition-all duration-200 cursor-pointer active:scale-95",
-                className,
-              )}
-            />
-          )
-        }
-      >
-        <LogIn className="size-3.5 sm:size-4 shrink-0" />
-        <span>
-          Masuk<span className="hidden 2xl:inline"> / Daftar</span>
-        </span>
-      </DialogTrigger>
+      {!autoOpen && (
+        <DialogTrigger
+          render={
+            trigger ? (
+              (trigger as React.ReactElement)
+            ) : (
+              <Button
+                type="button"
+                variant={variant || "default"}
+                size="sm"
+                className={cn(
+                  "h-9 sm:h-10 px-3 sm:px-3.5 2xl:px-4 rounded-full font-semibold text-xs sm:text-[13px] gap-1.5 shrink-0 bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-sm transition-all duration-200 cursor-pointer active:scale-95",
+                  className,
+                )}
+              />
+            )
+          }
+        >
+          <LogIn className="size-3.5 sm:size-4 shrink-0" />
+          <span>
+            Masuk<span className="hidden 2xl:inline"> / Daftar</span>
+          </span>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
