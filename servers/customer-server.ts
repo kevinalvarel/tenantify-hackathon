@@ -14,7 +14,7 @@ import {
   orderItems,
   zones,
 } from "@/db/schema";
-import { and, eq, inArray, desc, or, ilike, ne } from "drizzle-orm";
+import { and, eq, desc, or, ilike, ne } from "drizzle-orm";
 import type {
   CustomerProduct,
   Tenant,
@@ -463,29 +463,20 @@ export async function createCustomerOrderAction(
   }
 }
 
-export async function getCustomerOrdersAction(
-  orderIds?: string[],
-): Promise<CustomerOrder[]> {
+export async function getCustomerOrdersAction(): Promise<CustomerOrder[]> {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
     const customerId = session?.user?.id;
 
-    const conditions = [];
-    if (orderIds && orderIds.length > 0) {
-      conditions.push(inArray(orders.id, orderIds));
-    }
-    if (customerId) {
-      conditions.push(eq(orders.customerId, customerId));
-    }
-
-    if (conditions.length === 0) return [];
+    // Riwayat pesanan hanya milik akun yang sedang login.
+    if (!customerId) return [];
 
     const orderRows = await db
       .select()
       .from(orders)
-      .where(conditions.length > 1 ? or(...conditions) : conditions[0])
+      .where(eq(orders.customerId, customerId))
       .orderBy(desc(orders.createdAt));
 
     const result: CustomerOrder[] = [];

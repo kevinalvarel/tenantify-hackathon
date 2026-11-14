@@ -5,7 +5,6 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   useCallback,
 } from "react";
@@ -22,6 +21,7 @@ import {
   resolveUmkmByCodeAction,
   getCustomerOrdersAction,
 } from "@/servers/customer-server";
+import { useSession } from "@/lib/auth/auth-client";
 import { toast } from "sonner";
 
 function playCustomerChime() {
@@ -90,6 +90,8 @@ const CustomerContext = createContext<CustomerContextType | undefined>(undefined
 const ACTIVE_UMKM_STORAGE_KEY = "tenantify:active_umkm";
 
 export function CustomerProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, isPending: isSessionPending } = useSession();
+  const userId = session?.user?.id;
   const [activeUmkm, setActiveUmkmState] = useState<ActiveUmkm | null>(() => {
     if (typeof window === "undefined") return null;
     try {
@@ -109,10 +111,21 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
   const [allTenants, setAllTenants] = useState<Tenant[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
-  const ordersRef = useRef<CustomerOrder[]>(orders);
+  const [ordersUserId, setOrdersUserId] = useState<string | undefined>(userId);
+
+  // Logout atau ganti akun: buang riwayat pesanan milik sesi sebelumnya
+  if (ordersUserId !== userId) {
+    setOrdersUserId(userId);
+    setOrders([]);
+  }
+
   useEffect(() => {
-    ordersRef.current = orders;
-  }, [orders]);
+    try {
+      window.localStorage.removeItem("tenantify:customer_order_ids");
+    } catch {
+      // ignore
+    }
+  }, [userId]);
   const [cart, setCart] = useState<CustomerCartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
@@ -177,37 +190,14 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
 
   // Sinkronisasi status pesanan dari database secara otomatis setiap 2.5 detik & saat window focus
   useEffect(() => {
+    if (isSessionPending || !userId) return;
+
     let isMounted = true;
 
     const syncLiveOrders = async () => {
       try {
-        let storedIds: string[] = [];
-        try {
-          storedIds = JSON.parse(
-            window.localStorage.getItem("tenantify:customer_order_ids") || "[]",
-          );
-        } catch {
-          storedIds = [];
-        }
-
-        const currentIds = Array.from(
-          new Set([...ordersRef.current.map((o) => o.id), ...storedIds]),
-        );
-
-        const dbOrders = await getCustomerOrdersAction(currentIds);
+        const dbOrders = await getCustomerOrdersAction();
         if (!isMounted) return;
-
-        if (dbOrders.length > 0) {
-          try {
-            const allStored = new Set([...storedIds, ...dbOrders.map((o) => o.id)]);
-            window.localStorage.setItem(
-              "tenantify:customer_order_ids",
-              JSON.stringify(Array.from(allStored)),
-            );
-          } catch {
-            // ignore
-          }
-        }
 
         setOrders((prev) => {
           const prevMap = new Map(prev.map((o) => [o.id, o]));
@@ -268,7 +258,7 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
       clearInterval(intervalId);
       window.removeEventListener("focus", handleFocus);
     };
-  }, []);
+  }, [isSessionPending, userId]);
 
   // Tarik produk spesifik UMKM saat activeUmkm berubah
   useEffect(() => {
@@ -391,23 +381,7 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
   };
 
   const checkoutOrder = (newOrder: CustomerOrder) => {
-    // 1. Simpan ke state lokal
     setOrders((prev) => [newOrder, ...prev]);
-
-    // 2. Simpan order ID ke localStorage agar riwayat pesanan tetap tersimpan
-    try {
-      const stored: string[] = JSON.parse(
-        window.localStorage.getItem("tenantify:customer_order_ids") || "[]",
-      );
-      if (!stored.includes(newOrder.id)) {
-        window.localStorage.setItem(
-          "tenantify:customer_order_ids",
-          JSON.stringify([newOrder.id, ...stored]),
-        );
-      }
-    } catch {
-      // ignore
-    }
   };
 
   const reorder = (order: CustomerOrder) => {
