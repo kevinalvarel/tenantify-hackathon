@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, KeyRound } from "lucide-react";
+import Link from "next/link";
+import { Check, Copy, KeyRound, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ensureAssociationCodeAction } from "@/servers/account-server";
 
@@ -60,25 +61,40 @@ export function AssociationCodeCard({
         </div>
 
         {code ? (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="gap-1.5 text-xs"
-            onClick={handleCopy}
-          >
-            {copied ? (
-              <Check className="size-3.5" />
-            ) : (
-              <Copy className="size-3.5" />
-            )}
-            {copied ? "Tersalin" : "Salin Kode"}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/print/qr?code=${encodeURIComponent(code)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({
+                variant: "outline",
+                size: "sm",
+                className: "h-11 cursor-pointer gap-1.5 px-4 text-xs",
+              })}
+            >
+              <Printer className="size-3.5" aria-hidden="true" />
+              Cetak QR
+            </Link>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-11 cursor-pointer gap-1.5 px-4 text-xs"
+              onClick={handleCopy}
+            >
+              {copied ? (
+                <Check className="size-3.5" />
+              ) : (
+                <Copy className="size-3.5" />
+              )}
+              {copied ? "Tersalin" : "Salin Kode"}
+            </Button>
+          </div>
         ) : (
           <Button
             type="button"
             size="sm"
-            className="gap-1.5 text-xs"
+            className="h-11 cursor-pointer gap-1.5 px-4 text-xs"
             onClick={handleGenerate}
             disabled={isLoading}
           >

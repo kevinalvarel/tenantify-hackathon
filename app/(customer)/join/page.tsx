@@ -49,8 +49,8 @@ export default async function JoinPage({
                 Pilih UMKM atau Paguyuban
               </h1>
               <p className="text-xs sm:text-sm text-balance text-neutral-600 dark:text-neutral-400">
-                Masukkan 6-digit Kode Unik lokasi untuk mendeteksi UMKM dan
-                menampilkan menu hidangan yang tersedia.
+                Masukkan 6-digit Kode Unik lokasi atau scan QR code untuk
+                mendeteksi UMKM dan menampilkan menu hidangan yang tersedia.
               </p>
             </div>
 

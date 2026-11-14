@@ -25,6 +25,7 @@ import CodeSlots, {
 import { useSession } from "@/lib/auth/auth-client";
 import { logout } from "@/servers/auth-server";
 import { useCustomer } from "@/context/customer-context";
+import { QrScanDialog } from "@/components/customer/qr-scan-dialog";
 import type { ActiveUmkm } from "@/types/customer";
 
 const SAMPLE_CHIPS = [
@@ -149,6 +150,11 @@ export function JoinForm({
     router.push(`/join?code=${sampleCode}`);
   };
 
+  const handleScanResult = (scannedCode: string) => {
+    setCode(scannedCode);
+    router.push(`/join?code=${encodeURIComponent(scannedCode)}#hasil`);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {/* User Info Bar if Logged In */}
@@ -240,14 +246,17 @@ export function JoinForm({
         </div>
         <input type="hidden" name="code" value={code} />
 
-        <Button
-          type="submit"
-          className="w-full gap-2 h-11 rounded-2xl font-bold bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-md shadow-[#c85a32]/20 text-sm cursor-pointer active:scale-[0.99] transition-all"
-          disabled={code.length !== 6}
-        >
-          <Search className="size-4" />
-          <span>Deteksi & Buka Menu UMKM</span>
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <QrScanDialog onResult={handleScanResult} />
+          <Button
+            type="submit"
+            className="w-full sm:flex-1 gap-2 h-11 rounded-2xl font-bold bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-md shadow-[#c85a32]/20 text-sm cursor-pointer active:scale-[0.99] transition-all"
+            disabled={code.length !== 6}
+          >
+            <Search className="size-4" />
+            <span>Deteksi & Buka Menu UMKM</span>
+          </Button>
+        </div>
       </form>
 
       {/* Shortcut Sample Chips */}
@@ -272,7 +281,10 @@ export function JoinForm({
 
       {/* HASIL DETEKSI UMKM */}
       {detectedUmkm && (
-        <div className="animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col gap-3 rounded-2xl border border-emerald-600/30 bg-emerald-500/10 dark:bg-emerald-950/20 p-4">
+        <div
+          id="hasil"
+          className="animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col gap-3 rounded-2xl border border-emerald-600/30 bg-emerald-500/10 dark:bg-emerald-950/20 p-4"
+        >
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-start gap-2.5">
               <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
