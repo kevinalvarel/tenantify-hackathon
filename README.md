@@ -2,6 +2,38 @@
 
 Platform digital untuk mendigitalisasi dan mengelola aktivitas penjualan UMKM di area komersial seperti **Bazaar**, **Food Court**, dan tempat serupa. Tenantify menghubungkan tiga peran — **Association**, **Seller**, dan **Consumer** — dalam satu ekosistem: pengelolaan tenant, penjualan produk, pemetaan lokasi, hingga pengalaman berbelanja.
 
+---
+
+## 🔑 Akun Demo untuk Juri
+
+Untuk memudahkan proses pengujian dan eksplorasi fitur Tenantify, berikut akun demo yang dapat digunakan oleh juri berdasarkan masing-masing role.
+
+| Role | Email | Password |
+|---|---|---|
+| Consumer | `juri@tenantify.store` | `password123` |
+| Seller | `admin@kopikita.com` | `password123` |
+| Association | `cilegonjuare@gmail.com` | `cilegonjuare` |
+
+### Panduan Login
+
+Tenantify menyediakan dua alamat aplikasi berdasarkan kebutuhan pengguna:
+
+| Alamat Website | Pengguna |
+|---|---|
+| [https://tenantify.store](https://tenantify.store) | Customer |
+| [https://seller.tenantify.store](https://seller.tenantify.store) | Seller & Association |
+
+**Langkah Pengujian:**
+
+1. Buka alamat website sesuai role yang ingin diuji.
+2. Pilih menu **Masuk / Login**.
+3. Masukkan email dan password menggunakan akun demo yang telah disediakan.
+4. Setelah berhasil login, sistem akan mengarahkan pengguna ke halaman sesuai role dan hak akses masing-masing.
+
+**Catatan:** Gunakan akun demo di atas untuk keperluan pengujian dan eksplorasi fitur selama proses penilaian hackathon.
+
+---
+
 ## Fitur Utama
 
 - **Multi-role** — dashboard terpisah untuk Association (pengelola area), Seller (pemilik tenant), dan Consumer (pembeli).
