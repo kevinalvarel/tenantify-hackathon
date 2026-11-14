@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/drizzle";
 import { tenants, products, tenantOrders, orderItems } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import type {
   Order,
   Product,
@@ -332,5 +332,59 @@ export async function deleteProductAction(
   } catch (error) {
     console.error("Gagal menghapus produk:", error);
     return { success: false, message: "Gagal menghapus produk dari database." };
+  }
+}
+
+export async function updateOrderStatusAction(
+  orderIdOrTenantOrderId: string,
+  nextStatus: OrderStatus,
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session) {
+      return { success: false, message: "Sesi login tidak valid." };
+    }
+
+    // Update status di tabel tenant_orders (bisa matching via id tenant_order atau order_id root)
+    const updated = await db
+      .update(tenantOrders)
+      .set({
+        status: nextStatus,
+        updatedAt: new Date(),
+      })
+      .where(
+        or(
+          eq(tenantOrders.id, orderIdOrTenantOrderId),
+          eq(tenantOrders.orderId, orderIdOrTenantOrderId),
+        ),
+      )
+      .returning({ id: tenantOrders.id, orderId: tenantOrders.orderId });
+
+    if (!updated || updated.length === 0) {
+      return {
+        success: false,
+        message: `Pesanan #${orderIdOrTenantOrderId} tidak ditemukan di database.`,
+      };
+    }
+
+    revalidatePath("/dashboard/seller/orders");
+    revalidatePath("/dashboard/seller");
+    revalidatePath("/orders");
+    revalidatePath("/customer/orders");
+    revalidatePath("/");
+
+    return {
+      success: true,
+      message: `Status pesanan #${orderIdOrTenantOrderId} berhasil diubah menjadi "${nextStatus}".`,
+    };
+  } catch (error) {
+    console.error("Gagal mengubah status pesanan di database:", error);
+    return {
+      success: false,
+      message: "Terjadi kesalahan saat memperbarui status di database.",
+    };
   }
 }

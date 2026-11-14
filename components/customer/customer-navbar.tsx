@@ -17,6 +17,12 @@ import {
   User,
   MapPin,
   LogIn,
+  Bell,
+  BellRing,
+  Clock,
+  ChefHat,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { motion, useScroll, useMotionValueEvent } from "motion/react";
 import { useCustomer } from "@/context/customer-context";
@@ -78,6 +84,52 @@ const foodTypes: FoodTypeItem[] = [
   },
 ];
 
+function getOrderStatusDisplay(status: string) {
+  switch (status) {
+    case "Disiapkan":
+      return {
+        label: "Sedang Dimasak",
+        icon: ChefHat,
+        badgeClass:
+          "bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-300/40",
+      };
+    case "Siap Diambil":
+      return {
+        label: "Siap Diambil!",
+        icon: BellRing,
+        badgeClass:
+          "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300/50 font-bold animate-pulse",
+      };
+    case "Diterima":
+      return {
+        label: "Menunggu Konfirmasi",
+        icon: Clock,
+        badgeClass:
+          "bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-300/40",
+      };
+    case "Selesai":
+      return {
+        label: "Selesai",
+        icon: CheckCircle2,
+        badgeClass:
+          "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700",
+      };
+    case "Dibatalkan":
+      return {
+        label: "Dibatalkan",
+        icon: XCircle,
+        badgeClass:
+          "bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300 border-red-300/40",
+      };
+    default:
+      return {
+        label: status,
+        icon: Clock,
+        badgeClass: "bg-neutral-100 text-neutral-700",
+      };
+  }
+}
+
 export function CustomerNavbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -89,6 +141,7 @@ export function CustomerNavbar() {
     cartTotal,
     setIsCartOpen,
     activeOrdersCount,
+    orders,
     selectedCategory,
     setSelectedCategory,
     activeUmkm,
@@ -403,6 +456,147 @@ export function CustomerNavbar() {
 
         {/* Right Section: Terracotta Pill Capsule (Cart CTA), User Menu & Mobile Trigger */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 relative z-10">
+          {/* Customer Notification Bell */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "relative flex items-center justify-center size-9 sm:size-10 p-0 rounded-full transition-all duration-200 cursor-pointer select-none active:scale-95 shrink-0 border",
+                    activeOrdersCount > 0
+                      ? "bg-[#c85a32]/10 hover:bg-[#c85a32]/20 text-[#c85a32] border-[#c85a32]/30 shadow-xs"
+                      : "text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 border-neutral-200/80 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/70",
+                  )}
+                  aria-label="Notifikasi Pesanan"
+                />
+              }
+            >
+              {activeOrdersCount > 0 ? (
+                <BellRing className="size-4 sm:size-4.5 text-[#c85a32]" />
+              ) : (
+                <Bell className="size-4 sm:size-4.5" />
+              )}
+
+              {activeOrdersCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex size-4 sm:size-4.5 items-center justify-center pointer-events-none">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex items-center justify-center size-4 sm:size-4.5 rounded-full bg-red-600 text-[9px] sm:text-[10px] font-bold text-white shadow-xs">
+                    {activeOrdersCount}
+                  </span>
+                </span>
+              )}
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              align="end"
+              sideOffset={10}
+              className="w-80 sm:w-96 p-2 shadow-2xl rounded-2xl bg-white dark:bg-[#12141a] border border-neutral-200 dark:border-neutral-800"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
+                <div className="flex items-center gap-2">
+                  <div className="size-7 rounded-full bg-[#c85a32]/10 flex items-center justify-center text-[#c85a32]">
+                    <Bell className="size-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-neutral-900 dark:text-white">
+                      Notifikasi Pesanan
+                    </span>
+                    <p className="text-[10px] text-neutral-500 dark:text-neutral-400">
+                      Pembaruan status pesanan real-time
+                    </p>
+                  </div>
+                </div>
+                {activeOrdersCount > 0 && (
+                  <Badge className="bg-[#c85a32] text-white text-[10px] px-1.5 py-0 rounded-full font-bold border-none">
+                    {activeOrdersCount} Aktif
+                  </Badge>
+                )}
+              </div>
+
+              {/* Order Updates List */}
+              <div className="max-h-72 overflow-y-auto py-1 divide-y divide-neutral-100 dark:divide-neutral-800/60">
+                {orders.length === 0 ? (
+                  <div className="py-6 px-4 text-center">
+                    <div className="mx-auto size-10 rounded-full bg-neutral-100 dark:bg-neutral-800/80 flex items-center justify-center text-neutral-400 mb-2">
+                      <Bell className="size-5 text-neutral-400" />
+                    </div>
+                    <p className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                      Belum ada notifikasi pesanan
+                    </p>
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1 max-w-[220px] mx-auto leading-relaxed">
+                      Status pesanan yang sedang diproses atau siap diambil akan otomatis muncul di sini.
+                    </p>
+                  </div>
+                ) : (
+                  orders.slice(0, 5).map((order) => {
+                    const statusInfo = getOrderStatusDisplay(order.status);
+                    const StatusIcon = statusInfo.icon;
+                    const primaryTenant = order.tenantNames?.[0] || "UMKM";
+                    const itemsSummary = order.items
+                      ?.map((it) => `${it.quantity}x ${it.productName}`)
+                      .join(", ");
+
+                    return (
+                      <DropdownMenuItem
+                        key={order.id}
+                        onClick={() => router.push("/customer/orders")}
+                        className="p-2.5 rounded-xl cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800/70 transition-colors flex flex-col items-start gap-1.5 focus:bg-neutral-100 dark:focus:bg-neutral-800"
+                      >
+                        <div className="flex items-center justify-between w-full gap-2">
+                          <span className="text-xs font-bold text-neutral-900 dark:text-white truncate">
+                            {primaryTenant}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 font-medium",
+                              statusInfo.badgeClass,
+                            )}
+                          >
+                            <StatusIcon className="size-3" />
+                            <span>{statusInfo.label}</span>
+                          </Badge>
+                        </div>
+
+                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 w-full text-left">
+                          {itemsSummary || "Menu pesanan"}
+                        </p>
+
+                        <div className="flex items-center justify-between w-full text-[10px] text-neutral-400 dark:text-neutral-500 pt-0.5">
+                          <span>
+                            Kode:{" "}
+                            <strong className="text-neutral-700 dark:text-neutral-300 font-mono">
+                              {order.pickupCode}
+                            </strong>
+                          </span>
+                          <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+                            {formatRupiah(order.total)}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer CTA */}
+              <DropdownMenuSeparator className="my-1 bg-neutral-100 dark:bg-neutral-800" />
+              <div className="p-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push("/customer/orders")}
+                  className="w-full justify-between text-xs font-semibold text-[#c85a32] hover:bg-[#c85a32]/10 hover:text-[#b34a24] rounded-xl h-8.5 px-3 cursor-pointer"
+                >
+                  <span>Lihat Semua Pesanan</span>
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {/* Cart CTA */}
           <Button
             onClick={() => setIsCartOpen(true)}

@@ -12,8 +12,10 @@ import {
   updateProductStockAction,
   toggleProductActiveAction,
   deleteProductAction,
+  updateOrderStatusAction,
 } from "@/servers/seller-server";
 import { settleRentInvoiceAction } from "@/servers/rent-server";
+import { toast } from "sonner";
 import {
   Product,
   Order,
@@ -60,16 +62,31 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
-    getSellerDataAction().then((data) => {
-      if (isMounted) {
+
+    const fetchSellerData = async () => {
+      try {
+        const data = await getSellerDataAction();
+        if (!isMounted) return;
         if (data.products.length > 0) setProducts(data.products);
-        if (data.orders.length > 0) setOrders(data.orders);
+        setOrders(data.orders);
         setRentInvoices(data.rentInvoices);
         setIsRentLoading(false);
+      } catch (err) {
+        console.warn("Sinkronisasi data seller error:", err);
       }
-    });
+    };
+
+    fetchSellerData();
+
+    // Auto-sync berkala setiap 3.5 detik untuk pesanan masuk & status
+    const interval = setInterval(fetchSellerData, 3500);
+    const handleFocus = () => fetchSellerData();
+    window.addEventListener("focus", handleFocus);
+
     return () => {
       isMounted = false;
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
@@ -171,13 +188,27 @@ export function SellerProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleUpdateOrderStatus = (
+  const handleUpdateOrderStatus = async (
     orderId: string,
     nextStatus: OrderStatus,
   ) => {
+    // 1. Optimistic update di sisi seller
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: nextStatus } : o)),
     );
+
+    // 2. Persist perubahan status ke database PostgreSQL
+    try {
+      const res = await updateOrderStatusAction(orderId, nextStatus);
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+    } catch (err) {
+      console.error("Gagal mengupdate status pesanan:", err);
+      toast.error("Gagal memperbarui status pesanan di database.");
+    }
   };
 
   const handlePayRentInvoice = async (
