@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  ShoppingBag,
   Store,
   Building2,
   LogOut,
@@ -134,12 +133,8 @@ export function CustomerNavbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
-  const isJoinPage = pathname?.includes("/join");
   const isLoggedIn = !!session?.user;
   const {
-    cartItemCount,
-    cartTotal,
-    setIsCartOpen,
     activeOrdersCount,
     orders,
     selectedCategory,
@@ -596,50 +591,6 @@ export function CustomerNavbar() {
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Cart CTA */}
-          <Button
-            onClick={() => setIsCartOpen(true)}
-            className={cn(
-              "group relative flex items-center justify-center font-semibold text-xs sm:text-[13px] transition-all duration-200 cursor-pointer select-none active:scale-95 bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-[0_4px_12px_rgba(200,90,50,0.25)] border-none shrink-0",
-              isJoinPage
-                ? "size-9 sm:size-10 p-0 rounded-full"
-                : "h-9 sm:h-10 px-2.5 sm:px-3 xl:px-3.5 rounded-full gap-1.5",
-            )}
-            aria-label="Keranjang Belanja"
-          >
-            <ShoppingBag className="size-4 sm:size-4.5 shrink-0 transition-transform group-hover:scale-110 text-white" />
-
-            {!isJoinPage && (
-              <>
-                <span className="hidden 2xl:inline">Keranjang</span>
-
-                {cartItemCount > 0 ? (
-                  <>
-                    <Badge className="flex items-center justify-center size-5 p-0 rounded-full bg-white text-[#c85a32] text-[11px] font-bold border-none shrink-0">
-                      {cartItemCount}
-                    </Badge>
-                    <span className="hidden 2xl:inline text-xs font-semibold text-white/90">
-                      • {formatRupiah(cartTotal)}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-[11px] sm:text-xs text-white/80 font-semibold">
-                    (0)
-                  </span>
-                )}
-              </>
-            )}
-
-            {cartItemCount > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-1 -right-1 flex size-4 p-0 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white shadow-xs animate-bounce border-none"
-              >
-                {cartItemCount}
-              </Badge>
-            )}
-          </Button>
 
           {isLoggedIn ? (
             <DropdownMenu>

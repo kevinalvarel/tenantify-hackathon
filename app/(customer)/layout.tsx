@@ -5,6 +5,7 @@ import { CustomerNavbar } from "@/components/customer/customer-navbar";
 import { CustomerCartSheet } from "@/components/customer/customer-cart-sheet";
 import { CustomerLoginGate } from "@/components/customer/customer-login-gate";
 import { CustomerBottomNav } from "@/components/customer/customer-bottom-nav";
+import { CustomerFloatingCart } from "@/components/customer/customer-floating-cart";
 import { CustomerLayoutSkeleton } from "@/components/customer/customer-layout-skeleton";
 import { Suspense } from "react";
 
@@ -44,6 +45,9 @@ function CustomerLayoutContent({ children }: { children: React.ReactNode }) {
       <main className="relative z-10 flex-1 w-full max-w-[1400px] mx-auto pt-4 sm:pt-6 md:pt-24 pb-24 md:pb-6 px-3 sm:px-6 min-w-0">
         {children}
       </main>
+
+      {/* Floating Cart Button (Pojok Kanan Bawah) */}
+      <CustomerFloatingCart />
 
       {/* Customer Bottom Navigation (Mobile Only: md:hidden) */}
       <CustomerBottomNav />

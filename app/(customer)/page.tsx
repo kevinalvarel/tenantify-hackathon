@@ -86,8 +86,9 @@ export default function CustomerExplorePage() {
         </section>
 
         {/* Hero Card: Wajib Masukkan Kode Unik (Navigasi Join) */}
-        <div className="relative overflow-hidden rounded-3xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900/95 p-6 sm:p-10 shadow-xl shadow-black/5 text-center flex flex-col items-center">
-          <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#c85a32] via-[#e57342] to-amber-500" />
+        <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
+          <div className="relative overflow-hidden rounded-3xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900/95 p-6 sm:p-10 shadow-xl shadow-black/5 text-center flex flex-col items-center">
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#c85a32] via-[#e57342] to-amber-500" />
 
           {/* Badge Pengenal */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#c85a32]/10 text-[#c85a32] text-xs font-bold uppercase tracking-wider mb-4">
@@ -192,8 +193,9 @@ export default function CustomerExplorePage() {
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   // -------------------------------------------------------------
   // STATE 2: SUDAH JOIN UMKM -> TAMPILKAN MENU SPESIFIK UMKM INI
@@ -201,71 +203,73 @@ export default function CustomerExplorePage() {
   return (
     <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-full min-w-0">
       {/* Active UMKM Location Header Bar */}
-      <div className="w-full rounded-2xl sm:rounded-3xl border border-[#c85a32]/30 bg-gradient-to-r from-[#c85a32]/10 via-amber-500/5 to-white dark:to-neutral-900 p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-start sm:items-center gap-3 min-w-0">
-          <div className="size-11 sm:size-12 rounded-2xl bg-[#c85a32] text-white flex items-center justify-center shrink-0 shadow-md shadow-[#c85a32]/20">
-            {activeUmkm.type === "paguyuban" ? (
-              <Building2 className="size-6" />
-            ) : (
-              <Store className="size-6" />
-            )}
-          </div>
-
-          <div className="flex flex-col min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-base sm:text-lg font-extrabold text-neutral-900 dark:text-white tracking-tight truncate">
-                {activeUmkm.name}
-              </h1>
-              <Badge className="bg-[#c85a32] text-white text-[10px] font-bold uppercase border-none px-2 py-0.5">
-                {activeUmkm.type === "paguyuban"
-                  ? "Paguyuban Multi-UMKM"
-                  : "Stan UMKM Kuliner"}
-              </Badge>
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
+        <div className="w-full rounded-2xl sm:rounded-3xl border border-[#c85a32]/30 bg-gradient-to-r from-[#c85a32]/10 via-amber-500/5 to-white dark:to-neutral-900 p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
+            <div className="size-11 sm:size-12 rounded-2xl bg-[#c85a32] text-white flex items-center justify-center shrink-0 shadow-md shadow-[#c85a32]/20">
+              {activeUmkm.type === "paguyuban" ? (
+                <Building2 className="size-6" />
+              ) : (
+                <Store className="size-6" />
+              )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600 dark:text-neutral-300 mt-0.5">
-              <span className="font-mono font-bold text-[#c85a32]">
-                Kode: {activeUmkm.code}
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <MapPin className="size-3 text-neutral-400 shrink-0" />
-                {activeUmkm.location || "Area Food Court"}
-              </span>
-              <span>•</span>
-              <span
-                className={
-                  products.length > 0
-                    ? "font-semibold text-emerald-600 dark:text-emerald-400"
-                    : "font-semibold text-amber-600 dark:text-amber-400"
-                }
-              >
-                {products.length > 0
-                  ? `${products.length} Menu Siap Dipesan`
-                  : "Belum Ada Menu"}
-              </span>
+            <div className="flex flex-col min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-base sm:text-lg font-extrabold text-neutral-900 dark:text-white tracking-tight truncate">
+                  {activeUmkm.name}
+                </h1>
+                <Badge className="bg-[#c85a32] text-white text-[10px] font-bold uppercase border-none px-2 py-0.5">
+                  {activeUmkm.type === "paguyuban"
+                    ? "Paguyuban Multi-UMKM"
+                    : "Stan UMKM Kuliner"}
+                </Badge>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600 dark:text-neutral-300 mt-0.5">
+                <span className="font-mono font-bold text-[#c85a32]">
+                  Kode: {activeUmkm.code}
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <MapPin className="size-3 text-neutral-400 shrink-0" />
+                  {activeUmkm.location || "Area Food Court"}
+                </span>
+                <span>•</span>
+                <span
+                  className={
+                    products.length > 0
+                      ? "font-semibold text-emerald-600 dark:text-emerald-400"
+                      : "font-semibold text-amber-600 dark:text-amber-400"
+                  }
+                >
+                  {products.length > 0
+                    ? `${products.length} Menu Siap Dipesan`
+                    : "Belum Ada Menu"}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Action Button: Ganti UMKM / Kode Lain */}
-        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={leaveUmkm}
-            className="rounded-full text-xs font-semibold gap-1.5 h-8 sm:h-9 hover:border-[#c85a32] hover:text-[#c85a32] transition-colors"
-          >
-            <RefreshCw className="size-3.5" />
-            <span>Ganti UMKM</span>
-          </Button>
-          <Link
-            href="/join"
-            className="inline-flex items-center justify-center rounded-full text-xs font-semibold gap-1.5 h-8 sm:h-9 px-3.5 bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-xs transition-colors"
-          >
-            <LogIn className="size-3.5" />
-            <span>Kode Baru</span>
-          </Link>
+          {/* Action Button: Ganti UMKM / Kode Lain */}
+          <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={leaveUmkm}
+              className="rounded-full text-xs font-semibold gap-1.5 h-8 sm:h-9 hover:border-[#c85a32] hover:text-[#c85a32] transition-colors"
+            >
+              <RefreshCw className="size-3.5" />
+              <span>Ganti UMKM</span>
+            </Button>
+            <Link
+              href="/join"
+              className="inline-flex items-center justify-center rounded-full text-xs font-semibold gap-1.5 h-8 sm:h-9 px-3.5 bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-xs transition-colors"
+            >
+              <LogIn className="size-3.5" />
+              <span>Kode Baru</span>
+            </Link>
+          </div>
         </div>
       </div>
 
