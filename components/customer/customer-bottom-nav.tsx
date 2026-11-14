@@ -19,8 +19,13 @@ export function CustomerBottomNav() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const router = useRouter();
-  const { cartItemCount, activeOrdersCount, setIsCartOpen, isCartOpen, activeUmkm } =
-    useCustomer();
+  const {
+    cartItemCount,
+    activeOrdersCount,
+    setIsCartOpen,
+    isCartOpen,
+    activeUmkm,
+  } = useCustomer();
   const [scrollSection, setScrollSection] = useState<"beranda" | "menu">(
     "beranda",
   );
@@ -80,7 +85,7 @@ export function CustomerBottomNav() {
       aria-label="Navigasi Bawah Mobile"
       className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t border-neutral-200/80 dark:border-neutral-800/80 px-2 pt-1 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
     >
-      <div className="grid grid-cols-4 max-w-md mx-auto w-full items-center">
+      <div className="grid grid-cols-5 max-w-md mx-auto w-full items-center">
         {/* 1. Beranda */}
         <button
           type="button"
