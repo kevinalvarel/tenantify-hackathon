@@ -21,39 +21,6 @@ import { FeaturedTenantsSection } from "@/components/customer/featured-tenants-s
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const SAMPLE_CODES = [
-  {
-    code: "5S5CTP",
-    name: "Paguyuban Cilegon Juare",
-    type: "Paguyuban Multi-UMKM",
-    desc: "8 Tenant • Bebek Madura, Kevin Kebab, Ayam Geprek, dll.",
-  },
-  {
-    code: "KEB001",
-    name: "Kevin Kebab & Burger",
-    type: "Stan UMKM",
-    desc: "Kebab panggang daging sapi premium & burger juicy",
-  },
-  {
-    code: "BBK001",
-    name: "Bebek Madura Cak Munir",
-    type: "Stan UMKM",
-    desc: "Bebek & ayam goreng bumbu hitam Madura",
-  },
-  {
-    code: "KOP001",
-    name: "UMKM Kopi Kita",
-    type: "Stan UMKM",
-    desc: "Kopi nikmat dan minuman segar",
-  },
-  {
-    code: "PGY001",
-    name: "Paguyuban Nusantara",
-    type: "Paguyuban 4 Tenant",
-    desc: "Bebek Madura, Ayam Juara, Mie Aceh, Sate Maranggi",
-  },
-];
-
 export default function CustomerExplorePage() {
   const {
     products,
@@ -66,17 +33,7 @@ export default function CustomerExplorePage() {
     joinUmkmByCode,
   } = useCustomer();
   const [selectedTenantId, setSelectedTenantId] = useState<string>("all");
-  const [isJoiningSample, setIsJoiningSample] = useState<string | null>(null);
 
-  const handleSelectSample = async (sampleCode: string) => {
-    setIsJoiningSample(sampleCode);
-    await joinUmkmByCode(sampleCode);
-    setIsJoiningSample(null);
-  };
-
-  // -------------------------------------------------------------
-  // STATE 1: JIKA BELUM JOIN UMKM -> SEMBUNYIKAN MENU & TAMPILKAN JOIN HERO
-  // -------------------------------------------------------------
   if (!activeUmkm) {
     return (
       <div className="flex flex-col gap-6 w-full max-w-full min-w-0 py-2 sm:py-4">
@@ -103,7 +60,8 @@ export default function CustomerExplorePage() {
             Tenantify menampung berbagai paguyuban dan stan UMKM kuliner. Daftar
             menu disesuaikan dengan lokasi UMKM yang kamu tuju.
             <strong className="block text-neutral-900 dark:text-white font-semibold mt-1">
-              Silakan masukkan Kode Unik stan/paguyuban untuk melihat menu hidangan.
+              Silakan masukkan Kode Unik stan/paguyuban untuk melihat menu
+              hidangan.
             </strong>
           </p>
 
@@ -117,39 +75,6 @@ export default function CustomerExplorePage() {
               <span>Masukkan Kode Unik (Join)</span>
               <ArrowRight className="size-4 shrink-0" />
             </Link>
-          </div>
-
-          {/* Shortcut: Coba Kode Sample Langsung */}
-          <div className="mt-8 pt-6 border-t border-neutral-200/80 dark:border-neutral-800 w-full max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">
-              Atau coba langsung kode contoh berikut:
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-left">
-              {SAMPLE_CODES.map((item) => (
-                <button
-                  key={item.code}
-                  type="button"
-                  onClick={() => handleSelectSample(item.code)}
-                  disabled={isJoiningSample !== null}
-                  className="group flex flex-col p-3 rounded-2xl border border-neutral-200 dark:border-neutral-800 hover:border-[#c85a32] bg-neutral-50/60 dark:bg-neutral-800/40 hover:bg-[#c85a32]/5 transition-all cursor-pointer text-left active:scale-[0.98]"
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <span className="font-mono text-xs font-extrabold text-[#c85a32] bg-white dark:bg-neutral-800 px-2 py-0.5 rounded-md border border-neutral-200 dark:border-neutral-700">
-                      {item.code}
-                    </span>
-                    <Badge variant="outline" className="text-[10px] py-0">
-                      {item.type}
-                    </Badge>
-                  </div>
-                  <span className="font-bold text-xs text-neutral-900 dark:text-neutral-100 mt-1.5 group-hover:text-[#c85a32] transition-colors truncate">
-                    {item.name}
-                  </span>
-                  <span className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
-                    {item.desc}
-                  </span>
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* 3 Keunggulan Fitur Paguyuban */}
@@ -195,9 +120,6 @@ export default function CustomerExplorePage() {
     );
   }
 
-  // -------------------------------------------------------------
-  // STATE 2: SUDAH JOIN UMKM -> TAMPILKAN MENU SPESIFIK UMKM INI
-  // -------------------------------------------------------------
   return (
     <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-full min-w-0">
       {/* Active UMKM Location Header Bar */}

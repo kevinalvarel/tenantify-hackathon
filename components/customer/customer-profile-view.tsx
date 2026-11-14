@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -63,63 +63,6 @@ export type CustomerReviewItem = {
   };
 };
 
-const DEFAULT_REVIEWS: CustomerReviewItem[] = [
-  {
-    id: "rev-demo-1",
-    orderId: "ORD-9421",
-    tenantName: "Kevin Kebab",
-    boothNumber: "Stall A-04",
-    rating: 5,
-    comment:
-      "Kebab dagingnya melimpah, saus garlic mayo gurih dan rotinya dipanggang pas tidak alot. Waktu tunggu relatif cepat sekitar 5 menit.",
-    badge: "Rasa & Kualitas",
-    aspects: ["Rasa", "Kecepatan Penyajian"],
-    createdAt: "Kemarin, 14:20 WIB",
-    reply: {
-      tenantName: "Kevin Kebab",
-      message:
-        "Terima kasih banyak kak atas ulasannya! Kami selalu menjaga kualitas daging dan kematangan roti terbaik untuk pelanggan.",
-      repliedAt: "Kemarin, 15:02 WIB",
-    },
-  },
-  {
-    id: "rev-demo-2",
-    orderId: "ORD-8710",
-    tenantName: "Kopi & Toast Janji Manis",
-    boothNumber: "Stall A-02",
-    rating: 5,
-    comment:
-      "Kopi susu gula arennya mantap, rasanya bold dan manisnya pas. Toast keju cokelatnya juga garing di luar dan lembut di dalam.",
-    badge: "Rekomendasi Menu",
-    aspects: ["Minuman Segar", "Camilan"],
-    createdAt: "3 hari yang lalu",
-    reply: {
-      tenantName: "Kopi & Toast Janji Manis",
-      message:
-        "Senang sekali cocok dengan racikan kopi kami kak! Ditunggu kedatangannya kembali di booth Janji Manis.",
-      repliedAt: "3 hari yang lalu",
-    },
-  },
-  {
-    id: "rev-demo-3",
-    orderId: "ORD-7304",
-    tenantName: "Bebek Madura Cak Munir",
-    boothNumber: "Stall C-01",
-    rating: 4,
-    comment:
-      "Bumbu hitamnya juara pedas gurih nagih! Daging bebeknya empuk sekali. Sedikit catatan sambalnya cukup pedas bagi yang sensitif pedas.",
-    badge: "Ulasan Rasa",
-    aspects: ["Porsi", "Pedas"],
-    createdAt: "1 minggu yang lalu",
-    reply: {
-      tenantName: "Bebek Madura Cak Munir",
-      message:
-        "Matur suwun kak! Catatan tingkat kepedasan kami catat, untuk pesanan selanjutnya bisa request bumbu manis-pedas ya kak.",
-      repliedAt: "1 minggu yang lalu",
-    },
-  },
-];
-
 type ProfileTab = "pesanan" | "ulasan" | "akun";
 const orderStatusFilters = [
   "Semua",
@@ -172,11 +115,7 @@ export function CustomerProfileView() {
       if (storedReviews) {
         setReviews(JSON.parse(storedReviews));
       } else {
-        setReviews(DEFAULT_REVIEWS);
-        localStorage.setItem(
-          "tenantify_customer_reviews",
-          JSON.stringify(DEFAULT_REVIEWS),
-        );
+        setReviews([]);
       }
 
       const storedPhone = localStorage.getItem("tenantify_customer_phone");
@@ -189,7 +128,7 @@ export function CustomerProfileView() {
         setDisplayName(storedName);
       }
     } catch {
-      setReviews(DEFAULT_REVIEWS);
+      setReviews([]);
     } finally {
       setIsReviewsLoaded(true);
     }

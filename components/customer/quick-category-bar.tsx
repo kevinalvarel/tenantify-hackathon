@@ -16,7 +16,6 @@ import { cn } from "@/lib/utils";
 type CategoryItem = {
   id: string;
   name: string;
-  menuCount: string;
   icon: React.ComponentType<{ className?: string }>;
 };
 
@@ -24,49 +23,41 @@ const categories: CategoryItem[] = [
   {
     id: "cat-makanan-berat",
     name: "Makanan Berat",
-    menuCount: "142 Menu",
     icon: Utensils,
   },
   {
     id: "cat-kopi-teh",
     name: "Kopi & Teh",
-    menuCount: "68 Menu",
     icon: Coffee,
   },
   {
     id: "cat-camilan-roti",
     name: "Camilan & Roti",
-    menuCount: "54 Menu",
     icon: Croissant,
   },
   {
     id: "cat-nusantara",
     name: "Nusantara",
-    menuCount: "95 Menu",
     icon: Soup,
   },
   {
     id: "cat-mie-pasta",
     name: "Mie & Pasta",
-    menuCount: "42 Menu",
     icon: Flame,
   },
   {
     id: "cat-paket-hemat",
     name: "Paket Hemat",
-    menuCount: "29 Menu",
     icon: Package,
   },
   {
     id: "cat-katering-box",
     name: "Katering Box",
-    menuCount: "18 Paket",
     icon: Boxes,
   },
   {
     id: "cat-menu-favorit",
     name: "Menu Favorit",
-    menuCount: "Paling Laris",
     icon: Star,
   },
 ];
