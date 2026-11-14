@@ -4,6 +4,27 @@ Platform digital untuk mendigitalisasi dan mengelola aktivitas penjualan UMKM di
 
 ---
 
+## 📚 Repository & Sumber Proyek
+
+Tenantify dikembangkan dalam beberapa repository yang saling terintegrasi untuk membangun satu ekosistem digital. Berikut adalah repository resmi yang dapat diakses untuk melihat implementasi dan dokumentasi setiap komponen.
+
+| Komponen | Repository | Deskripsi |
+|---|---|---|
+| **Organization** | [tenantify-hackathon](https://github.com/tenantify-hackathon) | Halaman utama organisasi dan pusat seluruh pengembangan proyek Tenantify. |
+| **Web Application** | [tenantify-web-app](https://github.com/tenantify-hackathon/tenantify-web-app) | Aplikasi utama Tenantify yang mencakup pengelolaan Association, Seller, dan Consumer. |
+| **Machine Learning** | [tenantify-ml-models](https://github.com/tenantify-hackathon/tenantify-ml-models) | Backend AI untuk rekomendasi produk UMKM dan moderasi komentar berbasis NLU. |
+
+### Tautan Aplikasi
+
+| Platform | URL |
+|---|---|
+| Customer Application | [tenantify.store](https://tenantify.store) |
+| Seller & Association Dashboard | [seller.tenantify.store](https://seller.tenantify.store) |
+
+Seluruh repository merupakan bagian dari pengembangan **Tenantify — Ekosistem Digital untuk Pengelolaan Bazaar dan Food Court**.
+
+---
+
 ## 🔑 Akun Demo untuk Juri
 
 Untuk memudahkan proses pengujian dan eksplorasi fitur Tenantify, berikut akun demo yang dapat digunakan oleh juri berdasarkan masing-masing role.
