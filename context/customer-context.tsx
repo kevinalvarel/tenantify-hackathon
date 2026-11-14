@@ -175,7 +175,7 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     return res;
   };
 
-  // Sinkronisasi status pesanan dari database secara otomatis setiap 3.5 detik
+  // Sinkronisasi status pesanan dari database secara otomatis setiap 2.5 detik & saat window focus
   useEffect(() => {
     let isMounted = true;
 
@@ -194,10 +194,20 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
           new Set([...ordersRef.current.map((o) => o.id), ...storedIds]),
         );
 
-        if (currentIds.length === 0) return;
-
         const dbOrders = await getCustomerOrdersAction(currentIds);
-        if (!isMounted || dbOrders.length === 0) return;
+        if (!isMounted) return;
+
+        if (dbOrders.length > 0) {
+          try {
+            const allStored = new Set([...storedIds, ...dbOrders.map((o) => o.id)]);
+            window.localStorage.setItem(
+              "tenantify:customer_order_ids",
+              JSON.stringify(Array.from(allStored)),
+            );
+          } catch {
+            // ignore
+          }
+        }
 
         setOrders((prev) => {
           const prevMap = new Map(prev.map((o) => [o.id, o]));
@@ -249,10 +259,14 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     // Jalankan pertama kali
     syncLiveOrders();
 
-    const intervalId = setInterval(syncLiveOrders, 3500);
+    const intervalId = setInterval(syncLiveOrders, 2500);
+    const handleFocus = () => syncLiveOrders();
+    window.addEventListener("focus", handleFocus);
+
     return () => {
       isMounted = false;
       clearInterval(intervalId);
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 

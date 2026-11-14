@@ -455,15 +455,28 @@ export async function createCustomerOrderAction(
 }
 
 export async function getCustomerOrdersAction(
-  orderIds: string[],
+  orderIds?: string[],
 ): Promise<CustomerOrder[]> {
   try {
-    if (!orderIds || orderIds.length === 0) return [];
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    const customerId = session?.user?.id;
+
+    const conditions = [];
+    if (orderIds && orderIds.length > 0) {
+      conditions.push(inArray(orders.id, orderIds));
+    }
+    if (customerId) {
+      conditions.push(eq(orders.customerId, customerId));
+    }
+
+    if (conditions.length === 0) return [];
 
     const orderRows = await db
       .select()
       .from(orders)
-      .where(inArray(orders.id, orderIds))
+      .where(conditions.length > 1 ? or(...conditions) : conditions[0])
       .orderBy(desc(orders.createdAt));
 
     const result: CustomerOrder[] = [];

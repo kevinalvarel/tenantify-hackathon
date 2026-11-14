@@ -19,7 +19,7 @@ export type CartItem = {
 };
 
 export type OrderType = "POS Kasir" | "Online Order";
-export type OrderStatus = "Masuk" | "Diproses" | "Selesai" | "Dibatalkan";
+export type OrderStatus = "Masuk" | "Diproses" | "Siap Diambil" | "Selesai" | "Dibatalkan";
 export type PaymentMethod = "Tunai" | "QRIS" | "Debit / Transfer";
 
 export type Order = {

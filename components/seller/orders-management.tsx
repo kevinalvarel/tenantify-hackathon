@@ -13,6 +13,7 @@ import {
   Check,
   X,
   AlertCircle,
+  BellRing,
 } from "lucide-react";
 import { Order, OrderStatus, OrderType } from "@/types/seller";
 import { formatRupiah } from "@/lib/utils";
@@ -38,6 +39,7 @@ const statusTabs: { label: string; value: OrderStatus | "Semua" }[] = [
   { label: "Semua", value: "Semua" },
   { label: "Pesanan Masuk", value: "Masuk" },
   { label: "Sedang Diproses", value: "Diproses" },
+  { label: "Siap Diambil", value: "Siap Diambil" },
   { label: "Selesai", value: "Selesai" },
   { label: "Dibatalkan", value: "Dibatalkan" },
 ];
@@ -77,6 +79,13 @@ export function OrdersManagement({
           <Badge variant="secondary" className="gap-1 border-primary/30 text-primary">
             <ChefHat className="size-3" />
             Sedang Disiapkan
+          </Badge>
+        );
+      case "Siap Diambil":
+        return (
+          <Badge variant="outline" className="gap-1 text-blue-600 border-blue-500/30">
+            <BellRing className="size-3" />
+            Siap Diambil
           </Badge>
         );
       case "Selesai":
@@ -316,17 +325,43 @@ export function OrdersManagement({
                 )}
 
                 {order.status === "Diproses" && (
+                  <>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      onClick={() => {
+                        onUpdateOrderStatus(order.id, "Siap Diambil");
+                      }}
+                      className="flex-1 gap-1 border-blue-500/30 text-blue-600 hover:bg-blue-500/10 text-xs font-semibold cursor-pointer"
+                    >
+                      <BellRing className="size-3.5" />
+                      Siap Diambil
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="default"
+                      onClick={() => {
+                        onUpdateOrderStatus(order.id, "Selesai");
+                      }}
+                      className="flex-1 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer"
+                    >
+                      <Check className="size-3.5" />
+                      Selesai
+                    </Button>
+                  </>
+                )}
+
+                {order.status === "Siap Diambil" && (
                   <Button
                     size="xs"
                     variant="default"
                     onClick={() => {
                       onUpdateOrderStatus(order.id, "Selesai");
-                      toast.success(`Pesanan #${order.id} telah selesai!`);
                     }}
                     className="flex-1 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold cursor-pointer"
                   >
                     <Check className="size-3.5" />
-                    Tandai Siap / Selesai
+                    Selesaikan Pesanan
                   </Button>
                 )}
 
@@ -443,6 +478,48 @@ export function OrdersManagement({
                       Tolak Pesanan
                     </Button>
                   </>
+                )}
+                {selectedOrderForDetail.status === "Diproses" && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onUpdateOrderStatus(selectedOrderForDetail.id, "Siap Diambil");
+                        setSelectedOrderForDetail(null);
+                      }}
+                      className="border-blue-500/30 text-blue-600 hover:bg-blue-500/10 text-xs gap-1 font-semibold cursor-pointer"
+                    >
+                      <BellRing className="size-3.5" />
+                      Siap Diambil
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => {
+                        onUpdateOrderStatus(selectedOrderForDetail.id, "Selesai");
+                        setSelectedOrderForDetail(null);
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1 font-semibold cursor-pointer"
+                    >
+                      <Check className="size-3.5" />
+                      Selesai
+                    </Button>
+                  </>
+                )}
+                {selectedOrderForDetail.status === "Siap Diambil" && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => {
+                      onUpdateOrderStatus(selectedOrderForDetail.id, "Selesai");
+                      setSelectedOrderForDetail(null);
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1 font-semibold cursor-pointer"
+                  >
+                    <Check className="size-3.5" />
+                    Selesaikan Pesanan
+                  </Button>
                 )}
                 <Button
                   variant="outline"
