@@ -2,7 +2,7 @@
 
 1. **Muhammad Kevin Alvarel - Fullstack Engineer**
 2. **Muhammad Sahrul Ramadhan - Fullstack Engineer**
-3. 
+
 ---
 
 ## 📚 Repository & Sumber Proyek
