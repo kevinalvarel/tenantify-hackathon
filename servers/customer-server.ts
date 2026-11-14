@@ -22,7 +22,6 @@ import type {
   CustomerOrder,
   CustomerOrderStatus,
 } from "@/types/customer";
-import { findPresetUmkmByCode } from "@/data/umkm-registry";
 import { AreaZone, BoothSlot } from "@/types/association";
 import { slugify } from "@/lib/slug";
 
@@ -36,27 +35,10 @@ export async function resolveUmkmByCodeAction(rawCode: string): Promise<{
       return { success: false, message: "Kode unik wajib diisi." };
     }
 
-    const normalizedCode = rawCode.trim().toUpperCase();
+    const trimmedCode = rawCode.trim();
+    const normalizedCode = trimmedCode.toUpperCase();
 
-    // 1. First check in Preset / Configured Registry (fastest & robust)
-    const preset = findPresetUmkmByCode(normalizedCode);
-    if (preset) {
-      return {
-        success: true,
-        message: `Berhasil mendeteksi ${preset.name}`,
-        umkm: {
-          code: preset.code,
-          name: preset.name,
-          type: preset.type,
-          description: preset.description,
-          location: preset.location,
-          category: preset.category,
-          tenantIds: preset.tenantIds,
-        },
-      };
-    }
-
-    // 2. Check Database for association user
+    // 1. Check Database for association user
     try {
       const [assocUser] = await db
         .select({
@@ -101,7 +83,7 @@ export async function resolveUmkmByCodeAction(rawCode: string): Promise<{
       console.warn("Database lookup warning for association code:", dbErr);
     }
 
-    // 3. Check Database for direct Tenant (by tenant ID, booth number, or tenant name)
+    // 2. Check Database for direct Tenant (by tenant ID, booth number, or tenant name)
     try {
       const [matchedTenant] = await db
         .select({
@@ -113,9 +95,10 @@ export async function resolveUmkmByCodeAction(rawCode: string): Promise<{
         .where(
           or(
             eq(tenants.id, normalizedCode),
-            eq(tenants.id, rawCode.trim()),
+            eq(tenants.id, trimmedCode),
+            ilike(tenants.id, trimmedCode),
             ilike(tenants.name, normalizedCode),
-            ilike(tenants.name, `%${rawCode.trim()}%`),
+            ilike(tenants.name, `%${trimmedCode}%`),
           ),
         )
         .limit(1);
@@ -145,8 +128,7 @@ export async function resolveUmkmByCodeAction(rawCode: string): Promise<{
 
     return {
       success: false,
-      message:
-        "Kode unik UMKM tidak ditemukan. Coba kode sample seperti 5S5CTP (Paguyuban Cilegon Juare), KEB001, atau BBK001.",
+      message: "Kode unik UMKM tidak ditemukan. Pastikan kode yang dimasukkan sudah sesuai.",
     };
   } catch (error) {
     console.error("Error resolving UMKM by code:", error);

@@ -28,15 +28,6 @@ import { useCustomer } from "@/context/customer-context";
 import { QrScanDialog } from "@/components/customer/qr-scan-dialog";
 import type { ActiveUmkm } from "@/types/customer";
 
-const SAMPLE_CHIPS = [
-  { code: "5S5CTP", label: "Cilegon Juare", type: "Paguyuban" },
-  { code: "KEB001", label: "Kevin Kebab", type: "UMKM" },
-  { code: "BBK001", label: "Bebek Madura", type: "UMKM" },
-  { code: "KOP001", label: "Janji Manis", type: "UMKM" },
-  { code: "AYM001", label: "Ayam Juara", type: "UMKM" },
-  { code: "PGY001", label: "Nusantara", type: "Paguyuban" },
-];
-
 const SAVED_KEY = "tenantify:join:saved";
 const STORAGE_EVENT = "tenantify:join:storage";
 
@@ -145,9 +136,9 @@ export function JoinForm({
     router.push("/customer");
   };
 
-  const handleSelectSample = (sampleCode: string) => {
-    setCode(sampleCode);
-    router.push(`/join?code=${sampleCode}`);
+  const handleSelectSaved = (savedCode: string) => {
+    setCode(savedCode);
+    router.push(`/join?code=${savedCode}`);
   };
 
   const handleScanResult = (scannedCode: string) => {
@@ -216,7 +207,7 @@ export function JoinForm({
           <Label htmlFor="code" className="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-300">
             Masukkan 6 Digit Kode Unik
           </Label>
-          <span className="text-[11px] text-neutral-400">Contoh: 5S5CTP, KEB001</span>
+          <span className="text-[11px] text-neutral-400">Kode 6 digit stan / paguyuban</span>
         </div>
 
         <div className="flex justify-center py-2">
@@ -258,26 +249,6 @@ export function JoinForm({
           </Button>
         </div>
       </form>
-
-      {/* Shortcut Sample Chips */}
-      <div className="space-y-1.5 pt-1">
-        <p className="text-[11px] font-semibold text-neutral-500 text-center">
-          Atau klik kode sample untuk menguji cepat:
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-1.5">
-          {SAMPLE_CHIPS.map((chip) => (
-            <button
-              key={chip.code}
-              type="button"
-              onClick={() => handleSelectSample(chip.code)}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-800 hover:border-[#c85a32] hover:text-[#c85a32] transition-colors cursor-pointer"
-            >
-              <span className="font-mono font-bold text-[#c85a32]">{chip.code}</span>
-              <span className="text-neutral-500 dark:text-neutral-400">({chip.label})</span>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* HASIL DETEKSI UMKM */}
       {detectedUmkm && (
@@ -373,7 +344,7 @@ export function JoinForm({
               >
                 <button
                   type="button"
-                  onClick={() => handleSelectSample(item.code)}
+                  onClick={() => handleSelectSaved(item.code)}
                   className="flex items-center gap-2 min-w-0 text-left hover:text-[#c85a32] transition-colors cursor-pointer"
                 >
                   <Store className="size-4 text-[#c85a32] shrink-0" />
