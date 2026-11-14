@@ -92,6 +92,9 @@ export type PromotionType = "Info" | "Diskon" | "Pengumuman";
 
 export type Promotion = {
   id: string;
+  tenantId?: string;
+  tenantName?: string;
+  tenantCode?: string;
   title: string;
   message: string;
   type: PromotionType;
@@ -99,6 +102,7 @@ export type Promotion = {
   endDate: string;
   status: "Terkirim";
   sentAt: string;
+  targetUrl?: string;
 };
 
 export type RentPaymentHistoryItem = {

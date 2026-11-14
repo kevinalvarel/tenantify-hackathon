@@ -4,3 +4,4 @@ export * from "./products";
 export * from "./orders";
 export * from "./rent";
 export * from "./reviews";
+export * from "./promotions";
