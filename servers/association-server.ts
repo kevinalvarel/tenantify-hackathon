@@ -523,6 +523,48 @@ export async function deleteBoothAction(
   }
 }
 
+export async function deleteTenantAction(
+  id: string
+): Promise<LayoutActionResult> {
+  if (!id) {
+    return { success: false, message: "Tenant tidak ditemukan." };
+  }
+
+  if (!(await hasLayoutAccess())) {
+    return { success: false, message: SESSION_MESSAGE };
+  }
+
+  try {
+    const existing = await db
+      .select({ name: tenants.name })
+      .from(tenants)
+      .where(eq(tenants.id, id))
+      .limit(1);
+
+    if (existing.length === 0) {
+      return { success: false, message: "Tenant tidak ditemukan." };
+    }
+
+    await db.transaction(async (tx) => {
+      await tx
+        .update(boothSlots)
+        .set({ tenantId: null, status: "available" })
+        .where(eq(boothSlots.tenantId, id));
+
+      // Produk, pesanan, dan tagihan sewa ikut terhapus lewat cascade.
+      await tx.delete(tenants).where(eq(tenants.id, id));
+    });
+
+    return {
+      success: true,
+      message: `Tenant "${existing[0].name}" berhasil dihapus.`,
+      data: await loadAssociationData(),
+    };
+  } catch (error) {
+    return { success: false, message: messageOf(error) };
+  }
+}
+
 export async function saveFloorplanAction(
   input: TSaveFloorplan
 ): Promise<LayoutActionResult> {

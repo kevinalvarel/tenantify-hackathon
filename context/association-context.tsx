@@ -13,6 +13,7 @@ import {
   createBoothAction,
   createZoneAction,
   deleteBoothAction,
+  deleteTenantAction,
   deleteZoneAction,
   getAssociationDataAction,
   saveFloorplanAction,
@@ -46,7 +47,7 @@ type AssociationContextType = {
   refresh: () => Promise<void>;
   handleAddTenant: (newTenant: AssociationTenant) => void;
   handleToggleStatus: (tenantId: string) => void;
-  handleDeleteTenant: (tenantId: string) => void;
+  handleDeleteTenant: (tenantId: string) => Promise<LayoutActionResult>;
   handleCreateZone: (input: TCreateZone) => Promise<LayoutActionResult>;
   handleDeleteZone: (zoneId: string) => Promise<LayoutActionResult>;
   handleCreateBooth: (input: TCreateBooth) => Promise<LayoutActionResult>;
@@ -185,24 +186,8 @@ export function AssociationProvider({
     );
   };
 
-  const handleDeleteTenant = (tenantId: string) => {
-    const target = tenants.find((t) => t.id === tenantId);
-    setTenants((prev) => prev.filter((t) => t.id !== tenantId));
-    setBooths((prev) =>
-      prev.map((b) =>
-        b.tenantId === tenantId
-          ? {
-              ...b,
-              status: "available",
-              tenantId: undefined,
-              tenantName: undefined,
-              category: undefined,
-            }
-          : b
-      )
-    );
-    toast.success(`Tenant "${target?.name || ""}" berhasil dihapus.`);
-  };
+  const handleDeleteTenant = (tenantId: string) =>
+    runAction(() => deleteTenantAction(tenantId));
 
   const handleCreateZone = (input: TCreateZone) =>
     runAction(() => createZoneAction(input));

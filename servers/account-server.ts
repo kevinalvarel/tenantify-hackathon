@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 import { auth } from "@/lib/auth";
 import { db } from "@/drizzle";
@@ -29,14 +29,16 @@ export type AccountResponse = {
  * Server action untuk Association atau Developer membuat akun Seller sekaligus data Tenant.
  */
 export async function createSellerWithTenantAction(
-  data: TCreateSellerSchema
+  data: TCreateSellerSchema,
 ): Promise<AccountResponse> {
   try {
     const validated = createSellerSchema.safeParse(data);
     if (!validated.success) {
       return {
         success: false,
-        message: validated.error.issues[0]?.message || "Format data seller tidak valid",
+        message:
+          validated.error.issues[0]?.message ||
+          "Format data seller tidak valid",
       };
     }
 
@@ -56,7 +58,8 @@ export async function createSellerWithTenantAction(
     if (callerRole !== "association" && callerRole !== "developer") {
       return {
         success: false,
-        message: "Hanya Association atau Developer yang berwenang menambahkan akun Seller.",
+        message:
+          "Hanya Association atau Developer yang berwenang menambahkan akun Seller.",
       };
     }
 
@@ -133,18 +136,17 @@ export async function createSellerWithTenantAction(
   }
 }
 
-/**
- * Server action khusus Developer untuk membuat akun Association baru.
- */
 export async function createAssociationAccountAction(
-  data: TCreateAssociationSchema
+  data: TCreateAssociationSchema,
 ): Promise<AccountResponse> {
   try {
     const validated = createAssociationSchema.safeParse(data);
     if (!validated.success) {
       return {
         success: false,
-        message: validated.error.issues[0]?.message || "Format data association tidak valid",
+        message:
+          validated.error.issues[0]?.message ||
+          "Format data association tidak valid",
       };
     }
 
@@ -164,7 +166,8 @@ export async function createAssociationAccountAction(
     if (callerRole !== "developer") {
       return {
         success: false,
-        message: "Hanya Developer yang berwenang menambahkan akun Association baru.",
+        message:
+          "Hanya Developer yang berwenang menambahkan akun Association baru.",
       };
     }
 
@@ -231,12 +234,18 @@ export async function ensureAssociationCodeAction(): Promise<{
     });
 
     if (!session) {
-      return { success: false, message: "Sesi tidak valid. Silakan login kembali." };
+      return {
+        success: false,
+        message: "Sesi tidak valid. Silakan login kembali.",
+      };
     }
 
     const role = (session.user as { role?: string }).role;
     if (role !== "association" && role !== "developer") {
-      return { success: false, message: "Hanya Association yang dapat membuat kode pengelola." };
+      return {
+        success: false,
+        message: "Hanya Association yang dapat membuat kode pengelola.",
+      };
     }
 
     const [row] = await db
@@ -246,7 +255,11 @@ export async function ensureAssociationCodeAction(): Promise<{
       .limit(1);
 
     if (row?.code) {
-      return { success: true, message: "Kode pengelola sudah tersedia", code: row.code };
+      return {
+        success: true,
+        message: "Kode pengelola sudah tersedia",
+        code: row.code,
+      };
     }
 
     const code = await assignAssociationCode(session.user.id);
@@ -255,7 +268,8 @@ export async function ensureAssociationCodeAction(): Promise<{
     const err = error as { message?: string; body?: { message?: string } };
     return {
       success: false,
-      message: err.body?.message || err.message || "Gagal membuat kode pengelola.",
+      message:
+        err.body?.message || err.message || "Gagal membuat kode pengelola.",
     };
   }
 }

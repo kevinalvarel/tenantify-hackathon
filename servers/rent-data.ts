@@ -19,7 +19,9 @@ export function formatRentDate(value: Date) {
   }).format(value);
 }
 
-export async function loadRentInvoices(tenantId?: string): Promise<RentInvoice[]> {
+export async function loadRentInvoices(
+  tenantId?: string,
+): Promise<RentInvoice[]> {
   const rows = await db
     .select({ invoice: rentInvoices, tenantName: tenants.name })
     .from(rentInvoices)
@@ -38,14 +40,15 @@ export async function loadRentInvoices(tenantId?: string): Promise<RentInvoice[]
   const boothByTenant = new Map(
     boothRows
       .filter((booth) => booth.tenantId)
-      .map((booth) => [booth.tenantId as string, booth])
+      .map((booth) => [booth.tenantId as string, booth]),
   );
 
   const today = Date.now();
 
   return rows.map(({ invoice, tenantName }) => {
     const booth = boothByTenant.get(invoice.tenantId);
-    const overdue = invoice.status !== "paid" && invoice.dueDate.getTime() < today;
+    const overdue =
+      invoice.status !== "paid" && invoice.dueDate.getTime() < today;
 
     return {
       id: invoice.id,
@@ -61,7 +64,8 @@ export async function loadRentInvoices(tenantId?: string): Promise<RentInvoice[]
       electricityFee: invoice.electricityFee,
       totalAmount: invoice.totalAmount,
       dueDate: formatRentDate(invoice.dueDate),
-      status: invoice.status === "paid" ? "paid" : overdue ? "overdue" : "unpaid",
+      status:
+        invoice.status === "paid" ? "paid" : overdue ? "overdue" : "unpaid",
       paidAt: invoice.paidAt ? formatRentDate(invoice.paidAt) : undefined,
       paymentMethod: invoice.paymentMethod || undefined,
       receiptNumber: invoice.receiptNumber || undefined,

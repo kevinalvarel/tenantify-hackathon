@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Mail,
   Phone,
@@ -21,13 +22,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ConfirmDeleteDialog } from "@/components/association/layout/confirm-delete-dialog";
+import type { LayoutActionResult } from "@/servers/association-server";
+import { toast } from "sonner";
 
 type TenantDetailDialogProps = {
   tenant: AssociationTenant | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onToggleStatus: (tenantId: string) => void;
-  onDeleteTenant: (tenantId: string) => void;
+  onDeleteTenant: (tenantId: string) => Promise<LayoutActionResult>;
 };
 
 export function TenantDetailDialog({
@@ -37,9 +41,23 @@ export function TenantDetailDialog({
   onToggleStatus,
   onDeleteTenant,
 }: TenantDetailDialogProps) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   if (!tenant) return null;
 
+  const handleDeleteConfirm = async () => {
+    const result = await onDeleteTenant(tenant.id);
+    if (!result.success) {
+      toast.error(result.message);
+      return false;
+    }
+    toast.success(result.message);
+    onOpenChange(false);
+    return true;
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
@@ -145,10 +163,7 @@ export function TenantDetailDialog({
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => {
-              onDeleteTenant(tenant.id);
-              onOpenChange(false);
-            }}
+            onClick={() => setConfirmOpen(true)}
             className="text-xs w-full sm:w-auto gap-1"
           >
             <Trash2 className="size-3.5" />
@@ -178,5 +193,17 @@ export function TenantDetailDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {confirmOpen && (
+      <ConfirmDeleteDialog
+        open
+        onOpenChange={(next) => !next && setConfirmOpen(false)}
+        title="Hapus tenant?"
+        description={`Tenant "${tenant.name}" beserta produk, pesanan, dan tagihan sewanya akan dihapus permanen.`}
+        confirmLabel="Hapus tenant"
+        onConfirm={handleDeleteConfirm}
+      />
+    )}
+    </>
   );
 }

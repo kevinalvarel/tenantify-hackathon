@@ -96,7 +96,7 @@ export function AreaLayoutManagement({
       activeZoneCode === "all"
         ? zones
         : zones.filter((zone) => zone.code === activeZoneCode),
-    [zones, activeZoneCode]
+    [zones, activeZoneCode],
   );
 
   const statusCounts = useMemo(() => {
@@ -105,7 +105,7 @@ export function AreaLayoutManagement({
         acc[booth.status] += 1;
         return acc;
       },
-      { occupied: 0, available: 0, reserved: 0 }
+      { occupied: 0, available: 0, reserved: 0 },
     );
   }, [booths]);
 
@@ -121,13 +121,10 @@ export function AreaLayoutManagement({
 
   const occupiedByZone = (zoneCode: string) =>
     (boothsByZone.get(zoneCode) || []).filter(
-      (booth) => booth.status === "occupied"
+      (booth) => booth.status === "occupied",
     ).length;
 
-  const existingCodes = useMemo(
-    () => zones.map((zone) => zone.code),
-    [zones]
-  );
+  const existingCodes = useMemo(() => zones.map((zone) => zone.code), [zones]);
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return false;
@@ -317,7 +314,10 @@ export function AreaLayoutManagement({
                       <h4 className="text-sm font-bold text-foreground">
                         {zone.name}
                       </h4>
-                      <Badge variant="outline" className="font-mono text-[10px]">
+                      <Badge
+                        variant="outline"
+                        className="font-mono text-[10px]"
+                      >
                         {zone.code}
                       </Badge>
                     </div>
@@ -369,7 +369,11 @@ export function AreaLayoutManagement({
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        setBoothDialog({ open: true, booth: null, zoneId: zone.id })
+                        setBoothDialog({
+                          open: true,
+                          booth: null,
+                          zoneId: zone.id,
+                        })
                       }
                       className="min-h-11 gap-1.5 sm:min-h-7"
                     >
@@ -390,7 +394,7 @@ export function AreaLayoutManagement({
                         <div
                           key={booth.id}
                           className={`flex min-h-[120px] flex-col rounded-xl border transition-colors ${boothTone(
-                            booth.status
+                            booth.status,
                           )}`}
                         >
                           <button
@@ -460,7 +464,10 @@ export function AreaLayoutManagement({
                                 title="Ubah booth"
                                 className="min-h-11 min-w-11 text-muted-foreground hover:text-foreground sm:min-h-8 sm:min-w-8"
                               >
-                                <Pencil className="size-3.5" aria-hidden="true" />
+                                <Pencil
+                                  className="size-3.5"
+                                  aria-hidden="true"
+                                />
                               </Button>
                               <Button
                                 variant="ghost"
@@ -481,7 +488,10 @@ export function AreaLayoutManagement({
                                 }
                                 className="min-h-11 min-w-11 text-muted-foreground hover:text-destructive sm:min-h-8 sm:min-w-8"
                               >
-                                <Trash2 className="size-3.5" aria-hidden="true" />
+                                <Trash2
+                                  className="size-3.5"
+                                  aria-hidden="true"
+                                />
                               </Button>
                             </div>
                           </div>
@@ -497,7 +507,11 @@ export function AreaLayoutManagement({
                       variant="outline"
                       size="sm"
                       onClick={() =>
-                        setBoothDialog({ open: true, booth: null, zoneId: zone.id })
+                        setBoothDialog({
+                          open: true,
+                          booth: null,
+                          zoneId: zone.id,
+                        })
                       }
                       className="min-h-11 gap-1.5 sm:min-h-7"
                     >
@@ -551,9 +565,7 @@ export function AreaLayoutManagement({
       {boothDialog.open && (
         <BoothFormDialog
           open
-          onOpenChange={(open) =>
-            setBoothDialog((prev) => ({ ...prev, open }))
-          }
+          onOpenChange={(open) => setBoothDialog((prev) => ({ ...prev, open }))}
           zones={zones}
           booth={boothDialog.booth}
           defaultZoneId={boothDialog.zoneId}

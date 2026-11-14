@@ -28,11 +28,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TenantDetailDialog } from "@/components/association/tenant-detail-dialog";
+import { ConfirmDeleteDialog } from "@/components/association/layout/confirm-delete-dialog";
+import type { LayoutActionResult } from "@/servers/association-server";
+import { toast } from "sonner";
 
 type TenantManagementProps = {
   tenants: AssociationTenant[];
   onToggleStatus: (tenantId: string) => void;
-  onDeleteTenant: (tenantId: string) => void;
+  onDeleteTenant: (tenantId: string) => Promise<LayoutActionResult>;
   onSelectTenant?: (tenant: AssociationTenant) => void;
 };
 
@@ -62,6 +65,9 @@ export function TenantManagement({
   const [statusFilter, setStatusFilter] = useState<TenantStatus | "all">("all");
   const [localSelectedTenant, setLocalSelectedTenant] =
     useState<AssociationTenant | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AssociationTenant | null>(
+    null
+  );
 
   const handleInspectTenant = (tenant: AssociationTenant) => {
     if (onSelectTenant) {
@@ -69,6 +75,17 @@ export function TenantManagement({
     } else {
       setLocalSelectedTenant(tenant);
     }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return false;
+    const result = await onDeleteTenant(deleteTarget.id);
+    if (!result.success) {
+      toast.error(result.message);
+      return false;
+    }
+    toast.success(result.message);
+    return true;
   };
 
   // Filtered list
@@ -287,7 +304,7 @@ export function TenantManagement({
                             variant="ghost"
                             size="icon"
                             className="size-7 text-muted-foreground hover:text-destructive"
-                            onClick={() => onDeleteTenant(tenant.id)}
+                            onClick={() => setDeleteTarget(tenant)}
                             title="Hapus Tenant"
                           >
                             <Trash2 className="size-3.5" />
@@ -310,6 +327,17 @@ export function TenantManagement({
           onOpenChange={(open) => !open && setLocalSelectedTenant(null)}
           onToggleStatus={onToggleStatus}
           onDeleteTenant={onDeleteTenant}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmDeleteDialog
+          open
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          title="Hapus tenant?"
+          description={`Tenant "${deleteTarget.name}" beserta produk, pesanan, dan tagihan sewanya akan dihapus permanen. Booth ${deleteTarget.boothNumber || "-"} akan dilepas.`}
+          confirmLabel="Hapus tenant"
+          onConfirm={handleDeleteConfirm}
         />
       )}
     </div>
