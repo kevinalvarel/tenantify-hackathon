@@ -31,6 +31,12 @@ import {
   type TSaveFloorplan,
   type TUpdateBooth,
 } from "@/validations/association-layout";
+import {
+  ASSOCIATION_DATA_TTL,
+  cacheKeys,
+  cached,
+  invalidateTenantData,
+} from "@/lib/cache";
 
 export type AssociationData = {
   tenants: AssociationTenant[];
@@ -163,9 +169,18 @@ async function loadAssociationData(): Promise<AssociationData> {
   };
 }
 
+async function freshAssociationData(): Promise<AssociationData> {
+  await invalidateTenantData();
+  return loadAssociationData();
+}
+
 export async function getAssociationDataAction(): Promise<AssociationDataResult> {
   try {
-    return await loadAssociationData();
+    return await cached(
+      cacheKeys.associationData,
+      ASSOCIATION_DATA_TTL,
+      loadAssociationData,
+    );
   } catch (error) {
     console.error("Gagal mengambil data association dari database:", error);
     return {
@@ -277,7 +292,7 @@ export async function createZoneAction(
         boothNumbers.length > 0
           ? `Zona ${data.code} dengan ${boothNumbers.length} booth ditambahkan.`
           : `Zona ${data.code} ditambahkan.`,
-      data: await loadAssociationData(),
+      data: await freshAssociationData(),
     };
   } catch (error) {
     return { success: false, message: messageOf(error) };
@@ -327,7 +342,7 @@ export async function deleteZoneAction(id: string): Promise<LayoutActionResult> 
     return {
       success: true,
       message: `Zona ${deleted[0].code} dan booth kosong di dalamnya dihapus.`,
-      data: await loadAssociationData(),
+      data: await freshAssociationData(),
     };
   } catch (error) {
     return { success: false, message: messageOf(error) };
@@ -392,7 +407,7 @@ export async function createBoothAction(
     return {
       success: true,
       message: `Booth ${data.boothNumber} ditambahkan ke zona ${zone[0].code}.`,
-      data: await loadAssociationData(),
+      data: await freshAssociationData(),
     };
   } catch (error) {
     return { success: false, message: messageOf(error) };
@@ -470,7 +485,7 @@ export async function updateBoothAction(
     return {
       success: true,
       message: `Booth ${data.boothNumber} diperbarui.`,
-      data: await loadAssociationData(),
+      data: await freshAssociationData(),
     };
   } catch (error) {
     return { success: false, message: messageOf(error) };
@@ -516,7 +531,7 @@ export async function deleteBoothAction(
     return {
       success: true,
       message: `Booth ${existing[0].boothNumber} dihapus.`,
-      data: await loadAssociationData(),
+      data: await freshAssociationData(),
     };
   } catch (error) {
     return { success: false, message: messageOf(error) };
@@ -558,7 +573,7 @@ export async function deleteTenantAction(
     return {
       success: true,
       message: `Tenant "${existing[0].name}" berhasil dihapus.`,
-      data: await loadAssociationData(),
+      data: await freshAssociationData(),
     };
   } catch (error) {
     return { success: false, message: messageOf(error) };
@@ -746,7 +761,7 @@ export async function saveFloorplanAction(
     return {
       success: true,
       message: "Denah berhasil disimpan.",
-      data: await loadAssociationData(),
+      data: await freshAssociationData(),
     };
   } catch (error) {
     return { success: false, message: messageOf(error) };

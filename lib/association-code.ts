@@ -16,7 +16,6 @@ export function generateAssociationCode() {
 export async function assignAssociationCode(userId: string) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = generateAssociationCode();
-    // shortcut: cek unik sebelum update, tabrakan sangat kecil — tambahkan retry saat volume naik
     const [taken] = await db
       .select({ id: user.id })
       .from(user)

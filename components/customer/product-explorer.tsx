@@ -118,7 +118,9 @@ function ProductCardImage({ product }: { product: CustomerProduct }) {
       {/* Floating Rating Pill */}
       <span className="absolute top-3 right-3 bg-white/95 dark:bg-neutral-900/90 backdrop-blur-sm text-neutral-900 dark:text-neutral-100 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
         <Star className="size-3.5 fill-[#c85a32] text-[#c85a32]" />
-        <span>{product.rating > 0 ? Number(product.rating).toFixed(1) : "5.0"}</span>
+        <span>
+          {product.rating > 0 ? Number(product.rating).toFixed(1) : "5.0"}
+        </span>
       </span>
 
       {/* Discount Tag */}
@@ -168,7 +170,8 @@ function ProductCard({
             {product.name}
           </h3>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed font-normal">
-            {product.description || `Menu hidangan istimewa dari ${product.tenantName}.`}
+            {product.description ||
+              `Menu hidangan istimewa dari ${product.tenantName}.`}
           </p>
         </div>
       </div>
@@ -187,7 +190,9 @@ function ProductCard({
             <p
               className={cn(
                 "text-[10px] font-medium mt-0.5",
-                isOutOfStock ? "text-red-500 font-bold" : "text-neutral-400 dark:text-neutral-500",
+                isOutOfStock
+                  ? "text-red-500 font-bold"
+                  : "text-neutral-400 dark:text-neutral-500",
               )}
             >
               {isOutOfStock ? "Stok habis" : `Tersedia ${product.stock} porsi`}
@@ -545,8 +550,9 @@ export function ProductExplorer({
               Belum ada menu yang tersedia di UMKM ini
             </h3>
             <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 max-w-md mt-2 leading-relaxed">
-              Pemilik stan UMKM ini belum mendisplay produk menu di etalase katalognya.
-              Silakan cek kembali beberapa saat lagi atau beralih ke UMKM lainnya.
+              Pemilik stan UMKM ini belum mendisplay produk menu di etalase
+              katalognya. Silakan cek kembali beberapa saat lagi atau beralih ke
+              UMKM lainnya.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <Button
@@ -573,34 +579,36 @@ export function ProductExplorer({
         )}
 
         {/* Empty State 2: Filter / Search tidak menemukan menu */}
-        {!isLoadingProducts && products.length > 0 && filteredProducts.length === 0 && (
-          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-800 p-12 sm:p-16 text-center text-muted-foreground bg-white dark:bg-neutral-900/40">
-            <div className="flex size-14 items-center justify-center rounded-full bg-[#ffdbcf] text-[#c85a32] mb-3">
-              <UtensilsCrossed className="size-6" />
+        {!isLoadingProducts &&
+          products.length > 0 &&
+          filteredProducts.length === 0 && (
+            <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-800 p-12 sm:p-16 text-center text-muted-foreground bg-white dark:bg-neutral-900/40">
+              <div className="flex size-14 items-center justify-center rounded-full bg-[#ffdbcf] text-[#c85a32] mb-3">
+                <UtensilsCrossed className="size-6" />
+              </div>
+              <p className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+                Menu tidak ditemukan
+              </p>
+              <p className="text-xs sm:text-sm text-neutral-500 max-w-sm mt-1 leading-relaxed">
+                Tidak ada produk yang cocok dengan kata kunci atau filter tenant
+                yang Anda pilih.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedTenantId("all");
+                  setSelectedCategory("Semua");
+                  setSortBy("default");
+                }}
+                className="mt-4 gap-1.5 rounded-full text-xs font-semibold cursor-pointer border-[#c85a32] text-[#c85a32] hover:bg-[#c85a32] hover:text-white"
+              >
+                <X className="size-3.5" />
+                Reset Semua Filter
+              </Button>
             </div>
-            <p className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-              Menu tidak ditemukan
-            </p>
-            <p className="text-xs sm:text-sm text-neutral-500 max-w-sm mt-1 leading-relaxed">
-              Tidak ada produk yang cocok dengan kata kunci atau filter tenant
-              yang Anda pilih.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedTenantId("all");
-                setSelectedCategory("Semua");
-                setSortBy("default");
-              }}
-              className="mt-4 gap-1.5 rounded-full text-xs font-semibold cursor-pointer border-[#c85a32] text-[#c85a32] hover:bg-[#c85a32] hover:text-white"
-            >
-              <X className="size-3.5" />
-              Reset Semua Filter
-            </Button>
-          </div>
-        )}
+          )}
       </div>
     </section>
   );

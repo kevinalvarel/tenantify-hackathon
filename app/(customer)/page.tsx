@@ -47,80 +47,80 @@ export default function CustomerExplorePage() {
           <div className="relative overflow-hidden rounded-3xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900/95 p-6 sm:p-10 shadow-xl shadow-black/5 text-center flex flex-col items-center">
             <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#c85a32] via-[#e57342] to-amber-500" />
 
-          {/* Badge Pengenal */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#c85a32]/10 text-[#c85a32] text-xs font-bold uppercase tracking-wider mb-4">
-            <Layers className="size-3.5" />
-            <span>Sistem Multi-UMKM & Paguyuban</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-neutral-900 dark:text-neutral-50 tracking-tight max-w-2xl leading-tight">
-            Pesan Menu Langsung dari UMKM Pilihanmu
-          </h1>
-
-          <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-300 max-w-xl leading-relaxed">
-            Tenantify menampung berbagai paguyuban dan stan UMKM kuliner. Daftar
-            menu disesuaikan dengan lokasi UMKM yang kamu tuju.
-            <strong className="block text-neutral-900 dark:text-white font-semibold mt-1">
-              Silakan masukkan Kode Unik stan/paguyuban untuk melihat menu
-              hidangan.
-            </strong>
-          </p>
-
-          {/* NAVIGASI JOIN: Tombol Utama ke Halaman Join */}
-          <div className="mt-6 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-            <Link
-              href="/join"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 sm:py-4 rounded-full bg-[#c85a32] hover:bg-[#b34a24] text-white font-bold text-sm sm:text-base shadow-xl shadow-[#c85a32]/25 transition-all transform hover:-translate-y-0.5 active:scale-95 select-none"
-            >
-              <LogIn className="size-5 shrink-0" />
-              <span>Masukkan Kode Unik (Join)</span>
-              <ArrowRight className="size-4 shrink-0" />
-            </Link>
-          </div>
-
-          {/* 3 Keunggulan Fitur Paguyuban */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-3xl mt-8 pt-6 border-t border-neutral-200/80 dark:border-neutral-800 text-left">
-            <div className="flex items-start gap-3 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/30">
-              <Store className="size-5 text-[#c85a32] shrink-0 mt-0.5" />
-              <div>
-                <h2 className="text-xs font-bold text-neutral-900 dark:text-white">
-                  Multi-UMKM Terpusat
-                </h2>
-                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  Setiap UMKM & paguyuban memiliki kode unik tersendiri.
-                </p>
-              </div>
+            {/* Badge Pengenal */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#c85a32]/10 text-[#c85a32] text-xs font-bold uppercase tracking-wider mb-4">
+              <Layers className="size-3.5" />
+              <span>Sistem Multi-UMKM & Paguyuban</span>
             </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/30">
-              <UtensilsCrossed className="size-5 text-[#c85a32] shrink-0 mt-0.5" />
-              <div>
-                <h2 className="text-xs font-bold text-neutral-900 dark:text-white">
-                  Menu Khusus Sesuai UMKM
-                </h2>
-                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  Hanya menampilkan menu otentik milik UMKM yang kamu tuju.
-                </p>
-              </div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-neutral-900 dark:text-neutral-50 tracking-tight max-w-2xl leading-tight">
+              Pesan Menu Langsung dari UMKM Pilihanmu
+            </h1>
+
+            <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-300 max-w-xl leading-relaxed">
+              Tenantify menampung berbagai paguyuban dan stan UMKM kuliner.
+              Daftar menu disesuaikan dengan lokasi UMKM yang kamu tuju.
+              <strong className="block text-neutral-900 dark:text-white font-semibold mt-1">
+                Silakan masukkan Kode Unik stan/paguyuban untuk melihat menu
+                hidangan.
+              </strong>
+            </p>
+
+            {/* NAVIGASI JOIN: Tombol Utama ke Halaman Join */}
+            <div className="mt-6 flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+              <Link
+                href="/join"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 sm:py-4 rounded-full bg-[#c85a32] hover:bg-[#b34a24] text-white font-bold text-sm sm:text-base shadow-xl shadow-[#c85a32]/25 transition-all transform hover:-translate-y-0.5 active:scale-95 select-none"
+              >
+                <LogIn className="size-5 shrink-0" />
+                <span>Masukkan Kode Unik (Join)</span>
+                <ArrowRight className="size-4 shrink-0" />
+              </Link>
             </div>
 
-            <div className="flex items-start gap-3 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/30">
-              <ShieldCheck className="size-5 text-[#c85a32] shrink-0 mt-0.5" />
-              <div>
-                <h2 className="text-xs font-bold text-neutral-900 dark:text-white">
-                  Notifikasi Real-Time
-                </h2>
-                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  Lacak proses pesanan dari persiapan hingga siap diambil.
-                </p>
+            {/* 3 Keunggulan Fitur Paguyuban */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-3xl mt-8 pt-6 border-t border-neutral-200/80 dark:border-neutral-800 text-left">
+              <div className="flex items-start gap-3 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/30">
+                <Store className="size-5 text-[#c85a32] shrink-0 mt-0.5" />
+                <div>
+                  <h2 className="text-xs font-bold text-neutral-900 dark:text-white">
+                    Multi-UMKM Terpusat
+                  </h2>
+                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    Setiap UMKM & paguyuban memiliki kode unik tersendiri.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/30">
+                <UtensilsCrossed className="size-5 text-[#c85a32] shrink-0 mt-0.5" />
+                <div>
+                  <h2 className="text-xs font-bold text-neutral-900 dark:text-white">
+                    Menu Khusus Sesuai UMKM
+                  </h2>
+                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    Hanya menampilkan menu otentik milik UMKM yang kamu tuju.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/30">
+                <ShieldCheck className="size-5 text-[#c85a32] shrink-0 mt-0.5" />
+                <div>
+                  <h2 className="text-xs font-bold text-neutral-900 dark:text-white">
+                    Notifikasi Real-Time
+                  </h2>
+                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    Lacak proses pesanan dari persiapan hingga siap diambil.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-full min-w-0">

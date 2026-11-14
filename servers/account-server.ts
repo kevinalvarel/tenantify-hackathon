@@ -12,6 +12,7 @@ import {
   type TCreateSellerSchema,
   type TCreateAssociationSchema,
 } from "@/validations/auth-validation";
+import { invalidateTenantData } from "@/lib/cache";
 
 export type AccountResponse = {
   success: boolean;
@@ -99,6 +100,8 @@ export async function createSellerWithTenantAction(
       isOpen: true,
       avatar: "/icons/logo-lightmode.png",
     });
+
+    await invalidateTenantData();
 
     // 3. Jika nomor booth dipilih, perbarui status booth
     if (validated.data.boothNumber) {

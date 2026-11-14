@@ -20,6 +20,7 @@ import {
 } from "@/validations/product-validation";
 import { deleteBlobAction } from "@/servers/blob-server";
 import { loadRentInvoices } from "@/servers/rent-data";
+import { invalidateTenantData } from "@/lib/cache";
 
 export async function getSellerDataAction(): Promise<{
   products: Product[];
@@ -191,6 +192,7 @@ export async function createProductAction(
 
     revalidatePath("/dashboard/seller/stock");
     revalidatePath("/");
+    await invalidateTenantData();
 
     return {
       success: true,
@@ -240,6 +242,7 @@ export async function updateProductStockAction(
 
     revalidatePath("/dashboard/seller/stock");
     revalidatePath("/");
+    await invalidateTenantData();
 
     return { success: true, message: "Stok produk berhasil diperbarui." };
   } catch (error) {
@@ -279,6 +282,7 @@ export async function toggleProductActiveAction(
 
     revalidatePath("/dashboard/seller/stock");
     revalidatePath("/");
+    await invalidateTenantData();
 
     return { success: true, message: "Status produk berhasil diubah." };
   } catch (error) {
@@ -324,6 +328,7 @@ export async function deleteProductAction(
 
     revalidatePath("/dashboard/seller/stock");
     revalidatePath("/");
+    await invalidateTenantData();
 
     return {
       success: true,
