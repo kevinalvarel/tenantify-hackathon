@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useState,
   useCallback,
+  useRef,
 } from "react";
 import {
   CustomerProduct,
@@ -31,7 +32,8 @@ function playCustomerChime() {
   try {
     const AudioContextClass =
       window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
     if (!AudioContextClass) return;
 
     const ctx = new AudioContextClass();
@@ -65,7 +67,9 @@ type CustomerContextType = {
   activeUmkm: ActiveUmkm | null;
   setActiveUmkm: (umkm: ActiveUmkm | null) => void;
   leaveUmkm: () => void;
-  joinUmkmByCode: (code: string) => Promise<{ success: boolean; message: string; umkm?: ActiveUmkm }>;
+  joinUmkmByCode: (
+    code: string,
+  ) => Promise<{ success: boolean; message: string; umkm?: ActiveUmkm }>;
   orders: CustomerOrder[];
   promotions: Promotion[];
   promotionsCount: number;
@@ -76,7 +80,11 @@ type CustomerContextType = {
   setSelectedCategory: (category: string) => void;
   isNutritionModalOpen: boolean;
   setIsNutritionModalOpen: (open: boolean) => void;
-  addToCart: (product: CustomerProduct, quantity?: number, notes?: string) => void;
+  addToCart: (
+    product: CustomerProduct,
+    quantity?: number,
+    notes?: string,
+  ) => void;
   updateQuantity: (productId: string, delta: number) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
@@ -89,7 +97,9 @@ type CustomerContextType = {
   refreshProducts: (targetUmkm?: ActiveUmkm | null) => Promise<void>;
 };
 
-const CustomerContext = createContext<CustomerContextType | undefined>(undefined);
+const CustomerContext = createContext<CustomerContextType | undefined>(
+  undefined,
+);
 
 const ACTIVE_UMKM_STORAGE_KEY = "tenantify:active_umkm";
 
@@ -149,7 +159,10 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     setActiveUmkmState(umkm);
     try {
       if (umkm) {
-        window.localStorage.setItem(ACTIVE_UMKM_STORAGE_KEY, JSON.stringify(umkm));
+        window.localStorage.setItem(
+          ACTIVE_UMKM_STORAGE_KEY,
+          JSON.stringify(umkm),
+        );
       } else {
         window.localStorage.removeItem(ACTIVE_UMKM_STORAGE_KEY);
       }
@@ -186,7 +199,9 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     setActiveUmkm(null);
     setAllProducts([]);
     setSelectedCategory("Semua");
-    toast.info("Anda telah keluar dari UMKM. Masukkan kode baru untuk melihat menu.");
+    toast.info(
+      "Anda telah keluar dari UMKM. Masukkan kode baru untuk melihat menu.",
+    );
   };
 
   const joinUmkmByCode = async (code: string) => {
@@ -382,9 +397,7 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
     if (!activeUmkm) return [];
 
     if (activeUmkm.tenantIds && activeUmkm.tenantIds.length > 0) {
-      return allTenants.filter((t) =>
-        activeUmkm.tenantIds!.includes(t.id),
-      );
+      return allTenants.filter((t) => activeUmkm.tenantIds!.includes(t.id));
     }
 
     return allTenants;
@@ -392,12 +405,13 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
 
   const cartItemCount = useMemo(
     () => cart.reduce((sum, item) => sum + item.quantity, 0),
-    [cart]
+    [cart],
   );
 
   const cartTotal = useMemo(
-    () => cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
-    [cart]
+    () =>
+      cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    [cart],
   );
 
   const activeOrdersCount = useMemo(
@@ -406,26 +420,27 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
         (o) =>
           o.status === "Diterima" ||
           o.status === "Disiapkan" ||
-          o.status === "Siap Diambil"
+          o.status === "Siap Diambil",
       ).length,
-    [orders]
+    [orders],
   );
 
   const addToCart = (
     product: CustomerProduct,
     quantity: number = 1,
-    notes?: string
+    notes?: string,
   ) => {
     setCart((prev) => {
       const existingIndex = prev.findIndex(
         (item) =>
-          item.product.id === product.id && (item.notes || "") === (notes || "")
+          item.product.id === product.id &&
+          (item.notes || "") === (notes || ""),
       );
       if (existingIndex > -1) {
         return prev.map((item, idx) =>
           idx === existingIndex
             ? { ...item, quantity: item.quantity + quantity }
-            : item
+            : item,
         );
       }
       return [...prev, { product, quantity, notes }];
@@ -441,7 +456,7 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
           }
           return item;
         })
-        .filter((item) => item.quantity > 0)
+        .filter((item) => item.quantity > 0),
     );
   };
 
@@ -476,7 +491,9 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
       setCart((prev) => {
         const nextCart = [...prev];
         itemsToAdd.forEach((newItem) => {
-          const idx = nextCart.findIndex((c) => c.product.id === newItem.product.id);
+          const idx = nextCart.findIndex(
+            (c) => c.product.id === newItem.product.id,
+          );
           if (idx >= 0) {
             nextCart[idx].quantity += newItem.quantity;
           } else {
