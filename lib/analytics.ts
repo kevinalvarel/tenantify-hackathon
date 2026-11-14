@@ -4,6 +4,7 @@ import type {
   AnalyticsRange,
   AnalyticsTotals,
   AssociationAnalytics,
+  AssociationOrderRecord,
   CategoryAnalyticsSlice,
   DailyAnalyticsPoint,
   HourlyAnalyticsPoint,
@@ -39,6 +40,39 @@ const STANDARD_HOURS = [
   "21.00",
 ];
 
+function parseLocalDateAndHour(createdAt: Date | string) {
+  const d = createdAt instanceof Date ? createdAt : new Date(createdAt);
+  if (isNaN(d.getTime())) return null;
+
+  try {
+    const dateFormatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Jakarta",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const dateStr = dateFormatter.format(d);
+
+    const hourFormatter = new Intl.DateTimeFormat("id-ID", {
+      timeZone: "Asia/Jakarta",
+      hour: "2-digit",
+      hour12: false,
+    });
+    let hourStr = hourFormatter.format(d);
+    if (hourStr === "24") hourStr = "00";
+    const hourKey = `${hourStr.padStart(2, "0")}.00`;
+
+    return { dateStr, hourKey };
+  } catch {
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return {
+      dateStr: `${d.getFullYear()}-${month}-${day}`,
+      hourKey: `${String(d.getHours()).padStart(2, "0")}.00`,
+    };
+  }
+}
+
 function generateDailyPoints(today: string, days: number): DailyAnalyticsPoint[] {
   const points: DailyAnalyticsPoint[] = [];
   const baseDate = new Date(`${today}T00:00:00`);
@@ -68,62 +102,263 @@ export function buildAssociationAnalytics(
   tenants: AssociationTenant[],
   range: AnalyticsRange,
   today: string,
+  orders: AssociationOrderRecord[] = [],
 ): AssociationAnalytics {
   const activeTenants = tenants.filter((t) => t.status === "active");
-  const totalRevenue = activeTenants.reduce((sum, t) => sum + (t.monthlyRevenue || 0), 0);
+  const tenantMap = new Map(tenants.map((t) => [t.id, t]));
 
   const daily = generateDailyPoints(today, range);
+  const dailyMap = new Map(daily.map((p) => [p.date, p]));
+
+  // Calculate previous period dates for comparison
+  const basePrevDate = new Date(`${daily[0].date}T00:00:00`);
+  basePrevDate.setDate(basePrevDate.getDate() - 1);
+  const prevMonth = String(basePrevDate.getMonth() + 1).padStart(2, "0");
+  const prevDay = String(basePrevDate.getDate()).padStart(2, "0");
+  const prevEndDateStr = `${basePrevDate.getFullYear()}-${prevMonth}-${prevDay}`;
+  const previousDaily = generateDailyPoints(prevEndDateStr, range);
+  const prevDateSet = new Set(previousDaily.map((p) => p.date));
+
+  const hourlyCounts: Record<string, number> = {};
+  const paymentCounts: Record<string, number> = {
+    QRIS: 0,
+    Tunai: 0,
+    "Virtual Account": 0,
+    "Debit / Transfer": 0,
+  };
+  const categoryRevenue: Record<string, number> = {};
+  const tenantStats: Record<
+    string,
+    { revenue: number; transactions: number; visitors: number }
+  > = {};
+
+  for (const t of activeTenants) {
+    tenantStats[t.id] = { revenue: 0, transactions: 0, visitors: 0 };
+    categoryRevenue[t.category] = categoryRevenue[t.category] || 0;
+  }
+
+  let completedRevenue = 0;
+  let completedTransactions = 0;
+  let completedVisitors = 0;
+  let previousRevenue = 0;
+  let previousTransactions = 0;
+
+  const validOrders = orders.filter(
+    (o) =>
+      o.status !== "Dibatalkan" &&
+      (o.status === "Selesai" || o.isPaid === true),
+  );
+
+  for (const ord of validOrders) {
+    const dt = parseLocalDateAndHour(ord.createdAt);
+    if (!dt) continue;
+
+    // Check if order falls into current range
+    const currentPoint = dailyMap.get(dt.dateStr);
+    if (currentPoint) {
+      completedRevenue += ord.total;
+      completedTransactions += 1;
+      completedVisitors += 1;
+
+      currentPoint.revenue += ord.total;
+      currentPoint.transactions += 1;
+      currentPoint.visitors += 1;
+
+      // Hourly
+      hourlyCounts[dt.hourKey] = (hourlyCounts[dt.hourKey] || 0) + 1;
+
+      // Payment method normalization
+      const pm = (ord.paymentMethod || "").toLowerCase();
+      if (pm.includes("qris")) {
+        paymentCounts["QRIS"] = (paymentCounts["QRIS"] || 0) + 1;
+      } else if (pm.includes("tunai") || pm.includes("cash")) {
+        paymentCounts["Tunai"] = (paymentCounts["Tunai"] || 0) + 1;
+      } else if (pm.includes("virtual") || pm.includes("va")) {
+        paymentCounts["Virtual Account"] =
+          (paymentCounts["Virtual Account"] || 0) + 1;
+      } else {
+        paymentCounts["Debit / Transfer"] =
+          (paymentCounts["Debit / Transfer"] || 0) + 1;
+      }
+
+      // Tenant stats
+      if (!tenantStats[ord.tenantId]) {
+        tenantStats[ord.tenantId] = {
+          revenue: 0,
+          transactions: 0,
+          visitors: 0,
+        };
+      }
+      tenantStats[ord.tenantId].revenue += ord.total;
+      tenantStats[ord.tenantId].transactions += 1;
+      tenantStats[ord.tenantId].visitors += 1;
+
+      // Category
+      const tenant = tenantMap.get(ord.tenantId);
+      const cat = ord.tenantCategory || tenant?.category || "Makanan";
+      categoryRevenue[cat] = (categoryRevenue[cat] || 0) + ord.total;
+    } else if (prevDateSet.has(dt.dateStr)) {
+      previousRevenue += ord.total;
+      previousTransactions += 1;
+    }
+  }
+
+  // Fallback to tenant monthlyRevenue if no orders array passed or empty
+  if (
+    completedTransactions === 0 &&
+    activeTenants.some((t) => (t.monthlyRevenue || 0) > 0)
+  ) {
+    for (const t of activeTenants) {
+      const rev = t.monthlyRevenue || 0;
+      if (rev > 0) {
+        categoryRevenue[t.category] = (categoryRevenue[t.category] || 0) + rev;
+        if (tenantStats[t.id]) {
+          tenantStats[t.id].revenue = rev;
+        }
+        completedRevenue += rev;
+      }
+    }
+  }
 
   const hourly: HourlyAnalyticsPoint[] = STANDARD_HOURS.map((h) => ({
     hour: h,
-    transactions: 0,
+    transactions: hourlyCounts[h] || 0,
   }));
 
-  // Categories
-  const categoryTotals: Record<string, number> = {};
-  for (const t of activeTenants) {
-    categoryTotals[t.category] = (categoryTotals[t.category] || 0) + (t.monthlyRevenue || 0);
+  let peakHour: string | null = null;
+  let maxHourlyTx = 0;
+  for (const h of STANDARD_HOURS) {
+    const tx = hourlyCounts[h] || 0;
+    if (tx > maxHourlyTx) {
+      maxHourlyTx = tx;
+      peakHour = h;
+    }
   }
 
-  const categories: CategoryAnalyticsSlice[] = Object.entries(categoryTotals).map(
-    ([category, rev]) => ({
-      category,
-      revenue: rev,
-      share: totalRevenue > 0 ? Math.round((rev / totalRevenue) * 100) : 0,
-    }),
-  );
+  let peakDay: string | null = null;
+  let maxDailyRev = 0;
+  for (const p of daily) {
+    if (p.revenue > maxDailyRev) {
+      maxDailyRev = p.revenue;
+      peakDay = p.fullLabel;
+    }
+  }
 
-  // Top tenants
-  const topTenants: TenantAnalyticsRank[] = [...activeTenants]
-    .sort((a, b) => (b.monthlyRevenue || 0) - (a.monthlyRevenue || 0))
-    .slice(0, 5)
-    .map((t) => ({
-      id: t.id,
-      name: t.name,
-      owner: t.owner,
-      category: t.category,
-      revenue: t.monthlyRevenue || 0,
-      transactions: 0,
-      share: totalRevenue > 0 ? Math.round(((t.monthlyRevenue || 0) / totalRevenue) * 100) : 0,
-    }));
+  const totalPayments =
+    paymentCounts["QRIS"] +
+    paymentCounts["Tunai"] +
+    paymentCounts["Virtual Account"] +
+    paymentCounts["Debit / Transfer"];
 
   const payments: PaymentAnalyticsSlice[] = [
-    { key: "qris", label: "QRIS", transactions: 0, share: 0, fill: "var(--chart-1)" },
-    { key: "cash", label: "Tunai", transactions: 0, share: 0, fill: "var(--chart-3)" },
-    { key: "va", label: "Virtual Account", transactions: 0, share: 0, fill: "var(--muted-foreground)" },
-    { key: "transfer", label: "Debit / Transfer", transactions: 0, share: 0, fill: "var(--foreground)" },
+    {
+      key: "qris",
+      label: "QRIS",
+      transactions: paymentCounts["QRIS"],
+      share:
+        totalPayments > 0
+          ? Math.round((paymentCounts["QRIS"] / totalPayments) * 100)
+          : 0,
+      fill: "var(--chart-1)",
+    },
+    {
+      key: "cash",
+      label: "Tunai",
+      transactions: paymentCounts["Tunai"],
+      share:
+        totalPayments > 0
+          ? Math.round((paymentCounts["Tunai"] / totalPayments) * 100)
+          : 0,
+      fill: "var(--chart-3)",
+    },
+    {
+      key: "va",
+      label: "Virtual Account",
+      transactions: paymentCounts["Virtual Account"],
+      share:
+        totalPayments > 0
+          ? Math.round((paymentCounts["Virtual Account"] / totalPayments) * 100)
+          : 0,
+      fill: "var(--muted-foreground)",
+    },
+    {
+      key: "transfer",
+      label: "Debit / Transfer",
+      transactions: paymentCounts["Debit / Transfer"],
+      share:
+        totalPayments > 0
+          ? Math.round(
+              (paymentCounts["Debit / Transfer"] / totalPayments) * 100,
+            )
+          : 0,
+      fill: "var(--foreground)",
+    },
   ];
 
+  const categories: CategoryAnalyticsSlice[] = Object.entries(categoryRevenue)
+    .map(([category, rev]) => ({
+      category,
+      revenue: rev,
+      share:
+        completedRevenue > 0 ? Math.round((rev / completedRevenue) * 100) : 0,
+    }))
+    .sort((a, b) => b.revenue - a.revenue);
+
+  const topTenants: TenantAnalyticsRank[] = [...activeTenants]
+    .map((t) => {
+      const stats = tenantStats[t.id] || { revenue: 0, transactions: 0 };
+      const rev = stats.revenue;
+      return {
+        id: t.id,
+        name: t.name,
+        owner: t.owner,
+        category: t.category,
+        revenue: rev,
+        transactions: stats.transactions,
+        share:
+          completedRevenue > 0
+            ? Math.round((rev / completedRevenue) * 100)
+            : 0,
+      };
+    })
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+
+  const revenueChange =
+    previousRevenue > 0
+      ? Number(
+          (
+            ((completedRevenue - previousRevenue) / previousRevenue) *
+            100
+          ).toFixed(1),
+        )
+      : null;
+
+  const transactionsChange =
+    previousTransactions > 0
+      ? Number(
+          (
+            ((completedTransactions - previousTransactions) /
+              previousTransactions) *
+            100
+          ).toFixed(1),
+        )
+      : null;
+
   const totals: AnalyticsTotals = {
-    revenue: totalRevenue,
-    transactions: 0,
-    visitors: 0,
-    averageTicket: 0,
-    averageVisitors: 0,
-    previousRevenue: 0,
-    previousTransactions: 0,
-    revenueChange: null,
-    transactionsChange: null,
+    revenue: completedRevenue,
+    transactions: completedTransactions,
+    visitors: completedVisitors,
+    averageTicket:
+      completedTransactions > 0
+        ? Math.round(completedRevenue / completedTransactions)
+        : 0,
+    averageVisitors:
+      range > 0 ? Number((completedVisitors / range).toFixed(1)) : 0,
+    previousRevenue,
+    previousTransactions,
+    revenueChange,
+    transactionsChange,
   };
 
   return {
@@ -135,8 +370,8 @@ export function buildAssociationAnalytics(
     categories,
     topTenants,
     totals,
-    peakDay: null,
-    peakHour: null,
+    peakDay,
+    peakHour,
   };
 }
 

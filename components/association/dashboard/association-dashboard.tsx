@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/table";
 import { formatRupiah } from "@/lib/utils";
 import { AssociationHeader } from "@/components/association/association-header";
+import type { HighestMerchantTurnoverResult } from "@/servers/association-server";
 
 const CATEGORY_ORDER = [
   "Makanan",
@@ -100,7 +101,11 @@ function MetricCard({
   );
 }
 
-export function AssociationDashboard() {
+export function AssociationDashboard({
+  initialHighestMerchant,
+}: {
+  initialHighestMerchant?: HighestMerchantTurnoverResult | null;
+} = {}) {
   const {
     tenants,
     booths,
@@ -159,13 +164,37 @@ export function AssociationDashboard() {
     [activeTenants, inactiveTenants],
   );
 
-  const topTenants = useMemo(
-    () =>
-      [...activeTenantList]
+  const topTenants = useMemo(() => {
+    if (activeTenantList.length > 0) {
+      return [...activeTenantList]
         .sort((a, b) => b.monthlyRevenue - a.monthlyRevenue)
-        .slice(0, 5),
-    [activeTenantList],
-  );
+        .slice(0, 5);
+    }
+    if (
+      initialHighestMerchant?.topTenants &&
+      initialHighestMerchant.topTenants.length > 0
+    ) {
+      return initialHighestMerchant.topTenants.map((t) => ({
+        id: t.id,
+        name: t.name,
+        owner: t.owner,
+        email: "",
+        phone: "",
+        category: t.category,
+        zone: t.zone,
+        boothNumber: t.boothNumber,
+        status: "active" as const,
+        joinedAt: "",
+        monthlyRevenue: t.monthlyRevenue,
+        rating: t.rating,
+        totalProducts: 0,
+        avatar: t.avatar,
+      }));
+    }
+    return [];
+  }, [activeTenantList, initialHighestMerchant]);
+
+  const highestTenant = topTenants[0] || null;
 
   const inactiveList = useMemo(
     () => tenants.filter((tenant) => tenant.status === "inactive").slice(0, 4),
@@ -341,10 +370,21 @@ export function AssociationDashboard() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Tenant Omzet Tertinggi</CardTitle>
-            <CardDescription>Peringkat omzet bulan ini</CardDescription>
+            <div>
+              <CardTitle>Tenant Omzet Tertinggi</CardTitle>
+              <CardDescription>Peringkat omzet bulan ini</CardDescription>
+            </div>
             <CardAction>
-              <Badge variant="outline">Top 5</Badge>
+              {highestTenant && highestTenant.monthlyRevenue > 0 ? (
+                <Badge
+                  variant="secondary"
+                  className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold"
+                >
+                  Tertinggi: {formatRupiah(highestTenant.monthlyRevenue)}
+                </Badge>
+              ) : (
+                <Badge variant="outline">Top 5</Badge>
+              )}
             </CardAction>
           </CardHeader>
           <CardContent className="px-0">
@@ -357,31 +397,55 @@ export function AssociationDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topTenants.map((tenant) => (
-                  <TableRow key={tenant.id}>
-                    <TableCell className="pl-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
-                          {tenant.avatar}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-foreground">
-                            {tenant.name}
-                          </span>
-                          <span className="text-[11px] text-muted-foreground">
-                            {tenant.owner}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{tenant.category}</Badge>
-                    </TableCell>
-                    <TableCell className="pr-4 text-right font-semibold">
-                      {formatRupiah(tenant.monthlyRevenue)}
+                {topTenants.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={3}
+                      className="py-8 text-center text-xs text-muted-foreground"
+                    >
+                      Belum ada tenant aktif yang terdaftar.
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  topTenants.map((tenant, index) => (
+                    <TableRow key={tenant.id}>
+                      <TableCell className="pl-4">
+                        <div className="flex items-center gap-2.5">
+                          <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-[10px] font-bold text-muted-foreground tabular-nums">
+                            {index + 1}
+                          </span>
+                          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
+                            {tenant.avatar}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-foreground truncate">
+                                {tenant.name}
+                              </span>
+                              {index === 0 && tenant.monthlyRevenue > 0 && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[10px] py-0 px-1.5 text-emerald-700 dark:text-emerald-400 font-medium"
+                                >
+                                  Tertinggi
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-muted-foreground truncate">
+                              {tenant.owner}
+                            </span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{tenant.category}</Badge>
+                      </TableCell>
+                      <TableCell className="pr-4 text-right font-semibold tabular-nums">
+                        {formatRupiah(tenant.monthlyRevenue)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>

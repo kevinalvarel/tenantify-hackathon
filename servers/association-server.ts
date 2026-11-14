@@ -9,14 +9,20 @@ import {
   zones,
   user,
   products,
+  tenantOrders,
 } from "@/db/schema";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, or, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import type {
   AreaZone,
   AssociationTenant,
   BoothSlot,
 } from "@/types/association";
+import type {
+  AnalyticsRange,
+  AssociationAnalytics,
+} from "@/types/analytics";
+import { buildAssociationAnalytics } from "@/lib/analytics";
 import {
   associationSettingsSchema,
   type TAssociationSettings,
@@ -127,6 +133,34 @@ async function loadAssociationData(): Promise<AssociationData> {
     productCounts.map((p) => [p.tenantId, p.count])
   );
 
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const revenueRows = await db
+    .select({
+      tenantId: tenantOrders.tenantId,
+      monthlyRevenue: sql<number>`COALESCE(SUM(CASE WHEN ${tenantOrders.createdAt} >= ${startOfMonth} THEN ${tenantOrders.total} ELSE 0 END), 0)::int`,
+      totalRevenue: sql<number>`COALESCE(SUM(${tenantOrders.total}), 0)::int`,
+    })
+    .from(tenantOrders)
+    .where(
+      and(
+        ne(tenantOrders.status, "Dibatalkan"),
+        or(
+          eq(tenantOrders.status, "Selesai"),
+          eq(tenantOrders.isPaid, true),
+        ),
+      ),
+    )
+    .groupBy(tenantOrders.tenantId);
+
+  const revenueMap = new Map(
+    revenueRows.map((r) => [
+      r.tenantId,
+      r.monthlyRevenue > 0 ? r.monthlyRevenue : r.totalRevenue,
+    ]),
+  );
+
   const mappedTenants: AssociationTenant[] = tenantRows.map((r) => {
     const t = r.tenant;
     const joinedDate = t.joinedAt ? new Date(t.joinedAt) : new Date();
@@ -154,7 +188,7 @@ async function loadAssociationData(): Promise<AssociationData> {
         | "active"
         | "inactive",
       joinedAt: formattedDate,
-      monthlyRevenue: 0,
+      monthlyRevenue: revenueMap.get(t.id) || 0,
       rating: Number(t.rating) || 0,
       totalProducts: productCountMap.get(t.id) || 0,
       avatar: avatar || "T",
@@ -189,6 +223,143 @@ export async function getAssociationDataAction(): Promise<AssociationDataResult>
       zones: [],
       error: "Gagal memuat data zona dan booth dari database.",
     };
+  }
+}
+
+export type TopMerchantTurnover = {
+  id: string;
+  name: string;
+  owner: string;
+  category: string;
+  zone: string;
+  boothNumber: string;
+  monthlyRevenue: number;
+  totalOrders: number;
+  avatar: string;
+  rating: number;
+};
+
+export type HighestMerchantTurnoverResult = {
+  highestTenant: TopMerchantTurnover | null;
+  highestRevenue: number;
+  topTenants: TopMerchantTurnover[];
+  totalAreaRevenue: number;
+};
+
+export async function getHighestMerchantTurnoverAction(): Promise<HighestMerchantTurnoverResult> {
+  try {
+    const data = await getAssociationDataAction();
+    const activeTenants = data.tenants.filter((t) => t.status === "active");
+
+    const ordersAgg = await db
+      .select({
+        tenantId: tenantOrders.tenantId,
+        totalOrders: sql<number>`count(*)::int`,
+      })
+      .from(tenantOrders)
+      .where(
+        and(
+          ne(tenantOrders.status, "Dibatalkan"),
+          or(
+            eq(tenantOrders.status, "Selesai"),
+            eq(tenantOrders.isPaid, true),
+          ),
+        ),
+      )
+      .groupBy(tenantOrders.tenantId);
+
+    const orderCountMap = new Map(
+      ordersAgg.map((o) => [o.tenantId, o.totalOrders]),
+    );
+
+    const sorted: TopMerchantTurnover[] = activeTenants
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        owner: t.owner,
+        category: t.category,
+        zone: t.zone,
+        boothNumber: t.boothNumber,
+        monthlyRevenue: t.monthlyRevenue || 0,
+        totalOrders: orderCountMap.get(t.id) || 0,
+        avatar: t.avatar,
+        rating: t.rating,
+      }))
+      .sort((a, b) => b.monthlyRevenue - a.monthlyRevenue);
+
+    const highestTenant = sorted.length > 0 ? sorted[0] : null;
+    const highestRevenue = highestTenant?.monthlyRevenue || 0;
+    const totalAreaRevenue = sorted.reduce(
+      (sum, t) => sum + t.monthlyRevenue,
+      0,
+    );
+
+    return {
+      highestTenant,
+      highestRevenue,
+      topTenants: sorted.slice(0, 5),
+      totalAreaRevenue,
+    };
+  } catch (error) {
+    console.error("Gagal mengambil omzet pedagang tertinggi:", error);
+    return {
+      highestTenant: null,
+      highestRevenue: 0,
+      topTenants: [],
+      totalAreaRevenue: 0,
+    };
+  }
+}
+
+export async function getAssociationAnalyticsAction(
+  range: AnalyticsRange = 30,
+): Promise<AssociationAnalytics> {
+  try {
+    const data = await getAssociationDataAction();
+    const tenantsList = data.tenants;
+
+    const orderRows = await db
+      .select({
+        id: tenantOrders.id,
+        orderId: tenantOrders.orderId,
+        tenantId: tenantOrders.tenantId,
+        customerName: tenantOrders.customerName,
+        subtotal: tenantOrders.subtotal,
+        tax: tenantOrders.tax,
+        total: tenantOrders.total,
+        status: tenantOrders.status,
+        paymentMethod: tenantOrders.paymentMethod,
+        isPaid: tenantOrders.isPaid,
+        createdAt: tenantOrders.createdAt,
+        tenantCategory: tenants.category,
+        tenantName: tenants.name,
+      })
+      .from(tenantOrders)
+      .leftJoin(tenants, eq(tenantOrders.tenantId, tenants.id))
+      .where(
+        and(
+          ne(tenantOrders.status, "Dibatalkan"),
+          or(
+            eq(tenantOrders.status, "Selesai"),
+            eq(tenantOrders.isPaid, true),
+          ),
+        ),
+      )
+      .orderBy(tenantOrders.createdAt);
+
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const todayKey = `${now.getFullYear()}-${month}-${day}`;
+
+    return buildAssociationAnalytics(tenantsList, range, todayKey, orderRows);
+  } catch (error) {
+    console.error("Gagal mengambil analitik asosiasi:", error);
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const todayKey = `${now.getFullYear()}-${month}-${day}`;
+    return buildAssociationAnalytics([], range, todayKey, []);
   }
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   ChartNoAxesColumn,
@@ -25,6 +25,7 @@ import {
   YAxis,
 } from "recharts";
 import { useAssociation } from "@/context/association-context";
+import { getAssociationAnalyticsAction } from "@/servers/association-server";
 import { buildAssociationAnalytics } from "@/lib/analytics";
 import { cn, formatRupiah } from "@/lib/utils";
 import type {
@@ -646,32 +647,83 @@ function AnalyticsContent({ analytics }: { analytics: AssociationAnalytics }) {
   );
 }
 
-export function AnalyticsDashboard({ today }: { today: string }) {
+export function AnalyticsDashboard({
+  today,
+  initialAnalytics,
+}: {
+  today: string;
+  initialAnalytics?: AssociationAnalytics | null;
+}) {
   const { tenants } = useAssociation();
   const [range, setRange] = useState<AnalyticsRange>(30);
+  const [analytics, setAnalytics] = useState<AssociationAnalytics | null>(
+    initialAnalytics ?? null,
+  );
+  const [isLoading, setIsLoading] = useState(!initialAnalytics);
+  const [isError, setIsError] = useState(false);
 
-  const result = useMemo(() => {
-    try {
-      return {
-        analytics: buildAssociationAnalytics(tenants, range, today),
-        failed: false,
-      };
-    } catch {
-      return { analytics: null, failed: true };
+  useEffect(() => {
+    if (initialAnalytics && range === 30 && analytics === initialAnalytics) {
+      return;
     }
-  }, [tenants, range, today]);
+
+    let isActive = true;
+    setIsLoading(true);
+    setIsError(false);
+
+    getAssociationAnalyticsAction(range)
+      .then((data) => {
+        if (!isActive) return;
+        setAnalytics(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Gagal mengambil analitik asosiasi:", err);
+        if (!isActive) return;
+        try {
+          const fallback = buildAssociationAnalytics(tenants, range, today);
+          setAnalytics(fallback);
+        } catch {
+          setIsError(true);
+        }
+        setIsLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [range, initialAnalytics, tenants, today]);
 
   return (
     <div className="flex flex-col gap-4">
       <AnalyticsHeader range={range} onRangeChange={setRange} />
 
-      {result.failed ? (
+      {isError ? (
         <AnalyticsNotice
           variant="error"
-          onRetry={() => window.location.reload()}
+          onRetry={() => {
+            setIsLoading(true);
+            setIsError(false);
+            getAssociationAnalyticsAction(range)
+              .then((data) => {
+                setAnalytics(data);
+                setIsLoading(false);
+              })
+              .catch(() => {
+                setIsError(true);
+                setIsLoading(false);
+              });
+          }}
         />
-      ) : result.analytics && result.analytics.totals.transactions > 0 ? (
-        <AnalyticsContent analytics={result.analytics} />
+      ) : analytics && analytics.totals.transactions > 0 ? (
+        <div
+          className={cn(
+            "flex flex-col gap-4",
+            isLoading && "opacity-60 transition-opacity",
+          )}
+        >
+          <AnalyticsContent analytics={analytics} />
+        </div>
       ) : (
         <AnalyticsNotice variant="empty" />
       )}

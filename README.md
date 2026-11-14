@@ -34,7 +34,6 @@ components/           Komponen UI yang dipakai ulang
 context/              React context
 data/                 Data demo/seed statis
 db/                   Skema Drizzle & modul query
-docs/                 PRD, design, audit, scope, dan spesifikasi fitur
 hooks/                Custom React hooks
 lib/                  Utilitas: auth, cache, AI client, analytics, slug
 migrations/           Migrasi SQL Drizzle
@@ -47,7 +46,7 @@ validations/          Skema validasi Zod
 
 - Node.js 20+ (disarankan 24)
 - npm
-- Database PostgreSQL (Neon)
+- Database Serverless PostgreSQL (Neon)
 - Akun Upstash Redis (opsional, untuk cache)
 - Vercel Blob token (untuk upload gambar produk)
 
@@ -98,16 +97,9 @@ AI_SERVICE_URL=https://s4usan-tenantify-models.hf.space
 | `npm run db:push`     | Push skema langsung ke database  |
 | `npm run db:studio`   | Buka Drizzle Studio              |
 
-## Dokumentasi
+## Penanggung Jawab
 
-- [`docs/PRD.MD`](docs/PRD.MD) — product requirement
-- [`docs/DESIGN.md`](docs/DESIGN.md) — panduan desain
-- [`docs/scope/scope.md`](docs/scope/scope.md) — scope dan status fitur
-- [`docs/specs/`](docs/specs) — spesifikasi teknis per fitur
-
-## Pembuat
-
-1. **[Nama Pembuat 1]**
-2. **[Nama Pembuat 2]**
+1. **Muhammad Kevin Alvarel - Fullstack Engineer**
+2. **Muhammad Sahrul Ramadhan - Fullstack Engineer**
 
 Dibuat untuk hackathon.
