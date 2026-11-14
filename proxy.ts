@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { getRoleDashboard } from "@/lib/routes/role-dashboard";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -55,19 +56,6 @@ export async function proxy(request: NextRequest) {
 
   const role =
     (session?.user as { role?: string } | undefined)?.role || "customer";
-
-  const getRoleDashboard = (userRole: string) => {
-    switch (userRole) {
-      case "developer":
-      case "association":
-        return "/dashboard/association";
-      case "seller":
-        return "/dashboard/seller";
-      case "customer":
-      default:
-        return "/";
-    }
-  };
 
   if (!session) {
     if (isCustomerAccountRoute) {

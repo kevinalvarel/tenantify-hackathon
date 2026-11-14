@@ -45,7 +45,7 @@ export function NavUser({
   const { isMobile } = useSidebar();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
-  const { data: session } = useSession();
+  const { data: session, refetch } = useSession();
 
   const activeRole =
     user?.role ||
@@ -84,6 +84,7 @@ export function NavUser({
       }
 
       toast.success(res.message);
+      await refetch();
       router.push("/auth/sign-in");
       router.refresh();
     } catch {

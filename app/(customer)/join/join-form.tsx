@@ -83,7 +83,7 @@ export function JoinForm({
   error?: string | null;
 }) {
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending, refetch } = useSession();
   const { activeUmkm, setActiveUmkm } = useCustomer();
   const [code, setCode] = useState(defaultValue);
   const [status, setStatus] = useState<CodeSlotsStatus>(initialStatus);
@@ -125,6 +125,7 @@ export function JoinForm({
       return;
     }
     toast.success(response.message);
+    await refetch();
     router.refresh();
   };
 
