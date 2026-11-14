@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { MessageSquare, Search, Send, Star, Store } from "lucide-react";
 import type { SellerReview } from "@/types/seller";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import {
+  getSellerReviewsAction,
+  replyToReviewAction,
+} from "@/servers/review-server";
 
 type ReviewsManagementProps = {
   reviews: SellerReview[];
@@ -48,6 +52,30 @@ export function ReviewsManagement({ reviews }: ReviewsManagementProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setItems(reviews);
+  }, [reviews]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLatest = async () => {
+      try {
+        const res = await getSellerReviewsAction();
+        if (isMounted && res.reviews) {
+          setItems(res.reviews);
+        }
+      } catch {}
+    };
+
+    const interval = setInterval(fetchLatest, 4000);
+    window.addEventListener("focus", fetchLatest);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      window.removeEventListener("focus", fetchLatest);
+    };
+  }, []);
 
   const averageRating = useMemo(
     () =>

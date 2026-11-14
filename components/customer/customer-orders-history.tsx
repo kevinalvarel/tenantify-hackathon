@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Clock,
   CheckCircle2,
@@ -27,8 +27,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import {
+  submitCustomerReviewAction,
+  getCustomerOrderReviewsAction,
+} from "@/servers/review-server";
 
 type CustomerOrdersHistoryProps = {
   orders: CustomerOrder[];
@@ -64,6 +69,27 @@ export function CustomerOrdersHistory({
     >
   >({});
 
+  // Muat riwayat ulasan yang sudah tersimpan di database untuk pesanan customer
+  useEffect(() => {
+    let isMounted = true;
+    const loadReviewsFromDb = async () => {
+      const orderIds = orders.map((o) => o.id);
+      if (orderIds.length === 0) return;
+      try {
+        const saved = await getCustomerOrderReviewsAction(orderIds);
+        if (isMounted && saved && Object.keys(saved).length > 0) {
+          setSubmittedReviews((prev) => ({ ...saved, ...prev }));
+        }
+      } catch (err) {
+        console.warn("Gagal memuat ulasan tersimpan:", err);
+      }
+    };
+    loadReviewsFromDb();
+    return () => {
+      isMounted = false;
+    };
+  }, [orders]);
+
   const openReviewDialog = (order: CustomerOrder) => {
     setReviewOrder(order);
     setReviewRating(5);
@@ -72,52 +98,53 @@ export function CustomerOrdersHistory({
   };
 
   const handleSubmitReview = async () => {
-    if (!reviewOrder || !reviewComment.trim()) {
+    if (!reviewOrder) return;
+    const commentText = reviewComment.trim();
+    if (!commentText) {
       toast.error("Tulis ulasan Anda terlebih dahulu.");
       return;
     }
 
-    setIsSubmittingReview(true);
+    const orderToReview = reviewOrder;
+    const ratingValue = reviewRating;
+
+    // Langsung tutup modal dialog seketika tombol diklik
+    setReviewOrder(null);
+    setReviewComment("");
     setModerationOutcome(null);
 
+    // Tampilkan ulasan langsung pada kartu pesanan
+    setSubmittedReviews((prev) => ({
+      ...prev,
+      [orderToReview.id]: {
+        rating: ratingValue,
+        comment: commentText,
+        badge: "Terkirim",
+      },
+    }));
+    toast.success("Ulasan Anda berhasil dikirim! Terima kasih.");
+
+    setIsSubmittingReview(true);
+
     try {
-      const res = await fetch("/api/reviews/moderate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          commentText: reviewComment.trim(),
-          commentId: `cmt-${reviewOrder.id}`,
-          tenantId: reviewOrder.tenantNames[0],
-          rating: reviewRating,
-        }),
+      const res = await submitCustomerReviewAction({
+        orderId: orderToReview.id,
+        rating: ratingValue,
+        comment: commentText,
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Gagal memproses ulasan.");
-      }
-
-      setModerationOutcome(data);
-
-      if (data.accepted) {
-        const badge =
-          data.moderation?.dashboard_badge || data.moderation?.category || "Terkirim";
+      if (res.success && res.moderationBadge) {
         setSubmittedReviews((prev) => ({
           ...prev,
-          [reviewOrder.id]: {
-            rating: reviewRating,
-            comment: reviewComment.trim(),
-            badge,
+          [orderToReview.id]: {
+            rating: ratingValue,
+            comment: commentText,
+            badge: res.moderationBadge || "Terkirim",
           },
         }));
-        toast.success(`Ulasan terkirim (${badge})`);
-      } else {
-        toast.error("Ulasan otomatis ditolak oleh filter AI NLU.");
       }
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Gagal mengirim ulasan.",
-      );
+    } catch {
+      // ignore background error as review is already registered locally
     } finally {
       setIsSubmittingReview(false);
     }
@@ -370,15 +397,17 @@ export function CustomerOrdersHistory({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openReviewDialog(order)}
-                      className="gap-1.5 text-xs font-semibold cursor-pointer"
-                    >
-                      <MessageSquarePlus className="size-3.5" />
-                      {submittedReviews[order.id] ? "Ulas Lagi" : "Beri Ulasan"}
-                    </Button>
+                    {order.status === "Selesai" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openReviewDialog(order)}
+                        className="gap-1.5 text-xs font-semibold cursor-pointer border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+                      >
+                        <MessageSquarePlus className="size-3.5 text-amber-600 dark:text-amber-400" />
+                        {submittedReviews[order.id] ? "Ulas Lagi" : "Beri Ulasan"}
+                      </Button>
+                    )}
 
                     <Button
                       variant="outline"
@@ -446,156 +475,157 @@ export function CustomerOrdersHistory({
       </div>
 
       {/* MODAL KODE PENGAMBILAN */}
-      {activeCodeDialogOrder && (
-        <Dialog
-          open={!!activeCodeDialogOrder}
-          onOpenChange={(open) => !open && setActiveCodeDialogOrder(null)}
-        >
-          <DialogContent className="sm:max-w-sm text-center">
-            <DialogHeader>
-              <DialogTitle className="text-center font-bold">
-                Kode Pengambilan Pesanan
-              </DialogTitle>
-            </DialogHeader>
+      <Dialog
+        open={!!activeCodeDialogOrder}
+        onOpenChange={(open) => !open && setActiveCodeDialogOrder(null)}
+      >
+        <DialogContent className="sm:max-w-sm text-center">
+          {activeCodeDialogOrder && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-center font-bold">
+                  Kode Pengambilan Pesanan
+                </DialogTitle>
+              </DialogHeader>
 
-            <div className="flex flex-col items-center gap-3 p-4 bg-muted/40 rounded-xl border">
-              <span className="text-xs text-muted-foreground font-medium">
-                Tunjukkan kode ini ke petugas booth tenant
-              </span>
-              <p className="text-4xl font-extrabold font-mono text-primary tracking-widest my-1">
-                {activeCodeDialogOrder.pickupCode}
-              </p>
-              <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-                <p>Order ID: #{activeCodeDialogOrder.id}</p>
-                <p>Tenant: {activeCodeDialogOrder.tenantNames.join(", ")}</p>
-                {activeCodeDialogOrder.tableNumber && (
-                  <p className="font-semibold text-foreground">
-                    Antar ke: {activeCodeDialogOrder.tableNumber}
-                  </p>
-                )}
+              <div className="flex flex-col items-center gap-3 p-4 bg-muted/40 rounded-xl border">
+                <span className="text-xs text-muted-foreground font-medium">
+                  Tunjukkan kode ini ke petugas booth tenant
+                </span>
+                <p className="text-4xl font-extrabold font-mono text-primary tracking-widest my-1">
+                  {activeCodeDialogOrder.pickupCode}
+                </p>
+                <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+                  <p>Order ID: #{activeCodeDialogOrder.id}</p>
+                  <p>Tenant: {activeCodeDialogOrder.tenantNames.join(", ")}</p>
+                  {activeCodeDialogOrder.tableNumber && (
+                    <p className="font-semibold text-foreground">
+                      Antar ke: {activeCodeDialogOrder.tableNumber}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <DialogFooter>
-              <Button
-                variant="default"
-                className="w-full"
-                onClick={() => setActiveCodeDialogOrder(null)}
-              >
-                Tutup
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+              <DialogFooter>
+                <DialogClose
+                  render={
+                    <Button
+                      variant="default"
+                      className="w-full"
+                      onClick={() => setActiveCodeDialogOrder(null)}
+                    >
+                      Tutup
+                    </Button>
+                  }
+                />
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* MODAL ULASAN & MODERASI AI NLU */}
-      {reviewOrder && (
-        <Dialog
-          open={!!reviewOrder}
-          onOpenChange={(open) => !open && setReviewOrder(null)}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="font-bold">
-                Beri Ulasan Pesanan #{reviewOrder.id}
-              </DialogTitle>
-            </DialogHeader>
+      <Dialog
+        open={!!reviewOrder}
+        onOpenChange={(open) => {
+          if (!open) {
+            setReviewOrder(null);
+            setReviewComment("");
+            setModerationOutcome(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          {reviewOrder && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-bold">
+                  Beri Ulasan Pesanan #{reviewOrder.id}
+                </DialogTitle>
+              </DialogHeader>
 
-            <div className="flex flex-col gap-4 py-2">
-              <div className="text-xs text-muted-foreground">
-                Tenant:{" "}
-                <strong className="text-foreground">
-                  {reviewOrder.tenantNames.join(", ")}
-                </strong>
+              <div className="flex flex-col gap-4 py-2">
+                <div className="text-xs text-muted-foreground">
+                  Tenant:{" "}
+                  <strong className="text-foreground">
+                    {reviewOrder.tenantNames.join(", ")}
+                  </strong>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-xs font-semibold text-foreground block">
+                    Rating Anda
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        className="p-1 cursor-pointer transition-transform active:scale-95"
+                        aria-label={`Beri ${star} bintang`}
+                      >
+                        <Star
+                          className={`size-6 ${
+                            star <= reviewRating
+                              ? "fill-amber-500 text-amber-500"
+                              : "text-muted-foreground/30"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="order-review-comment"
+                    className="text-xs font-semibold text-foreground block"
+                  >
+                    Komentar & Saran
+                  </label>
+                  <Textarea
+                    id="order-review-comment"
+                    placeholder="Tulis pengalaman Anda tentang rasa, porsi, atau pelayanan tenant..."
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    className="resize-none h-24 text-xs"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <span className="text-xs font-semibold text-foreground block">
-                  Rating Anda
-                </span>
-                <div className="flex items-center gap-1.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
+              <DialogFooter className="gap-2 sm:gap-2">
+                <DialogClose
+                  render={
+                    <Button
+                      variant="outline"
                       type="button"
-                      onClick={() => setReviewRating(star)}
-                      className="p-1 cursor-pointer transition-transform active:scale-95"
-                      aria-label={`Beri ${star} bintang`}
+                      onClick={() => {
+                        setReviewOrder(null);
+                        setReviewComment("");
+                        setModerationOutcome(null);
+                      }}
                     >
-                      <Star
-                        className={`size-6 ${
-                          star <= reviewRating
-                            ? "fill-amber-500 text-amber-500"
-                            : "text-muted-foreground/30"
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="order-review-comment"
-                  className="text-xs font-semibold text-foreground block"
-                >
-                  Komentar & Saran
-                </label>
-                <Textarea
-                  id="order-review-comment"
-                  placeholder="Tulis pengalaman Anda tentang rasa, porsi, atau pelayanan tenant..."
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  className="resize-none h-24 text-xs"
+                      Tutup
+                    </Button>
+                  }
                 />
-              </div>
-
-              {moderationOutcome && (
-                <div
-                  className={`rounded-xl border p-3 text-xs space-y-1 ${
-                    moderationOutcome.accepted
-                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
-                      : "border-destructive/30 bg-destructive/10 text-destructive"
-                  }`}
-                >
-                  <p className="font-bold flex items-center gap-1.5">
-                    {moderationOutcome.accepted ? (
-                      <CheckCircle2 className="size-4 shrink-0" />
-                    ) : (
-                      <ShieldAlert className="size-4 shrink-0" />
-                    )}
-                    <span>
-                      {moderationOutcome.moderation.dashboard_badge ||
-                        moderationOutcome.moderation.category}
-                    </span>
-                  </p>
-                  <p className="text-[11px] opacity-90">
-                    {moderationOutcome.moderation.moderation_reason}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <DialogFooter className="gap-2 sm:gap-2">
-              <Button
-                variant="outline"
-                type="button"
-                onClick={() => setReviewOrder(null)}
-              >
-                Tutup
-              </Button>
-              <Button
-                type="button"
-                disabled={isSubmittingReview || !reviewComment.trim()}
-                onClick={handleSubmitReview}
-              >
-                {isSubmittingReview ? "Memeriksa NLU..." : "Kirim Ulasan"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+                <DialogClose
+                  render={
+                    <Button
+                      type="button"
+                      disabled={isSubmittingReview || !reviewComment.trim()}
+                      onClick={handleSubmitReview}
+                    >
+                      Kirim Ulasan
+                    </Button>
+                  }
+                />
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
