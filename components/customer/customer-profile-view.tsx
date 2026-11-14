@@ -42,9 +42,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { submitCustomerReviewAction } from "@/servers/review-server";
 
 export type CustomerReviewItem = {
   id: string;
@@ -302,70 +304,61 @@ export function CustomerProfileView() {
       return;
     }
 
-    setIsSubmittingReview(true);
+    const orderToReview = reviewOrder;
+    const ratingValue = reviewRating;
+
+    // Langsung tutup modal dialog seketika tombol diklik
+    setReviewOrder(null);
+    setReviewComment("");
     setModerationError(null);
 
+    const newReviewItem: CustomerReviewItem = {
+      id: `rev-${Date.now()}`,
+      orderId: orderToReview.id,
+      tenantName: orderToReview.tenantNames.join(", ") || "Tenant Food Court",
+      boothNumber: orderToReview.tableNumber
+        ? `Meja ${orderToReview.tableNumber}`
+        : "Stan Booth",
+      rating: ratingValue,
+      comment: cleanText,
+      badge: "Ulasan Pelanggan",
+      aspects: ["Layanan"],
+      createdAt: "Baru saja",
+    };
+
+    const updatedList = [newReviewItem, ...reviews];
+    setReviews(updatedList);
     try {
-      const res = await fetch("/api/reviews/moderate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          commentText: cleanText,
-          commentId: `rev-${reviewOrder.id}-${Date.now()}`,
-          tenantId: reviewOrder.tenantNames[0] || "Stan Tenant",
-          rating: reviewRating,
-        }),
+      localStorage.setItem(
+        "tenantify_customer_reviews",
+        JSON.stringify(updatedList),
+      );
+    } catch {}
+
+    toast.success("Ulasan Anda berhasil dikirim! Terima kasih.");
+    setActiveTab("ulasan");
+
+    setIsSubmittingReview(true);
+
+    try {
+      const result = await submitCustomerReviewAction({
+        orderId: orderToReview.id,
+        rating: ratingValue,
+        comment: cleanText,
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Gagal memproses ulasan.");
-      }
-
-      if (data.accepted) {
-        const moderation: CommentClassificationResult | undefined =
-          data.moderation;
-        const badge =
-          moderation?.dashboard_badge ||
-          moderation?.category ||
-          "Ulasan Pelanggan";
-
-        const newReviewItem: CustomerReviewItem = {
-          id: `rev-${Date.now()}`,
-          orderId: reviewOrder.id,
-          tenantName: reviewOrder.tenantNames.join(", ") || "Tenant Food Court",
-          boothNumber: reviewOrder.tableNumber
-            ? `Meja ${reviewOrder.tableNumber}`
-            : "Stan Booth",
-          rating: reviewRating,
-          comment: cleanText,
-          badge,
-          aspects: moderation?.aspects || ["Layanan"],
-          createdAt: "Baru saja",
-        };
-
-        const updatedList = [newReviewItem, ...reviews];
-        setReviews(updatedList);
+      if (result.success && result.moderationBadge) {
+        newReviewItem.badge = result.moderationBadge;
+        setReviews([...updatedList]);
         try {
           localStorage.setItem(
             "tenantify_customer_reviews",
             JSON.stringify(updatedList),
           );
         } catch {}
-
-        toast.success(`Ulasan berhasil dikirim (${badge})`);
-        setReviewOrder(null);
-        setActiveTab("ulasan");
-      } else {
-        const reason =
-          data.moderation?.moderation_reason ||
-          "Ulasan tidak memenuhi pedoman komunitas ulasan ramah.";
-        setModerationError(reason);
-        toast.error("Ulasan belum dapat diterbitkan. Periksa saran di bawah.");
       }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Gagal mengirim ulasan.";
-      toast.error(msg);
+    } catch {
+      // ignore
     } finally {
       setIsSubmittingReview(false);
     }
@@ -1235,25 +1228,33 @@ export function CustomerProfileView() {
               )}
 
               <DialogFooter className="gap-2 sm:gap-0 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setReviewOrder(null)}
-                  disabled={isSubmittingReview}
-                  className="min-h-[44px] h-10 rounded-xl text-xs font-medium cursor-pointer"
-                >
-                  Batal
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSubmitReview}
-                  disabled={
-                    isSubmittingReview || reviewComment.trim().length < 5
+                <DialogClose
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setReviewOrder(null)}
+                      disabled={isSubmittingReview}
+                      className="min-h-[44px] h-10 rounded-xl text-xs font-medium cursor-pointer"
+                    >
+                      Batal
+                    </Button>
                   }
-                  className="min-h-[44px] h-10 rounded-xl bg-[#c85a32] hover:bg-[#b04f2c] text-white text-xs font-semibold cursor-pointer shadow-xs"
-                >
-                  {isSubmittingReview ? "Memeriksa Ulasan..." : "Kirim Ulasan"}
-                </Button>
+                />
+                <DialogClose
+                  render={
+                    <Button
+                      type="button"
+                      onClick={handleSubmitReview}
+                      disabled={
+                        isSubmittingReview || reviewComment.trim().length < 5
+                      }
+                      className="min-h-[44px] h-10 rounded-xl bg-[#c85a32] hover:bg-[#b04f2c] text-white text-xs font-semibold cursor-pointer shadow-xs"
+                    >
+                      Kirim Ulasan
+                    </Button>
+                  }
+                />
               </DialogFooter>
             </div>
           )}
