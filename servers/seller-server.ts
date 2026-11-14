@@ -190,6 +190,7 @@ export async function createProductAction(
     });
 
     revalidatePath("/dashboard/seller/stock");
+    revalidatePath("/");
 
     return {
       success: true,
@@ -238,6 +239,7 @@ export async function updateProductStockAction(
       .where(eq(products.id, productId));
 
     revalidatePath("/dashboard/seller/stock");
+    revalidatePath("/");
 
     return { success: true, message: "Stok produk berhasil diperbarui." };
   } catch (error) {
@@ -276,6 +278,7 @@ export async function toggleProductActiveAction(
       .where(eq(products.id, productId));
 
     revalidatePath("/dashboard/seller/stock");
+    revalidatePath("/");
 
     return { success: true, message: "Status produk berhasil diubah." };
   } catch (error) {
@@ -320,6 +323,7 @@ export async function deleteProductAction(
     await db.delete(products).where(eq(products.id, productId));
 
     revalidatePath("/dashboard/seller/stock");
+    revalidatePath("/");
 
     return {
       success: true,

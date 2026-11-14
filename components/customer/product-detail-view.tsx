@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,26 +16,69 @@ import {
   ChevronRight,
   Heart,
   Share2,
+  RefreshCw,
 } from "lucide-react";
 import { useCustomer } from "@/context/customer-context";
-import { getProductBySlug, demoProducts } from "@/data/customer-demo";
+import { getProductByIdOrSlugAction } from "@/servers/customer-server";
 import { formatRupiah, cn } from "@/lib/utils";
+import { slugify } from "@/lib/slug";
 import { TenantifyPlaceholder } from "@/components/customer/tenantify-placeholder";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import type { CustomerProduct } from "@/types/customer";
 
 export function ProductDetailView({ slug }: { slug: string }) {
   const router = useRouter();
-  const { addToCart, setIsCartOpen } = useCustomer();
+  const { addToCart, setIsCartOpen, allProducts, products } = useCustomer();
 
-  const product = getProductBySlug(slug);
+  const [serverProduct, setServerProduct] = useState<CustomerProduct | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Cari produk dari context terlebih dahulu
+  const contextProduct = useMemo(() => {
+    const pool = allProducts.length > 0 ? allProducts : products;
+    if (!slug) return undefined;
+    const clean = decodeURIComponent(slug).trim().toLowerCase();
+    return pool.find(
+      (p) =>
+        p.id.toLowerCase() === clean ||
+        (p.slug && p.slug.toLowerCase() === clean) ||
+        slugify(p.name).toLowerCase() === clean,
+    );
+  }, [allProducts, products, slug]);
+
+  const product = contextProduct || serverProduct;
+
+  useEffect(() => {
+    if (!contextProduct && slug) {
+      setIsLoading(true);
+      getProductByIdOrSlugAction(slug)
+        .then((res) => {
+          setServerProduct(res);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [contextProduct, slug]);
 
   const [qty, setQty] = useState(1);
   const [notes, setNotes] = useState("");
   const [imgError, setImgError] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6 bg-white dark:bg-neutral-900/60 rounded-3xl border border-neutral-200 dark:border-neutral-800 my-6 shadow-sm">
+        <RefreshCw className="size-8 text-[#c85a32] animate-spin mb-3" />
+        <p className="text-sm font-semibold text-neutral-600 dark:text-neutral-300">
+          Memuat rincian menu dari database...
+        </p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -50,7 +93,7 @@ export function ProductDetailView({ slug }: { slug: string }) {
           Menu Tidak Ditemukan
         </h2>
         <p className="text-sm text-neutral-500 max-w-md mt-2 mb-6">
-          Maaf, hidangan dengan slug <span className="font-semibold text-neutral-800 dark:text-neutral-200">"{slug}"</span> tidak ditemukan atau sudah tidak tersedia.
+          Maaf, hidangan dengan slug <span className="font-semibold text-neutral-800 dark:text-neutral-200">"{slug}"</span> tidak ditemukan atau sudah tidak tersedia di etalase UMKM ini.
         </p>
         <Button
           onClick={() => router.push("/customer#pilihan-menu")}
@@ -63,28 +106,35 @@ export function ProductDetailView({ slug }: { slug: string }) {
     );
   }
 
+  const isOutOfStock = product.stock !== undefined && product.stock <= 0;
+
   // Other products from same tenant
-  const tenantOtherProducts = demoProducts
+  const productPool = allProducts.length > 0 ? allProducts : products;
+  const tenantOtherProducts = productPool
     .filter((p) => p.tenantId === product.tenantId && p.id !== product.id)
     .slice(0, 3);
 
   // Recommendations from same category
-  const relatedProducts = demoProducts
+  const relatedProducts = productPool
     .filter(
       (p) =>
         p.id !== product.id &&
         p.tenantId !== product.tenantId &&
-        (p.category === product.category || p.mcdCategory === product.mcdCategory)
+        (p.category === product.category || (p.mcdCategory && p.mcdCategory === product.mcdCategory)),
     )
     .slice(0, 3);
 
   const handleAddToCart = (openCart = false) => {
+    if (isOutOfStock) {
+      toast.error("Maaf, stok menu ini sedang habis.");
+      return;
+    }
     addToCart(product, qty, notes.trim() || undefined);
     toast.success(
       `"${product.name}" (${qty}x) ditambahkan ke keranjang!`,
       {
         description: notes.trim() ? `Catatan: ${notes.trim()}` : undefined,
-      }
+      },
     );
     if (openCart) {
       setIsCartOpen(true);
@@ -251,6 +301,15 @@ export function ProductDetailView({ slug }: { slug: string }) {
                     {formatRupiah(product.originalPrice)}
                   </span>
                 )}
+                {isOutOfStock ? (
+                  <Badge variant="destructive" className="font-bold text-xs uppercase px-2.5 py-0.5 ml-2">
+                    Stok Habis
+                  </Badge>
+                ) : product.stock !== undefined ? (
+                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 ml-2">
+                    Tersedia {product.stock} porsi
+                  </span>
+                ) : null}
               </div>
 
               {/* Divider */}
@@ -377,23 +436,37 @@ export function ProductDetailView({ slug }: { slug: string }) {
 
               {/* Action Buttons */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                <Button
-                  type="button"
-                  onClick={() => handleAddToCart(false)}
-                  className="h-12 rounded-2xl bg-[#ffdbcf] hover:bg-[#ffcdbd] text-[#c85a32] font-bold text-sm shadow-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <ShoppingBag className="size-4 stroke-[2.5]" />
-                  <span>+ Keranjang ({qty})</span>
-                </Button>
+                {isOutOfStock ? (
+                  <div className="col-span-full">
+                    <Button
+                      type="button"
+                      disabled
+                      className="w-full h-12 rounded-2xl bg-neutral-200 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 font-bold text-sm cursor-not-allowed select-none"
+                    >
+                      <span>Stok Habis — Tidak Dapat Dipesan</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={() => handleAddToCart(false)}
+                      className="h-12 rounded-2xl bg-[#ffdbcf] hover:bg-[#ffcdbd] text-[#c85a32] font-bold text-sm shadow-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <ShoppingBag className="size-4 stroke-[2.5]" />
+                      <span>+ Keranjang ({qty})</span>
+                    </Button>
 
-                <Button
-                  type="button"
-                  onClick={() => handleAddToCart(true)}
-                  className="h-12 rounded-2xl bg-[#c85a32] hover:bg-[#b34a24] text-white font-bold text-sm shadow-md shadow-[#c85a32]/25 hover:shadow-lg transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <span>Pesan Sekarang</span>
-                  <ChevronRight className="size-4 stroke-[2.5]" />
-                </Button>
+                    <Button
+                      type="button"
+                      onClick={() => handleAddToCart(true)}
+                      className="h-12 rounded-2xl bg-[#c85a32] hover:bg-[#b34a24] text-white font-bold text-sm shadow-md shadow-[#c85a32]/25 hover:shadow-lg transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <span>Pesan Sekarang</span>
+                      <ChevronRight className="size-4 stroke-[2.5]" />
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>

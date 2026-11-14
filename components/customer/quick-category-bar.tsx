@@ -78,8 +78,77 @@ export function QuickCategoryBar({
   onSelectCategory?: (category: string) => void;
   activeCategory?: string;
 }) {
-  const { selectedCategory, setSelectedCategory } = useCustomer();
+  const { selectedCategory, setSelectedCategory, products } = useCustomer();
   const current = activeCategory || selectedCategory;
+
+  const getCategoryCount = (catName: string) => {
+    if (!products || products.length === 0) return 0;
+    if (catName === "Makanan Berat") {
+      return products.filter(
+        (p) =>
+          p.category === "Makanan" ||
+          p.category === "Makanan Berat" ||
+          p.category === "Nusantara" ||
+          p.name.toLowerCase().includes("nasi") ||
+          p.name.toLowerCase().includes("bebek") ||
+          p.name.toLowerCase().includes("ayam"),
+      ).length;
+    }
+    if (catName === "Kopi & Teh") {
+      return products.filter(
+        (p) =>
+          p.category === "Minuman" ||
+          p.category === "Kopi & Teh" ||
+          p.name.toLowerCase().includes("kopi") ||
+          p.name.toLowerCase().includes("teh"),
+      ).length;
+    }
+    if (catName === "Camilan & Roti") {
+      return products.filter(
+        (p) =>
+          p.category === "Camilan" ||
+          p.category === "Camilan & Roti" ||
+          p.name.toLowerCase().includes("roti") ||
+          p.name.toLowerCase().includes("toast") ||
+          p.name.toLowerCase().includes("dimsum"),
+      ).length;
+    }
+    if (catName === "Nusantara") {
+      return products.filter(
+        (p) =>
+          p.category === "Nusantara" ||
+          p.name.toLowerCase().includes("bebek") ||
+          p.name.toLowerCase().includes("ayam") ||
+          p.name.toLowerCase().includes("sate"),
+      ).length;
+    }
+    if (catName === "Mie & Pasta") {
+      return products.filter(
+        (p) =>
+          p.category === "Mie & Pasta" ||
+          p.name.toLowerCase().includes("mie") ||
+          p.name.toLowerCase().includes("seblak"),
+      ).length;
+    }
+    if (catName === "Paket Hemat") {
+      return products.filter(
+        (p) =>
+          p.category === "Paket Hemat" || p.name.toLowerCase().includes("paket"),
+      ).length;
+    }
+    if (catName === "Katering Box") {
+      return products.filter(
+        (p) =>
+          p.category === "Katering Box" ||
+          p.name.toLowerCase().includes("katering") ||
+          p.name.toLowerCase().includes("bento"),
+      ).length;
+    }
+    if (catName === "Menu Favorit") {
+      return products.filter((p) => Boolean(p.isPopular)).length;
+    }
+    return 0;
+  };
 
   const handleClick = (categoryName: string) => {
     // Toggle: jika kategori yang sama diklik lagi, kembalikan ke "Semua"
@@ -157,7 +226,9 @@ export function QuickCategoryBar({
                     : "text-neutral-500 dark:text-neutral-400",
                 )}
               >
-                {cat.menuCount}
+                {getCategoryCount(cat.name) > 0
+                  ? `${getCategoryCount(cat.name)} Menu`
+                  : "Pilihan"}
               </span>
             </button>
           );

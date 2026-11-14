@@ -1,5 +1,5 @@
 import { ProductDetailView } from "@/components/customer/product-detail-view";
-import { getProductBySlug } from "@/data/customer-demo";
+import { getProductByIdOrSlugAction } from "@/servers/customer-server";
 import { Metadata } from "next";
 
 export const instant = false;
@@ -13,7 +13,7 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const resolvedParams = await Promise.resolve(params);
   const slug = resolvedParams?.slug || "";
-  const product = getProductBySlug(slug);
+  const product = await getProductByIdOrSlugAction(slug);
 
   if (!product) {
     return {

@@ -42,9 +42,9 @@ const SAMPLE_CODES = [
   },
   {
     code: "KOP001",
-    name: "Kopi & Toast Janji Manis",
+    name: "UMKM Kopi Kita",
     type: "Stan UMKM",
-    desc: "Artisan coffee & roti bakar kekinian",
+    desc: "Kopi nikmat dan minuman segar",
   },
   {
     code: "PGY001",
@@ -233,8 +233,16 @@ export default function CustomerExplorePage() {
                 {activeUmkm.location || "Area Food Court"}
               </span>
               <span>•</span>
-              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                {products.length} Menu Siap Dipesan
+              <span
+                className={
+                  products.length > 0
+                    ? "font-semibold text-emerald-600 dark:text-emerald-400"
+                    : "font-semibold text-amber-600 dark:text-amber-400"
+                }
+              >
+                {products.length > 0
+                  ? `${products.length} Menu Siap Dipesan`
+                  : "Belum Ada Menu"}
               </span>
             </div>
           </div>
