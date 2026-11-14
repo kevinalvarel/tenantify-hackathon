@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -11,8 +11,11 @@ import {
   UtensilsCrossed,
   SlidersHorizontal,
   X,
-  ChevronUp,
   RefreshCw,
+  Coffee,
+  Croissant,
+  Package,
+  MoveHorizontal,
 } from "lucide-react";
 import { CustomerProduct, Tenant } from "@/types/customer";
 import { formatRupiah, cn } from "@/lib/utils";
@@ -48,33 +51,69 @@ const filterTabs = [
   "Menu Favorit",
 ] as const;
 
-function FloatingScrollToTop() {
-  const [show, setShow] = useState(false);
+type MenuShafConfig = {
+  key: string;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  categories: string[];
+};
 
-  useEffect(() => {
-    const onScroll = () => {
-      setShow(window.scrollY > 300);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+/**
+ * Shaf (baris) menu untuk tampilan mobile. Produk dikelompokkan ke kategori
+ * yang lebih ramah dibaca, lalu setiap shaf digeser secara horizontal.
+ */
+const menuShafConfigs: MenuShafConfig[] = [
+  {
+    key: "makanan-berat",
+    title: "Makanan Berat",
+    icon: UtensilsCrossed,
+    categories: ["Makanan Berat", "Makanan", "Nusantara", "Mie & Pasta"],
+  },
+  {
+    key: "minuman",
+    title: "Minuman",
+    icon: Coffee,
+    categories: ["Minuman", "Kopi & Teh", "Minuman Segar"],
+  },
+  {
+    key: "cemilan",
+    title: "Cemilan",
+    icon: Croissant,
+    categories: ["Camilan", "Camilan & Roti", "Makanan Penutup"],
+  },
+  {
+    key: "paket-hemat",
+    title: "Paket Hemat",
+    icon: Package,
+    categories: ["Paket Hemat", "Katering Box"],
+  },
+];
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+const fallbackShaf: MenuShafConfig = {
+  key: "lainnya",
+  title: "Menu Lainnya",
+  icon: UtensilsCrossed,
+  categories: [],
+};
 
-  if (!show) return null;
-
-  return (
-    <button
-      type="button"
-      onClick={scrollToTop}
-      aria-label="Kembali ke atas"
-      className="fixed bottom-20 md:bottom-6 right-6 z-40 size-11 rounded-full bg-[#c85a32] hover:bg-[#b34a24] text-white shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
-    >
-      <ChevronUp className="size-5 stroke-[2.5]" />
-    </button>
+function getMenuShafKey(product: CustomerProduct) {
+  const primaryCategory = product.category?.toLowerCase().trim();
+  const primaryMatch = menuShafConfigs.find((shaf) =>
+    shaf.categories.some(
+      (category) => category.toLowerCase() === primaryCategory,
+    ),
   );
+  if (primaryMatch) return primaryMatch.key;
+
+  // Sebagian produk hanya punya kategori dari sistem lama (mcdCategory).
+  const secondaryCategory = product.mcdCategory?.toLowerCase().trim();
+  const secondaryMatch = menuShafConfigs.find((shaf) =>
+    shaf.categories.some(
+      (category) => category.toLowerCase() === secondaryCategory,
+    ),
+  );
+
+  return secondaryMatch?.key ?? fallbackShaf.key;
 }
 
 function ProductCardImage({ product }: { product: CustomerProduct }) {
@@ -234,9 +273,158 @@ function ProductCard({
   );
 }
 
+function CompactProductCard({
+  product,
+  onAddToCart,
+}: {
+  product: CustomerProduct;
+  onAddToCart: (product: CustomerProduct) => void;
+}) {
+  const [imgError, setImgError] = useState(false);
+  const productSlug = product.slug || slugify(product.name);
+  const isOutOfStock = product.stock !== undefined && product.stock <= 0;
+  const hasDiscount =
+    product.originalPrice !== undefined && product.originalPrice > product.price;
+
+  return (
+    <Link
+      href={`/customer/product/${productSlug}`}
+      className={cn(
+        "group flex w-[37vw] min-w-[128px] max-w-[160px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-neutral-200/80 bg-white shadow-xs transition-all duration-300 select-none hover:border-[#c85a32]/40 hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900",
+        isOutOfStock && "opacity-80",
+      )}
+    >
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+        {product.image && !imgError ? (
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            draggable={false}
+            unoptimized={product.image.startsWith("http")}
+            sizes="(max-width: 768px) 37vw, 160px"
+            className={cn(
+              "object-cover transition-transform duration-500 group-hover:scale-105",
+              isOutOfStock && "grayscale",
+            )}
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <TenantifyPlaceholder size="xs" subtitle={product.category} />
+        )}
+
+        {/* Rating Pill */}
+        <span className="absolute top-2 left-2 inline-flex items-center gap-0.5 rounded-full bg-white/95 px-1.5 py-0.5 text-[10px] font-bold text-neutral-900 shadow-sm backdrop-blur-sm dark:bg-neutral-900/90 dark:text-neutral-100">
+          <Star className="size-2.5 fill-amber-400 text-amber-400" />
+          {product.rating > 0 ? Number(product.rating).toFixed(1) : "5.0"}
+        </span>
+
+        {isOutOfStock ? (
+          <span className="absolute inset-x-0 bottom-0 bg-red-600/95 py-1 text-center text-[10px] font-bold tracking-wide text-white uppercase">
+            Stok Habis
+          </span>
+        ) : hasDiscount ? (
+          <span className="absolute bottom-2 left-2 rounded-full bg-[#c85a32] px-2 py-0.5 text-[9px] font-extrabold tracking-wide text-white uppercase shadow-sm">
+            Hemat {formatRupiah((product.originalPrice ?? 0) - product.price)}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="flex flex-1 flex-col p-2.5">
+        <h3 className="line-clamp-2 min-h-[2.4rem] text-[12.5px] leading-snug font-bold text-neutral-900 capitalize transition-colors group-hover:text-[#c85a32] dark:text-neutral-100">
+          {product.name}
+        </h3>
+        <p className="mt-1 line-clamp-2 min-h-[1.8rem] text-[10px] leading-relaxed text-neutral-500 dark:text-neutral-400">
+          {product.description || `Menu dari ${product.tenantName}.`}
+        </p>
+
+        <div className="mt-auto flex items-end justify-between gap-1.5 pt-2">
+          <div className="min-w-0">
+            {hasDiscount && (
+              <span className="block truncate text-[9px] text-neutral-400 line-through dark:text-neutral-500">
+                {formatRupiah(product.originalPrice ?? 0)}
+              </span>
+            )}
+            <p className="truncate text-[13.5px] leading-tight font-extrabold text-[#c85a32]">
+              {formatRupiah(product.price)}
+            </p>
+          </div>
+
+          {isOutOfStock ? (
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-neutral-200 text-[10px] font-bold text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500">
+              —
+            </span>
+          ) : (
+            <button
+              type="button"
+              aria-label={`Tambah ${product.name} ke keranjang`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onAddToCart(product);
+                toast.success(
+                  `"${product.name}" berhasil ditambahkan ke keranjang!`,
+                );
+              }}
+              className="grid size-8 shrink-0 cursor-pointer place-items-center rounded-full bg-[#c85a32] text-white shadow-md shadow-[#c85a32]/20 transition-all hover:bg-[#b34a24] active:scale-90"
+            >
+              <Plus className="size-4 stroke-[2.5]" />
+            </button>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function MobileMenuShaf({
+  shaf,
+  onAddToCart,
+}: {
+  shaf: MenuShafConfig & { products: CustomerProduct[] };
+  onAddToCart: (product: CustomerProduct) => void;
+}) {
+  const Icon = shaf.icon;
+
+  return (
+    <section
+      aria-label={`${shaf.title} - geser untuk melihat menu lainnya`}
+      className="min-w-0"
+    >
+      <div className="mb-2 flex items-center gap-2 px-1">
+        <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-[#c85a32]/10 text-[#c85a32] dark:bg-[#c85a32]/15">
+          <Icon className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <h3 className="truncate text-[13px] font-extrabold text-neutral-900 dark:text-neutral-100">
+            {shaf.title}
+          </h3>
+          <p className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">
+            {shaf.products.length} menu pilihan
+          </p>
+        </div>
+      </div>
+
+      <div
+        role="region"
+        aria-label={`Daftar menu ${shaf.title}`}
+        tabIndex={0}
+        className="-mx-4 flex snap-x snap-proximity gap-2.5 overflow-x-auto overscroll-x-contain scrollbar-none scroll-px-4 px-4 pt-0.5 pb-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c85a32]/50 sm:gap-3"
+      >
+        {shaf.products.map((product) => (
+          <CompactProductCard
+            key={product.id}
+            product={product}
+            onAddToCart={onAddToCart}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function ProductExplorer({
   products,
-  tenants,
   onAddToCart,
   selectedTenantId: externalTenantId,
   onSelectTenant: externalSetTenant,
@@ -371,6 +559,36 @@ export function ProductExplorer({
     return filtered;
   }, [products, selectedTenantId, selectedCategory, searchQuery, sortBy]);
 
+  // Kelompokkan hasil filter ke beberapa shaf kategori untuk tampilan mobile.
+  const menuShafs = useMemo(() => {
+    const buckets = new Map<string, CustomerProduct[]>();
+
+    for (const product of filteredProducts) {
+      const key = getMenuShafKey(product);
+      const bucket = buckets.get(key);
+      if (bucket) {
+        bucket.push(product);
+      } else {
+        buckets.set(key, [product]);
+      }
+    }
+
+    const shafs: Array<MenuShafConfig & { products: CustomerProduct[] }> =
+      menuShafConfigs
+        .map((shaf) => ({
+          ...shaf,
+          products: buckets.get(shaf.key) ?? [],
+        }))
+        .filter((shaf) => shaf.products.length > 0);
+
+    const remaining = buckets.get(fallbackShaf.key) ?? [];
+    if (remaining.length > 0) {
+      shafs.push({ ...fallbackShaf, products: remaining });
+    }
+
+    return shafs;
+  }, [filteredProducts]);
+
   const hasActiveFilters =
     selectedTenantId !== "all" ||
     selectedCategory !== "Semua" ||
@@ -382,8 +600,6 @@ export function ProductExplorer({
       aria-label="Pilihan Menu Makanan"
       className="py-10 sm:py-14 bg-neutral-100/70 dark:bg-neutral-900/40 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 max-w-7xl mx-auto w-full px-4 sm:px-6 my-4 shadow-xs"
     >
-      <FloatingScrollToTop />
-
       <div className="space-y-6 sm:space-y-8">
         {/* Header Bar: Title on Top Left, Filtering Underneath */}
         <div className="flex flex-col items-start gap-2.5 w-full">
@@ -519,8 +735,28 @@ export function ProductExplorer({
           </div>
         )}
 
-        {/* Food Grid (3 columns on desktop matching user HTML) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+        {/* Mobile: shaf kategori dengan horizontal scroll independen */}
+        {filteredProducts.length > 0 && (
+          <div className="md:hidden">
+            <div className="mb-3 flex items-center gap-2 rounded-xl border border-[#c85a32]/15 bg-white/80 px-3 py-2 text-[11px] font-medium text-neutral-600 dark:border-[#c85a32]/20 dark:bg-neutral-900/70 dark:text-neutral-300">
+              <MoveHorizontal className="size-4 shrink-0 text-[#c85a32]" />
+              <span>Geser tiap baris untuk melihat menu lainnya.</span>
+            </div>
+
+            <div className="space-y-5">
+              {menuShafs.map((shaf) => (
+                <MobileMenuShaf
+                  key={shaf.key}
+                  shaf={shaf}
+                  onAddToCart={onAddToCart}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Desktop: Food Grid (3 columns matching user HTML) */}
+        <div className="hidden gap-6 sm:gap-7 md:grid md:grid-cols-2 lg:grid-cols-3">
           {filteredProducts.map((product) => (
             <ProductCard
               key={product.id}

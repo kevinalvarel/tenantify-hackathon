@@ -280,39 +280,6 @@ export function CustomerNavbar() {
             Beranda
           </Link>
 
-          {/* Join UMKM (Jika belum connect) ATAU Pill Lokasi UMKM Aktif (Jika sudah connect) */}
-          {!activeUmkm ? (
-            <Link
-              href="/join"
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-all select-none whitespace-nowrap",
-                pathname.includes("/join")
-                  ? "text-white bg-[#c85a32] shadow-sm"
-                  : "text-[#c85a32] bg-[#c85a32]/10 hover:bg-[#c85a32]/20 border border-[#c85a32]/30",
-              )}
-            >
-              <LogIn className="size-3.5" />
-              <span>Join UMKM</span>
-            </Link>
-          ) : (
-            <Link
-              href="/join"
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-all select-none whitespace-nowrap max-w-[130px] xl:max-w-[160px]",
-                pathname.includes("/join")
-                  ? "text-white bg-[#c85a32] shadow-sm"
-                  : "text-[#c85a32] bg-[#c85a32]/10 hover:bg-[#c85a32]/20 border border-[#c85a32]/30",
-              )}
-              title={`Terhubung ke ${activeUmkm.name} (${activeUmkm.code}). Klik untuk ganti.`}
-            >
-              <MapPin className="size-3.5 shrink-0 text-[#c85a32]" />
-              <span className="truncate">{activeUmkm.name}</span>
-              <Badge className="bg-[#c85a32] text-white text-[10px] font-mono px-1 py-0 border-none shrink-0">
-                {activeUmkm.code}
-              </Badge>
-            </Link>
-          )}
-
           {/* Menu Khusus: Hanya jika sudah terhubung ke UMKM */}
           {activeUmkm && (
             <>
@@ -447,6 +414,39 @@ export function CustomerNavbar() {
           >
             Denah Bazaar
           </Link>
+
+          {/* Join UMKM (Jika belum connect) ATAU Pill Lokasi UMKM Aktif (Jika sudah connect) */}
+          {!activeUmkm ? (
+            <Link
+              href="/join"
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-all select-none whitespace-nowrap",
+                pathname.includes("/join")
+                  ? "text-white bg-[#c85a32] shadow-sm"
+                  : "text-[#c85a32] bg-[#c85a32]/10 hover:bg-[#c85a32]/20 border border-[#c85a32]/30",
+              )}
+            >
+              <LogIn className="size-3.5" />
+              <span>Join UMKM</span>
+            </Link>
+          ) : (
+            <Link
+              href="/join"
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-full text-xs xl:text-[13px] font-semibold transition-all select-none whitespace-nowrap max-w-[130px] xl:max-w-[160px]",
+                pathname.includes("/join")
+                  ? "text-white bg-[#c85a32] shadow-sm"
+                  : "text-[#c85a32] bg-[#c85a32]/10 hover:bg-[#c85a32]/20 border border-[#c85a32]/30",
+              )}
+              title={`Terhubung ke ${activeUmkm.name} (${activeUmkm.code}). Klik untuk ganti.`}
+            >
+              <MapPin className="size-3.5 shrink-0 text-[#c85a32]" />
+              <span className="truncate">{activeUmkm.name}</span>
+              <Badge className="bg-[#c85a32] text-white text-[10px] font-mono px-1 py-0 border-none shrink-0">
+                {activeUmkm.code}
+              </Badge>
+            </Link>
+          )}
         </nav>
 
         {/* Right Section: Terracotta Pill Capsule (Cart CTA), User Menu & Mobile Trigger */}
