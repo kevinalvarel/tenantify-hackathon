@@ -1,7 +1,8 @@
-# Tenantify
+## Penanggung Jawab
 
-Platform digital untuk mendigitalisasi dan mengelola aktivitas penjualan UMKM di area komersial seperti **Bazaar**, **Food Court**, dan tempat serupa. Tenantify menghubungkan tiga peran — **Association**, **Seller**, dan **Consumer** — dalam satu ekosistem: pengelolaan tenant, penjualan produk, pemetaan lokasi, hingga pengalaman berbelanja.
-
+1. **Muhammad Kevin Alvarel - Fullstack Engineer**
+2. **Muhammad Sahrul Ramadhan - Fullstack Engineer**
+3. 
 ---
 
 ## 📚 Repository & Sumber Proyek
@@ -24,6 +25,10 @@ Tenantify dikembangkan dalam beberapa repository yang saling terintegrasi untuk 
 Seluruh repository merupakan bagian dari pengembangan **Tenantify — Ekosistem Digital untuk Pengelolaan Bazaar dan Food Court**.
 
 ---
+
+# Tenantify
+
+Platform digital untuk mendigitalisasi dan mengelola aktivitas penjualan UMKM di area komersial seperti **Bazaar**, **Food Court**, dan tempat serupa. Tenantify menghubungkan tiga peran — **Association**, **Seller**, dan **Consumer** — dalam satu ekosistem: pengelolaan tenant, penjualan produk, pemetaan lokasi, hingga pengalaman berbelanja.
 
 ## 🔑 Akun Demo untuk Juri
 
@@ -149,10 +154,5 @@ AI_SERVICE_URL=https://s4usan-tenantify-models.hf.space
 | `npm run db:migrate`  | Jalankan migrasi ke database     |
 | `npm run db:push`     | Push skema langsung ke database  |
 | `npm run db:studio`   | Buka Drizzle Studio              |
-
-## Penanggung Jawab
-
-1. **Muhammad Kevin Alvarel - Fullstack Engineer**
-2. **Muhammad Sahrul Ramadhan - Fullstack Engineer**
 
 Dibuat untuk hackathon.
