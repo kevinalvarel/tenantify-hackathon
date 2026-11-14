@@ -21,6 +21,8 @@ import {
   resolveUmkmByCodeAction,
   getCustomerOrdersAction,
 } from "@/servers/customer-server";
+import { getCustomerTargetedPromotionsAction } from "@/servers/promotion-server";
+import type { Promotion } from "@/types/seller";
 import { useSession } from "@/lib/auth/auth-client";
 import { toast } from "sonner";
 
@@ -65,6 +67,8 @@ type CustomerContextType = {
   leaveUmkm: () => void;
   joinUmkmByCode: (code: string) => Promise<{ success: boolean; message: string; umkm?: ActiveUmkm }>;
   orders: CustomerOrder[];
+  promotions: Promotion[];
+  promotionsCount: number;
   cart: CustomerCartItem[];
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
@@ -111,6 +115,16 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
   const [allTenants, setAllTenants] = useState<Tenant[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [orders, setOrders] = useState<CustomerOrder[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const knownPromoIdsRef = useRef<Set<string>>(new Set());
+  const ordersRef = useRef<CustomerOrder[]>(orders);
+  useEffect(() => {
+    ordersRef.current = orders;
+  }, [orders]);
+  const activeUmkmRef = useRef<ActiveUmkm | null>(activeUmkm);
+  useEffect(() => {
+    activeUmkmRef.current = activeUmkm;
+  }, [activeUmkm]);
   const [ordersUserId, setOrdersUserId] = useState<string | undefined>(userId);
 
   // Logout atau ganti akun: buang riwayat pesanan milik sesi sebelumnya
@@ -241,6 +255,66 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
           });
           return merged;
         });
+
+        // Sinkronisasi promosi aktif tertarget dari seller UMKM
+        try {
+          const transactedTenantNames = new Set<string>();
+          ordersRef.current.forEach((ord) => {
+            ord.tenantNames?.forEach((tn) => transactedTenantNames.add(tn));
+            ord.items?.forEach(
+              (it) => it.tenantName && transactedTenantNames.add(it.tenantName),
+            );
+          });
+
+          const transactedIds = allTenants
+            .filter(
+              (t) =>
+                transactedTenantNames.has(t.name) ||
+                transactedTenantNames.has(t.id),
+            )
+            .map((t) => t.id);
+
+          const livePromos = await getCustomerTargetedPromotionsAction({
+            activeUmkmCode: activeUmkmRef.current?.code,
+            activeTenantIds: activeUmkmRef.current?.tenantIds,
+            transactedTenantIds: transactedIds,
+          });
+
+          if (isMounted && livePromos) {
+            setPromotions((prev) => {
+              // Deteksi promosi baru yang masuk untuk notifikasi realtime
+              livePromos.forEach((p) => {
+                if (
+                  knownPromoIdsRef.current.size > 0 &&
+                  !knownPromoIdsRef.current.has(p.id)
+                ) {
+                  playCustomerChime();
+                  toast.info(
+                    `Promo Baru dari ${p.tenantName}! Nikmati ${p.title} sekarang.`,
+                    {
+                      description: p.message,
+                      duration: 9000,
+                      action: {
+                        label: "Lihat Menu",
+                        onClick: () => {
+                          const target =
+                            p.targetUrl ||
+                            `/?tenant=${p.tenantId}#customer-product-explorer`;
+                          window.location.href = target;
+                        },
+                      },
+                    },
+                  );
+                }
+              });
+
+              knownPromoIdsRef.current = new Set(livePromos.map((p) => p.id));
+              return livePromos;
+            });
+          }
+        } catch (promoErr) {
+          console.warn("Gagal sinkronisasi promosi customer:", promoErr);
+        }
       } catch (err) {
         console.warn("Sinkronisasi pesanan customer error:", err);
       }
@@ -428,6 +502,8 @@ export function CustomerProvider({ children }: { children: React.ReactNode }) {
         leaveUmkm,
         joinUmkmByCode,
         orders,
+        promotions,
+        promotionsCount: promotions.length,
         cart,
         isCartOpen,
         setIsCartOpen,

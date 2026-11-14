@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Bell,
   CalendarDays,
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { createPromotionAction } from "@/servers/promotion-server";
 
 type PromotionsManagementProps = {
   promotions: Promotion[];
@@ -60,8 +61,13 @@ export function PromotionsManagement({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    setItems(promotions);
+  }, [promotions]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextErrors: FormErrors = {};
@@ -78,35 +84,33 @@ export function PromotionsManagement({
       return;
     }
 
-    const sentAt = new Intl.DateTimeFormat("id-ID", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date());
-
-    setItems((prev) => [
-      {
-        id: `promo-${Date.now()}`,
+    setIsSubmitting(true);
+    try {
+      const res = await createPromotionAction({
         title: title.trim(),
         message: message.trim(),
         type,
         startDate,
         endDate,
-        status: "Terkirim",
-        sentAt,
-      },
-      ...prev,
-    ]);
+      });
 
-    setTitle("");
-    setMessage("");
-    setType("Info");
-    setStartDate("");
-    setEndDate("");
-    setErrors({});
-    toast.success("Notifikasi promosi terkirim (simulasi).");
+      if (res.success && res.promotion) {
+        setItems((prev) => [res.promotion!, ...prev]);
+        setTitle("");
+        setMessage("");
+        setType("Info");
+        setStartDate("");
+        setEndDate("");
+        setErrors({});
+        toast.success(res.message);
+      } else {
+        toast.error(res.message || "Gagal mengirim notifikasi promosi.");
+      }
+    } catch {
+      toast.error("Terjadi kesalahan saat menyiarkan promosi.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const periodLabel = formatPeriod(startDate, endDate);
@@ -247,9 +251,9 @@ export function PromotionsManagement({
                 </div>
               </div>
 
-              <Button type="submit" className="h-11 gap-1.5 sm:h-8">
+              <Button type="submit" disabled={isSubmitting} className="h-11 gap-1.5 sm:h-8">
                 <Send className="size-4" />
-                Kirim Notifikasi
+                {isSubmitting ? "Mengirim..." : "Kirim Notifikasi"}
               </Button>
             </form>
           </CardContent>

@@ -377,9 +377,8 @@ export async function createCustomerOrderAction(
         .limit(1);
 
       const validTenantId = existingTenant ? tenantId : "t_1794582095176";
-      const tenantOrderId = `TO-${orderId.replace("ORD-", "")}${
-        tenantGroups.size > 1 ? `-${validTenantId.slice(-4)}` : ""
-      }`;
+      const tenantOrderId = `TO-${orderId.replace("ORD-", "")}${tenantGroups.size > 1 ? `-${validTenantId.slice(-4)}` : ""
+        }`;
 
       const groupSubtotal = groupItems.reduce(
         (sum, it) => sum + it.price * it.quantity,
@@ -529,11 +528,11 @@ export async function getCustomerOrdersAction(): Promise<CustomerOrder[]> {
 
       const createdAtFormatted = ord.createdAt
         ? new Intl.DateTimeFormat("id-ID", {
-            day: "2-digit",
-            month: "short",
-            hour: "2-digit",
-            minute: "2-digit",
-          }).format(new Date(ord.createdAt))
+          day: "2-digit",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(new Date(ord.createdAt))
         : "Baru saja";
 
       result.push({
