@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { loginSchema, registerSchema } from "@/validations/auth-validation";
 import { signIn, signUpCustomer } from "@/servers/auth-server";
+import { useSession } from "@/lib/auth/auth-client";
 
 type Mode = "sign-in" | "sign-up";
 type FieldName = "name" | "email" | "password" | "confirmPassword";
@@ -62,6 +63,7 @@ export function CustomerAuthDialog({
 }: CustomerAuthDialogProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
+  const { refetch } = useSession();
   const [open, setOpen] = useState(autoOpen);
   const [mode, setMode] = useState<Mode>("sign-in");
   const [loading, setLoading] = useState(false);
@@ -99,6 +101,7 @@ export function CustomerAuthDialog({
 
       toast.success(response.message);
       setValues(emptyValues);
+      await refetch();
       setOpen(false);
       if (callbackUrl) {
         router.push(callbackUrl);
