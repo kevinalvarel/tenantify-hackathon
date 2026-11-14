@@ -14,7 +14,7 @@ import {
   orderItems,
   zones,
 } from "@/db/schema";
-import { and, eq, inArray, desc, or, ilike, ne } from "drizzle-orm";
+import { and, eq, desc, or, ilike, ne } from "drizzle-orm";
 import type {
   CustomerProduct,
   Tenant,
@@ -24,6 +24,7 @@ import type {
 } from "@/types/customer";
 import { AreaZone, BoothSlot } from "@/types/association";
 import { slugify } from "@/lib/slug";
+import { cached, cacheKeys, CUSTOMER_CATALOG_TTL } from "@/lib/cache";
 
 export async function resolveUmkmByCodeAction(rawCode: string): Promise<{
   success: boolean;
@@ -139,7 +140,7 @@ export async function resolveUmkmByCodeAction(rawCode: string): Promise<{
   }
 }
 
-export async function getCustomerDataAction(filterTenantIds?: string[]): Promise<{
+async function loadCustomerCatalog(): Promise<{
   products: CustomerProduct[];
   tenants: Tenant[];
 }> {
@@ -184,13 +185,7 @@ export async function getCustomerDataAction(filterTenantIds?: string[]): Promise
       .from(products)
       .where(eq(products.isActive, true));
 
-    // If specific tenantIds are requested, filter products strictly for those tenants
-    const filteredRows =
-      filterTenantIds && filterTenantIds.length > 0
-        ? productRows.filter((p) => filterTenantIds.includes(p.tenantId))
-        : productRows;
-
-    const mappedProducts: CustomerProduct[] = filteredRows.map((p) => {
+    const mappedProducts: CustomerProduct[] = productRows.map((p) => {
       const parentTenant = tenantMap.get(p.tenantId);
       const safeSlug = slugify(p.name) + "-" + p.id.slice(-6);
       return {
@@ -216,6 +211,32 @@ export async function getCustomerDataAction(filterTenantIds?: string[]): Promise
     };
   } catch (error) {
     console.error("Gagal mengambil data customer dari database:", error);
+    return {
+      products: [],
+      tenants: [],
+    };
+  }
+}
+
+export async function getCustomerDataAction(filterTenantIds?: string[]): Promise<{
+  products: CustomerProduct[];
+  tenants: Tenant[];
+}> {
+  try {
+    const catalog = await cached(
+      cacheKeys.customerCatalog,
+      CUSTOMER_CATALOG_TTL,
+      loadCustomerCatalog,
+    );
+
+    const products =
+      filterTenantIds && filterTenantIds.length > 0
+        ? catalog.products.filter((p) => filterTenantIds.includes(p.tenantId))
+        : catalog.products;
+
+    return { products, tenants: catalog.tenants };
+  } catch (error) {
+    console.error("Gagal mengambil data customer dari cache/database:", error);
     return {
       products: [],
       tenants: [],
@@ -441,29 +462,20 @@ export async function createCustomerOrderAction(
   }
 }
 
-export async function getCustomerOrdersAction(
-  orderIds?: string[],
-): Promise<CustomerOrder[]> {
+export async function getCustomerOrdersAction(): Promise<CustomerOrder[]> {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
     const customerId = session?.user?.id;
 
-    const conditions = [];
-    if (orderIds && orderIds.length > 0) {
-      conditions.push(inArray(orders.id, orderIds));
-    }
-    if (customerId) {
-      conditions.push(eq(orders.customerId, customerId));
-    }
-
-    if (conditions.length === 0) return [];
+    // Riwayat pesanan hanya milik akun yang sedang login.
+    if (!customerId) return [];
 
     const orderRows = await db
       .select()
       .from(orders)
-      .where(conditions.length > 1 ? or(...conditions) : conditions[0])
+      .where(eq(orders.customerId, customerId))
       .orderBy(desc(orders.createdAt));
 
     const result: CustomerOrder[] = [];

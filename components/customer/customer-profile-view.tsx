@@ -76,7 +76,7 @@ const ratingFilters = ["Semua", 5, 4, 3, 2, 1] as const;
 
 export function CustomerProfileView() {
   const router = useRouter();
-  const { data: session, isPending: isSessionLoading } = useSession();
+  const { data: session, isPending: isSessionLoading, refetch } = useSession();
   const { orders, reorder, activeOrdersCount } = useCustomer();
 
   const [activeTab, setActiveTab] = useState<ProfileTab>("pesanan");
@@ -243,6 +243,7 @@ export function CustomerProfileView() {
         return;
       }
       toast.success(res.message);
+      await refetch();
       setDisplayName("");
       try {
         localStorage.removeItem("tenantify_customer_name");

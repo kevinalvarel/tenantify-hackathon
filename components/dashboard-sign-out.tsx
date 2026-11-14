@@ -7,9 +7,11 @@ import { LogOutIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { signOut } from "@/servers/auth-server";
+import { useSession } from "@/lib/auth/auth-client";
 
 export function DashboardSignOut() {
   const router = useRouter();
+  const { refetch } = useSession();
   const [loading, setLoading] = useState(false);
 
   const handleSignOut = async () => {
@@ -18,6 +20,7 @@ export function DashboardSignOut() {
       const res = await signOut();
       if (res.success) {
         toast.success(res.message);
+        await refetch();
         router.push("/auth/sign-in");
         router.refresh();
       } else {

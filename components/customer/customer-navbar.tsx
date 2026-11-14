@@ -134,7 +134,7 @@ function getOrderStatusDisplay(status: string) {
 export function CustomerNavbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, isPending, refetch } = useSession();
   const isLoggedIn = !!session?.user;
   const {
     activeOrdersCount,
@@ -200,6 +200,7 @@ export function CustomerNavbar() {
         return;
       }
       toast.success(res.message);
+      await refetch();
       router.push("/");
       router.refresh();
     } catch {
@@ -613,7 +614,12 @@ export function CustomerNavbar() {
             );
           })()}
 
-          {isLoggedIn ? (
+          {isPending ? (
+            <span
+              aria-hidden
+              className="size-8 sm:size-9 shrink-0 rounded-full bg-neutral-200/80 dark:bg-neutral-800 animate-pulse"
+            />
+          ) : isLoggedIn ? (
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
@@ -860,7 +866,7 @@ export function CustomerNavbar() {
             <span>Denah Bazaar</span>
           </Link>
 
-          {!isLoggedIn && (
+          {!isPending && !isLoggedIn && (
             <div className="pt-2">
               <CustomerAuthDialog className="w-full justify-center h-10" />
             </div>

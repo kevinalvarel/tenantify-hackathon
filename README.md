@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tenantify
 
-## Getting Started
+Platform digital untuk mendigitalisasi dan mengelola aktivitas penjualan UMKM di area komersial seperti **Bazaar**, **Food Court**, dan tempat serupa. Tenantify menghubungkan tiga peran — **Association**, **Seller**, dan **Consumer** — dalam satu ekosistem: pengelolaan tenant, penjualan produk, pemetaan lokasi, hingga pengalaman berbelanja.
 
-First, run the development server:
+## Fitur Utama
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Multi-role** — dashboard terpisah untuk Association (pengelola area), Seller (pemilik tenant), dan Consumer (pembeli).
+- **Cross-tenant product recommendation** — rekomendasi produk dari tenant lain berbasis layanan AI (semantic + complementary scoring).
+- **Tenant map & floor plan** — layout zona dan lokasi booth/tenant yang bisa dilihat Consumer dan diatur Association.
+- **Dua jalur pemesanan** — online ordering lewat aplikasi dan transaksi langsung di tenant melalui POS kasir.
+- **Manajemen katalog & stok** — Seller mengelola produk, stok, promosi, ulasan, dan statistik penjualan.
+- **Invoice sewa tenant** — Association menerbitkan tagihan sewa bulanan beserta status pembayaran.
+- **Autentikasi & otorisasi** — Better Auth dengan email/password, sesi, role, dan kode unik association.
+
+## Tech Stack
+
+| Lapisan         | Teknologi                                                       |
+| --------------- | --------------------------------------------------------------- |
+| Framework       | Next.js 16 (App Router, Turbopack, Server Actions), React 19    |
+| Bahasa          | TypeScript                                                      |
+| Database        | PostgreSQL (Neon) + Drizzle ORM                                 |
+| Auth            | Better Auth                                                     |
+| UI              | Tailwind CSS v4, Base UI, shadcn/ui, Lucide & Hugeicons, Motion |
+| Form & validasi | React Hook Form + Zod                                           |
+| Cache           | Upstash Redis                                                   |
+| Storage         | Vercel Blob                                                     |
+| AI service      | Layanan rekomendasi eksternal (Hugging Face Space)              |
+
+## Struktur Proyek
+
+```
+app/                  Route & halaman (landing, customer, dashboard admin, API)
+components/           Komponen UI yang dipakai ulang
+context/              React context
+data/                 Data demo/seed statis
+db/                   Skema Drizzle & modul query
+docs/                 PRD, design, audit, scope, dan spesifikasi fitur
+hooks/                Custom React hooks
+lib/                  Utilitas: auth, cache, AI client, analytics, slug
+migrations/           Migrasi SQL Drizzle
+servers/              Server actions per domain (auth, seller, association, dll.)
+types/                Definisi tipe TypeScript
+validations/          Skema validasi Zod
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Prasyarat
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Node.js 20+ (disarankan 24)
+- npm
+- Database PostgreSQL (Neon)
+- Akun Upstash Redis (opsional, untuk cache)
+- Vercel Blob token (untuk upload gambar produk)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Menjalankan Proyek
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Buka [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Variabel Lingkungan
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Buat file `.env` di root project:
 
-## Deploy on Vercel
+```env
+# Database
+DATABASE_URL=postgresql://...
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Better Auth
+BETTER_AUTH_SECRET=...
+BETTER_AUTH_URL=http://localhost:3000
+BASE_URL=http://localhost:3000
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Upstash Redis (opsional)
+UPSTASH_REDIS_REST_URL=...
+UPSTASH_REDIS_REST_TOKEN=...
+
+# Vercel Blob
+BLOB_READ_WRITE_TOKEN=...
+
+# AI service (opsional, ada default)
+AI_SERVICE_URL=https://s4usan-tenantify-models.hf.space
+```
+
+### Perintah Tersedia
+
+| Perintah              | Deskripsi                        |
+| --------------------- | -------------------------------- |
+| `npm run dev`         | Menjalankan server development   |
+| `npm run build`       | Build produksi                   |
+| `npm start`           | Menjalankan hasil build          |
+| `npm run lint`        | Menjalankan ESLint               |
+| `npm run db:generate` | Generate file migrasi dari skema |
+| `npm run db:migrate`  | Jalankan migrasi ke database     |
+| `npm run db:push`     | Push skema langsung ke database  |
+| `npm run db:studio`   | Buka Drizzle Studio              |
+
+## Dokumentasi
+
+- [`docs/PRD.MD`](docs/PRD.MD) — product requirement
+- [`docs/DESIGN.md`](docs/DESIGN.md) — panduan desain
+- [`docs/scope/scope.md`](docs/scope/scope.md) — scope dan status fitur
+- [`docs/specs/`](docs/specs) — spesifikasi teknis per fitur
+
+## Pembuat
+
+1. **[Nama Pembuat 1]**
+2. **[Nama Pembuat 2]**
+
+Dibuat untuk hackathon.

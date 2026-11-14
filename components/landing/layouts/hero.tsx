@@ -4,8 +4,13 @@ import { CloudShader } from "@/components/ui/cloud-shader";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "@/lib/auth/auth-client";
+import { getRoleDashboard } from "@/lib/routes/role-dashboard";
 
 export function HeroSection() {
+  const { data: session, isPending } = useSession();
+  const role = (session?.user as { role?: string } | undefined)?.role;
+
   return (
     <>
       <section id="hero" className="relative min-h-dvh w-full overflow-hidden">
@@ -28,17 +33,39 @@ export function HeroSection() {
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-            <Button render={<Link href="/auth/sign-up" />} nativeButton={false}>
-              Mulai Sekarang
-            </Button>
+            {isPending ? (
+              <>
+                <span
+                  aria-hidden
+                  className="h-9 w-36 animate-pulse rounded-md bg-white/30"
+                />
+                <span
+                  aria-hidden
+                  className="h-9 w-32 animate-pulse rounded-md bg-white/20"
+                />
+              </>
+            ) : session?.user ? (
+              <Button
+                render={<Link href={getRoleDashboard(role)} />}
+                nativeButton={false}
+              >
+                Buka Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button render={<Link href="/auth/sign-up" />} nativeButton={false}>
+                  Mulai Sekarang
+                </Button>
 
-            <Button
-              variant="outline"
-              render={<Link href="/auth/sign-in" />}
-              nativeButton={false}
-            >
-              Masuk ke Akun
-            </Button>
+                <Button
+                  variant="outline"
+                  render={<Link href="/auth/sign-in" />}
+                  nativeButton={false}
+                >
+                  Masuk ke Akun
+                </Button>
+              </>
+            )}
           </div>
 
           <p className="mt-4 text-xs text-white/70">

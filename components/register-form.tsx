@@ -79,18 +79,21 @@ export function RegisterForm({
     >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Buat Akun Association</h1>
+          <h1 className="text-2xl font-bold">
+            Daftarkan Kepengurusan Paguyuban UMKM
+          </h1>
           <p className="text-sm text-balance text-muted-foreground">
-            Masukan data Anda untuk membuat akun pengelola kawasan
+            Buat akun pengurus untuk mengelola pedagang, zona, dan okupansi
+            paguyuban Anda.
           </p>
         </div>
 
         <Field>
-          <FieldLabel htmlFor="name">Nama Penampung UMKM</FieldLabel>
+          <FieldLabel htmlFor="name">Nama Paguyuban UMKM</FieldLabel>
           <Input
             id="name"
             type="text"
-            placeholder="Contoh: UMKM Cilegon Juare"
+            placeholder="Contoh: Paguyuban UMKM Cilegon Juare"
             disabled={isSubmitting}
             {...register("name")}
           />
@@ -110,7 +113,7 @@ export function RegisterForm({
             <FieldError>{errors.email.message}</FieldError>
           ) : (
             <FieldDescription>
-              Kita akan menggunakan email ini untuk menghubungi Anda.
+              Email ini dipakai untuk masuk dan dihubungi pengelola.
             </FieldDescription>
           )}
         </Field>
@@ -199,19 +202,19 @@ export function RegisterForm({
                 Mendaftarkan...
               </>
             ) : (
-              "Daftar"
+              "Daftarkan Paguyuban"
             )}
           </Button>
         </Field>
 
         <Field>
           <FieldDescription className="text-center">
-            Sudah Punya Akun?{" "}
+            Sudah punya akun pengurus?{" "}
             <Link
               href="/auth/sign-in"
               className="font-medium underline underline-offset-4 hover:text-primary"
             >
-              Masuk
+              Masuk ke dashboard
             </Link>
           </FieldDescription>
         </Field>

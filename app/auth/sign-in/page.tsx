@@ -43,11 +43,12 @@ export default function LoginPage() {
 
           <div className="space-y-2">
             <h2 className="text-xl font-bold text-foreground">
-              Kelola Kawasan Anda Bersama Tenantify
+              Satu Pintu untuk Pedagang dan Pengurus
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Daftar sebagai Association untuk mengelola tenant, memantau
-              okupansi, dan mengatur kawasan bazaar atau food court Anda.
+              Pedagang mengelola menu, stok, dan pesanan stan. Pengurus
+              memantau tenant, zona, dan okupansi kawasan dari dashboard yang
+              sama.
             </p>
           </div>
         </div>

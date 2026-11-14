@@ -43,11 +43,12 @@ export default function RegisterPage() {
 
           <div className="space-y-2">
             <h2 className="text-xl font-bold text-foreground">
-              Kelola Kawasan Anda Bersama Tenantify
+              Daftarkan Paguyuban UMKM Anda
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Daftar sebagai Association untuk mengelola tenant, memantau
-              okupansi, dan mengatur kawasan bazaar atau food court Anda.
+              Satu akun pengurus untuk mengelola pedagang, zona, dan okupansi
+              kawasan bazaar atau food court. Pedagang nanti ditambahkan dari
+              dashboard Anda.
             </p>
           </div>
         </div>
