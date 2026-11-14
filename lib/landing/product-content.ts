@@ -36,7 +36,7 @@ export const HERO = {
     "Tenantify menyatukan pengelola area, pemilik tenant, dan pengunjung. Kelola tenant, susun katalog, terima pesanan online maupun langsung di tenant, dari satu dashboard saja.",
   primaryCta: { label: "Mulai Sekarang", href: "/auth/sign-up" },
   secondaryCta: { label: "Masuk ke Akun", href: "/auth/sign-in" },
-  image: "/images/dashboard-seller.png",
+  image: "/images/landing/seller.png",
   imageAlt: "Dashboard Seller Tenantify",
 };
 
@@ -53,7 +53,7 @@ export const ROLES: ProductRole[] = [
       "Pantau jumlah tenant aktif beserta status persetujuannya",
     ],
     shot: {
-      expectedPath: "/images/landing/dashboard-association.png",
+      src: "/images/landing/asso.png",
       alt: "Dashboard Association Tenantify",
     },
     ctaLabel: "Mulai sebagai Association",
@@ -71,11 +71,11 @@ export const ROLES: ProductRole[] = [
       "Jalankan kasir sendiri di tenant dan pantau pemasukan",
     ],
     shot: {
-      src: "/images/dashboard-seller.png",
+      src: "/images/landing/seller.png",
       alt: "Dashboard Seller Tenantify",
     },
     ctaLabel: "Mulai sebagai Seller",
-    ctaHref: "/auth/coming-soon",
+    ctaHref: "/auth/sign-in",
   },
   {
     id: "consumer",
@@ -89,11 +89,11 @@ export const ROLES: ProductRole[] = [
       "Lihat riwayat pesanan Anda kapan saja",
     ],
     shot: {
-      expectedPath: "/images/landing/dashboard-consumer.png",
+      src: "/images/landing/customer.png",
       alt: "Dashboard Consumer Tenantify",
     },
     ctaLabel: "Mulai sebagai Consumer",
-    ctaHref: "/auth/coming-soon",
+    ctaHref: "/",
   },
 ];
 

@@ -115,7 +115,7 @@ export const SERVICE_ROLES: ServiceRole[] = [
       },
     ],
     preview: {
-      expectedPath: "/images/landing/dashboard-association.png",
+      src: "/images/landing/asso.png",
       alt: "Panel Dasbor Pengelola Kawasan Tenantify",
       metricLabel: "Efisiensi Kurasi & Okupansi",
       metricValue: "100% Digital",
@@ -165,14 +165,14 @@ export const SERVICE_ROLES: ServiceRole[] = [
       },
     ],
     preview: {
-      src: "/images/dashboard-seller.png",
+      src: "/images/landing/seller.png",
       alt: "Dasbor Kasir POS dan Manajemen Stok Seller Tenantify",
       metricLabel: "Kecepatan Pemrosesan Kasir",
       metricValue: "< 15 Detik",
     },
     cta: {
       label: "Buka Stan Penjual",
-      href: "/auth/coming-soon",
+      href: "/auth/sign-in",
     },
     secondaryCta: {
       label: "Masuk ke Dasbor Kasir",
@@ -215,14 +215,14 @@ export const SERVICE_ROLES: ServiceRole[] = [
       },
     ],
     preview: {
-      expectedPath: "/images/landing/dashboard-consumer.png",
+      src: "/images/landing/customer.png",
       alt: "Antarmuka Penjelajah Menu dan Denah Bazaar Consumer Tenantify",
       metricLabel: "Waktu Antre Dipangkas",
       metricValue: "Hingga 70%",
     },
     cta: {
       label: "Mulai Belanja & Jelajah",
-      href: "/auth/coming-soon",
+      href: "/",
     },
     secondaryCta: {
       label: "Masuk Akun Pengunjung",
